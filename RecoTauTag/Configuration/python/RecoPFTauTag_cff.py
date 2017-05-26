@@ -47,11 +47,11 @@ combinatoricRecoTaus.jetSrc = PFRecoTauPFJetInputs.inputJetCollection
 
 #--------------------------------------------------------------------------------
 # CV: set mass of tau candidates reconstructed in 1Prong0pi0 decay mode to charged pion mass
-combinatoricRecoTaus.modifiers.append(cms.PSet(
-    name = cms.string("tau_mass"),
-    plugin = cms.string("PFRecoTauMassPlugin"),
-    verbosity = cms.int32(0)                                    
-))    
+#combinatoricRecoTaus.modifiers.append(cms.PSet(
+#    name = cms.string("tau_mass"),
+#    plugin = cms.string("PFRecoTauMassPlugin"),
+#    verbosity = cms.int32(0)                                    
+#))    
 #--------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------

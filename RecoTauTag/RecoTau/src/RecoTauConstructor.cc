@@ -16,7 +16,8 @@ RecoTauConstructor::RecoTauConstructor(const PFJetRef& jet, const edm::Handle<PF
 				       bool copyGammasFromPiZeros,
 				       const StringObjectFunction<reco::PFTau>* signalConeSize,
 				       double minAbsPhotonSumPt_insideSignalCone, double minRelPhotonSumPt_insideSignalCone,
-				       double minAbsPhotonSumPt_outsideSignalCone, double minRelPhotonSumPt_outsideSignalCone)
+				       double minAbsPhotonSumPt_outsideSignalCone, double minRelPhotonSumPt_outsideSignalCone,
+				       bool moveUnusedSignalPiZeros)
   : signalConeSize_(signalConeSize),
     minAbsPhotonSumPt_insideSignalCone_(minAbsPhotonSumPt_insideSignalCone),
     minRelPhotonSumPt_insideSignalCone_(minRelPhotonSumPt_insideSignalCone),
@@ -28,6 +29,7 @@ RecoTauConstructor::RecoTauConstructor(const PFJetRef& jet, const edm::Handle<PF
   tau_.reset(new PFTau());
 
   copyGammas_ = copyGammasFromPiZeros;
+  moveSignalPiZeros_ = moveUnusedSignalPiZeros;
   // Initialize our Accessors
   collections_[std::make_pair(kSignal, kChargedHadron)] =
       &tau_->selectedSignalPFChargedHadrCands_;
@@ -295,6 +297,7 @@ void RecoTauConstructor::sortAndCopyIntoTau() {
   // Sort each of our sortable collections, and copy them into the final
   // tau RefVector.
   BOOST_FOREACH ( const CollectionMap::value_type& colkey, collections_ ) {
+    colkey.second->clear();
     SortedListPtr sortedCollection = sortedCollections_[colkey.first];
     std::sort(sortedCollection->begin(),
               sortedCollection->end(),
@@ -323,8 +326,8 @@ namespace
 	  piZero != piZeros.end(); ++piZero ) {
       double photonSumPt_insideSignalCone = 0.;
       double photonSumPt_outsideSignalCone = 0.;
-      int numPhotons = piZero->numberOfDaughters();
-      for ( int idxPhoton = 0; idxPhoton < numPhotons; ++idxPhoton ) {
+      size_t numPhotons = piZero->numberOfDaughters();
+      for ( size_t idxPhoton = 0; idxPhoton < numPhotons; ++idxPhoton ) {
 	const reco::Candidate* photon = piZero->daughter(idxPhoton);
 	double dR = deltaR(photon->p4(), tau.p4());
 	if ( dR < dRsignalCone ) {
@@ -349,6 +352,70 @@ namespace
     if ( nPiZeros > maxPiZeros ) nPiZeros = maxPiZeros;
     return static_cast<PFTau::hadronicDecayMode>(trackIndex + nPiZeros);
   }
+}
+
+void RecoTauConstructor::moveUnusedSignalPiZeros(){ 
+       
+  reco::Candidate::LorentzVector tauP4 = tau_->p4(); //uncorrected P4
+  reco::Candidate::LorentzVector corrTauP4 = tauP4; //(to be) corrected P4
+  double dRsignalCone = ( signalConeSize_ ) ? (*signalConeSize_)(*tau_) : 0.5;
+
+  std::vector<RecoTauPiZero> newPiZeros;
+  const std::vector<RecoTauPiZero>& piZeros = tau_->signalPiZeroCandidates();
+  for(std::vector<RecoTauPiZero>::const_iterator piZero = piZeros.begin();
+       piZero != piZeros.end(); ++piZero){
+    double photonSumPt_insideSignalCone = 0.;
+    double photonSumPt_outsideSignalCone = 0.;
+    size_t numPhotons = piZero->numberOfDaughters();
+    for(size_t idxPhoton = 0; idxPhoton < numPhotons; ++idxPhoton){
+      const reco::Candidate* photon = piZero->daughter(idxPhoton);
+      double dR = deltaR(photon->p4(), tauP4);
+      if( dR < dRsignalCone ){
+	photonSumPt_insideSignalCone += photon->pt();
+      } 
+      else{
+	photonSumPt_outsideSignalCone += photon->pt();
+      }
+    }
+    // Move piZeros not used to form a decay mode from signal to isolation category
+    if( !( photonSumPt_insideSignalCone  > minAbsPhotonSumPt_insideSignalCone_   || 
+	   photonSumPt_insideSignalCone  > (minRelPhotonSumPt_insideSignalCone_ *tauP4.pt())  ||
+	   photonSumPt_outsideSignalCone > minAbsPhotonSumPt_outsideSignalCone_ || 
+	   photonSumPt_outsideSignalCone > (minRelPhotonSumPt_outsideSignalCone_*tauP4.pt()) ) ){
+
+      //Remove piZero from signal...(done below)
+      if( copyGammas_ ){//remove related photons
+	//MB: Quite complex, but not nicer way found
+	getSortedCollection(kSignal,kGamma)->erase( 
+	   std::remove_if(getSortedCollection(kSignal,kGamma)->begin(), getSortedCollection(kSignal,kGamma)->end(),
+			  [&](auto x){return std::find(piZero->daughterPtrVector().begin(),piZero->daughterPtrVector().end(), edm::Ptr<reco::Candidate>(x))!=piZero->daughterPtrVector().end();}), getSortedCollection(kSignal,kGamma)->end() );
+	getSortedCollection(kSignal,kAll)->erase( 
+	   std::remove_if(getSortedCollection(kSignal,kAll)->begin(), getSortedCollection(kSignal,kAll)->end(),
+			  [&](auto x){return std::find(piZero->daughterPtrVector().begin(),piZero->daughterPtrVector().end(), edm::Ptr<reco::Candidate>(x))!=piZero->daughterPtrVector().end();}), getSortedCollection(kSignal,kAll)->end() );
+      }
+      //add the piZero to isolation
+      tau_->isolationPiZeroCandidatesRestricted().push_back(*piZero);
+      if( copyGammas_ ){
+	addPFCands(kIsolation, kGamma, piZero->daughterPtrVector().begin(),
+		   piZero->daughterPtrVector().end());
+      }
+      //correct 4-momentum
+      corrTauP4 -= piZero->p4();
+    }
+    else{
+      newPiZeros.push_back(*piZero);
+    }
+  }
+  if( newPiZeros.size()!=piZeros.size() ){
+    //set signalPiZeros
+    tau_->signalPiZeroCandidatesRestricted().swap(newPiZeros);
+    //copy updated PiZero and gamma collections into tau
+    sortAndCopyIntoTau();
+    //set corrected 4-momentum
+    tau_->setP4(corrTauP4);
+  }
+
+  return;
 }
 
 std::auto_ptr<reco::PFTau> RecoTauConstructor::get(bool setupLeadingObjects) 
@@ -398,6 +465,10 @@ std::auto_ptr<reco::PFTau> RecoTauConstructor::get(bool setupLeadingObjects)
       dRsignalCone, 
       minAbsPhotonSumPt_insideSignalCone_, minRelPhotonSumPt_insideSignalCone_, minAbsPhotonSumPt_outsideSignalCone_, minRelPhotonSumPt_outsideSignalCone_);
   tau_->setDecayMode(dm);
+
+  // Move piZeros not used to form a decay mode from signal to isolation category
+  if(moveSignalPiZeros_) 
+    moveUnusedSignalPiZeros();
 
   LogDebug("TauConstructorGet") << "Pt = " << tau_->pt() << ", eta = " << tau_->eta() << ", phi = " << tau_->phi() << ", mass = " << tau_->mass() << ", dm = " << tau_->decayMode() ;
 

@@ -57,7 +57,8 @@ class RecoTauConstructor {
 	bool copyGammasFromPiZeros = false,
 	const StringObjectFunction<reco::PFTau>* signalConeSize = 0,
 	double minAbsPhotonSumPt_insideSignalCone = 2.5, double minRelPhotonSumPt_insideSignalCone = 0.,
-	double minAbsPhotonSumPt_outsideSignalCone = 1.e+9, double minRelPhotonSumPt_outsideSignalCone = 1.e+9);
+	double minAbsPhotonSumPt_outsideSignalCone = 1.e+9, double minRelPhotonSumPt_outsideSignalCone = 1.e+9,
+	bool moveUnusedSignalPiZeros = false);
 
     /*
      * Code to set leading candidates.  These are just wrappers about
@@ -124,6 +125,9 @@ class RecoTauConstructor {
       }
     }
 
+    /// Move piZeros not used to form a decay mode from signal to isolation category
+    void moveUnusedSignalPiZeros();
+
     // Build and return the associated tau
     std::auto_ptr<reco::PFTau> get(bool setupLeadingCandidates=true);
 
@@ -137,6 +141,7 @@ class RecoTauConstructor {
     typedef std::map<CollectionKey, SortedListPtr> SortedCollectionMap;
 
     bool copyGammas_;
+    bool moveSignalPiZeros_;
 
     const StringObjectFunction<reco::PFTau>* signalConeSize_;
     double minAbsPhotonSumPt_insideSignalCone_;

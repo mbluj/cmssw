@@ -276,7 +276,8 @@ RecoTauBuilderCombinatoricPlugin::operator()(
         RecoTauConstructor tau(
           jet, getPFCands(), true, 
 	  &signalConeSize_, 
-	  minAbsPhotonSumPt_insideSignalCone_, minRelPhotonSumPt_insideSignalCone_, minAbsPhotonSumPt_outsideSignalCone_, minRelPhotonSumPt_outsideSignalCone_);
+	  minAbsPhotonSumPt_insideSignalCone_, minRelPhotonSumPt_insideSignalCone_, minAbsPhotonSumPt_outsideSignalCone_, minRelPhotonSumPt_outsideSignalCone_,
+	  true);
         // Reserve space in our collections
         tau.reserve(
 	    RecoTauConstructor::kSignal,

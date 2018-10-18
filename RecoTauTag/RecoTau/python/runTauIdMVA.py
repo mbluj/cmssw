@@ -580,7 +580,7 @@ class TauIDEmbedder(object):
                 electrons = self.cms.InputTag('slimmedElectrons'),
                 muons = self.cms.InputTag('slimmedMuons'),
                 taus = self.cms.InputTag('slimmedTaus'),
-                graph_file = self.cms.string('RecoTauTag/RecoTau/data/deepTau_2017v1_20L1024N.pb')
+                graph_file = self.cms.string('RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v1_20L1024N.pb')
             )
 
             self.process.rerunMvaIsolationSequence += self.cms.Sequence(
@@ -602,7 +602,7 @@ class TauIDEmbedder(object):
                 electrons = self.cms.InputTag('slimmedElectrons'),
                 muons = self.cms.InputTag('slimmedMuons'),
                 taus = self.cms.InputTag('slimmedTaus'),
-                graph_file = self.cms.string('RecoTauTag/RecoTau/data/DPFIsolation_2017v0.pb')
+                graph_file = self.cms.string('RecoTauTag/TrainingFiles/data/DPFTauId/DPFIsolation_2017v0.pb')
             )
 
             self.process.rerunMvaIsolationSequence += self.cms.Sequence(
@@ -623,7 +623,7 @@ class TauIDEmbedder(object):
                 electrons = self.cms.InputTag('slimmedElectrons'),
                 muons = self.cms.InputTag('slimmedMuons'),
                 taus = self.cms.InputTag('slimmedTaus'),
-                graph_file = self.cms.string('RecoTauTag/RecoTau/data/DPFIsolation_2017v1.pb')
+                graph_file = self.cms.string('RecoTauTag/TrainingFiles/data/DPFTauId/DPFIsolation_2017v1.pb')
             )
 
             self.process.rerunMvaIsolationSequence += self.cms.Sequence(

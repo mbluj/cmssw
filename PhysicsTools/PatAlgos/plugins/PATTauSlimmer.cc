@@ -28,6 +28,7 @@ namespace pat {
     const edm::EDGetTokenT<edm::View<pat::Tau>> src_;
     const bool linkToPackedPF_;
     const edm::EDGetTokenT<edm::Association<pat::PackedCandidateCollection>> pf2pc_;
+    const bool embedLostTracks_;
     const bool dropPiZeroRefs_;
     const bool dropTauChargedHadronRefs_;
     const bool dropPFSpecific_;
@@ -42,6 +43,7 @@ pat::PATTauSlimmer::PATTauSlimmer(const edm::ParameterSet &iConfig)
       linkToPackedPF_(iConfig.getParameter<bool>("linkToPackedPFCandidates")),
       pf2pc_(mayConsume<edm::Association<pat::PackedCandidateCollection>>(
           iConfig.getParameter<edm::InputTag>("packedPFCandidates"))),
+      embedLostTracks_(iConfig.getParameter<bool>("embedLostTracks")),
       dropPiZeroRefs_(iConfig.exists("dropPiZeroRefs") ? iConfig.getParameter<bool>("dropPiZeroRefs") : true),
       dropTauChargedHadronRefs_(
           iConfig.exists("dropTauChargedHadronRefs") ? iConfig.getParameter<bool>("dropTauChargedHadronRefs") : true),
@@ -122,6 +124,24 @@ void pat::PATTauSlimmer::produce(edm::Event &iEvent, const edm::EventSetup &iSet
         isolationGammaPtrs.push_back(edm::refToPtr((*pf2pc)[p]));
       }
       tau.setIsolationGammaCands(isolationGammaPtrs);
+    }
+    if (embedLostTracks_) {
+
+      std::vector<reco::Track> signalLostTracks;
+      for (const reco::PFRecoTauChargedHadron &chH : tau.signalTauChargedHadronCandidates()) {
+	if (chH.algoIs(reco::PFRecoTauChargedHadron::kTrack)) {
+	    if (chH.getTrack().isNonnull()) {
+	      signalLostTracks.push_back(*chH.getTrack());
+	    } else if (chH.getLostTrackCandidate().isNonnull()) {
+	      const pat::PackedCandidate *lostCand = 
+		dynamic_cast<const pat::PackedCandidate*>(chH.getLostTrackCandidate().get());
+	      if (lostCand!=nullptr){
+		signalLostTracks.push_back(lostCand->pseudoTrack());
+	      }
+	    }
+	}
+      }
+      tau.setSignalLostTracks(signalLostTracks);
     }
     if (dropPiZeroRefs_) {
       tau.pfSpecific_[0].signalPiZeroCandidates_.clear();

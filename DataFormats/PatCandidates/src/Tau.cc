@@ -4,6 +4,7 @@
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/Math/interface/deltaPhi.h"
 #include <algorithm>
 #include <boost/bind.hpp>
 
@@ -1008,6 +1009,24 @@ reco::CandidatePtrVector Tau::isolationGammaCands() const {
   } else {
     return isolationGammaCandPtrs_;
   }
+}
+
+void Tau::setSignalLostTracks(const std::vector<reco::Track> &trks) {
+  if (embeddedSignalTracks_ && !signalTracks_.empty()) {//do not store same tracks again
+    for (std::vector<reco::Track>::const_iterator trk = trks.begin(); trk != trks.end(); ++trk){
+      bool match = false;
+      for (std::vector<reco::Track>::const_iterator sigTrk = signalTracks_.begin(); sigTrk != signalTracks_.end(); ++sigTrk){
+	if(std::abs(trk->eta()-sigTrk->eta())<5e-4 && reco::deltaPhi(trk->phi(),sigTrk->phi())<5e-4) match = true;
+      }
+      if (!match) signalTracks_.push_back(*trk);
+    }
+  } else {
+    signalTracks_.clear();
+    for (std::vector<reco::Track>::const_iterator trk = trks.begin(); trk != trks.end(); ++trk){
+      signalTracks_.push_back(*trk);
+    }
+  }
+  embeddedSignalTracks_ = true;
 }
 
 /// ----- Top Projection business -------

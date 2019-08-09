@@ -263,6 +263,7 @@ namespace pat {
     void setIsolationChargedHadrCands(const reco::CandidatePtrVector& ptrs) { isolationChargedHadrCandPtrs_ = ptrs; }
     void setIsolationNeutralHadrCands(const reco::CandidatePtrVector& ptrs) { isolationNeutralHadrCandPtrs_ = ptrs; }
     void setIsolationGammaCands(const reco::CandidatePtrVector& ptrs) { isolationGammaCandPtrs_ = ptrs; }
+    void setSignalLostTracks(const std::vector<reco::Track> &trks);
 
     /// ----- Top Projection business -------
     /// get the number of non-null PFCandidates

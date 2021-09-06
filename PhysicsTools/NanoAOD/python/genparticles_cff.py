@@ -45,6 +45,9 @@ genParticleTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
          pdgId  = Var("pdgId", int, doc="PDG id"),
          status  = Var("status", int, doc="Particle status. 1=stable"),
          genPartIdxMother = Var("?numberOfMothers>0?motherRef(0).key():-1", int, doc="index of the mother particle"),
+         vx = Var("vx",  float,precision=10),
+         vy = Var("vy",  float,precision=10),
+         vz = Var("vz",  float,precision=10),
          statusFlags = (Var(
             "statusFlags().isLastCopyBeforeFSR()                  * 16384 +"
             "statusFlags().isLastCopy()                           * 8192  +"

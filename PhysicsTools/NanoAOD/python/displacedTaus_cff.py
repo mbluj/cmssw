@@ -48,7 +48,7 @@ def nanoAOD_addTauReco(process):
     process.finalTaus.cut = process.finalDisplacedTaus.cut.value()
 
 ##################### Import reusable funtions and objects from std taus ######## 
-from PhysicsTools.NanoAOD.taus_cff import _tauId2WPMask,_tauId5WPMask,_tauId7WPMask,tausMCMatchLepTauForTable,tausMCMatchHadTauForTable,tauMCTable
+from PhysicsTools.NanoAOD.taus_cff import _tauId2WPMask,_tauId4WPMask,_tauId5WPMask,_tauId6WPMask,_tauId7WPMask,_tauId8WPMask,tausMCMatchLepTauForTable,tausMCMatchHadTauForTable,tauMCTable
 
 ##################### User floats producers, selectors ##########################
 

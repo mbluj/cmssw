@@ -2,8 +2,50 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
 ##################### Displaced taus collection #################################
-# Production of displaced taus to be added to the master nano_cff by a 
-# dedicated function
+# Production of displaced taus to be added to the master nano_cff by the
+# following dedicated function
+def nanoAOD_addTauReco(process):
+    print("Add displaced taus")
+    postfix = 'Displaced'
+    from RecoTauTag.Configuration.tools.adaptToRunAtMiniAOD import adaptToRunAtMiniAOD
+    tauAtMiniTools = adaptToRunAtMiniAOD(process,postfix=postfix)
+    tauAtMiniTools.addTauReReco()
+    tauAtMiniTools.adaptTauToMiniAODReReco()
+    #Remove PATTau MC info as it is anyway recalculated for NanoAOD
+    from PhysicsTools.PatAlgos.tools.coreTools import runOnData
+    runOnData(process, names = ['Taus'], outputModules = [],postfix=postfix)
+    #modify tau reco to be displaced-friendly
+    pvAlgo = 'highestPtInEvent' #PV[0]
+    maxDeltaZ = 100.
+    maxTIP = 100.
+    maxTrkChi2 = 1000.
+    minPxlForDM = 1 #default 1
+    qCuts = [
+        getattr(process,'combinatoricRecoTaus'+postfix).builders[0].qualityCuts,
+        getattr(process,'ak4PFJetsRecoTauChargedHadrons'+postfix).builders[0].qualityCuts,
+        getattr(process,'ak4PFJetsRecoTauChargedHadrons'+postfix).builders[1].qualityCuts,
+        getattr(process,'ak4PFJetsRecoTauChargedHadrons'+postfix).builders[2].qualityCuts,
+        getattr(process,'ak4PFJetsLegacyHPSPiZeros'+postfix).builders[0].qualityCuts, #needed?
+        getattr(process,'hpsPFTauPrimaryVertexProducer'+postfix).qualityCuts #need to refit proper PV
+    ]
+    for qCut in qCuts:
+        qCut.pvFindingAlgo = pvAlgo
+        qCut.signalQualityCuts.maxDeltaZ = maxDeltaZ
+        qCut.signalQualityCuts.maxTransverseImpactParameter = maxTIP
+        qCut.signalQualityCuts.maxTrackChi2 = maxTrkChi2
+    getattr(process,'hpsSelectionDiscriminator'+postfix).minPixelHits = minPxlForDM
+    getattr(process,'hpsPFTauDiscriminationByDecayModeFindingNewDMs'+postfix).minPixelHits = minPxlForDM
+    getattr(process,'hpsPFTauDiscriminationByDecayModeFindingOldDMs'+postfix).minPixelHits = minPxlForDM
+    getattr(process,'hpsPFTauDiscriminationByDecayModeFinding'+postfix).minPixelHits = minPxlForDM
+    #add it to sequences
+    process.finalDisplacedTaus.src = 'selectedPatTaus'+postfix
+    process.displacedTauTask.add(getattr(process,'miniAODTausTask'+postfix))
+    process.nanoTableTaskCommon.add(process.displacedTauTask)
+    process.nanoTableTaskCommon.add(process.displacedTauTablesTask)
+    process.nanoTableTaskFS.add(process.displacedTauMCTask)
+    #FIXME: to be removed after studies
+    print("Relax standard taus")
+    process.finalTaus.cut = process.finalDisplacedTaus.cut.value()
 
 ##################### Import reusable funtions and objects from std taus ######## 
 from PhysicsTools.NanoAOD.taus_cff import _tauId2WPMask,_tauId5WPMask,_tauId7WPMask,tausMCMatchLepTauForTable,tausMCMatchHadTauForTable,tauMCTable
@@ -103,4 +145,3 @@ displacedTauMCTable = tauMCTable.clone(
 displacedTauTask = cms.Task(finalDisplacedTaus)
 displacedTauTablesTask = cms.Task(displacedTauTable)
 displacedTauMCTask = cms.Task(displacedTausMCMatchLepTauForTable,displacedTausMCMatchHadTauForTable,displacedTauMCTable)
-

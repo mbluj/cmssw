@@ -32,6 +32,8 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
 #include "DataFormats/NanoAOD/interface/FlatTable.h"
@@ -66,11 +68,13 @@ private:
 
   const edm::EDGetTokenT<std::vector<reco::Vertex>> pvs_;
   const edm::EDGetTokenT<edm::ValueMap<float>> pvsScore_;
+  const edm::EDGetTokenT<reco::BeamSpot> bs_;
   const edm::EDGetTokenT<edm::View<reco::VertexCompositePtrCandidate>> svs_;
   const StringCutObjectSelector<reco::Candidate> svCut_;
   const StringCutObjectSelector<reco::Vertex> goodPvCut_;
   const std::string goodPvCutString_;
   const std::string pvName_;
+  const std::string bsName_;
   const std::string svName_;
   const std::string svDoc_;
   const double dlenMin_, dlenSigMin_;
@@ -82,11 +86,13 @@ private:
 VertexTableProducer::VertexTableProducer(const edm::ParameterSet& params)
     : pvs_(consumes<std::vector<reco::Vertex>>(params.getParameter<edm::InputTag>("pvSrc"))),
       pvsScore_(consumes<edm::ValueMap<float>>(params.getParameter<edm::InputTag>("pvSrc"))),
+      bs_(consumes<reco::BeamSpot>(params.getParameter<edm::InputTag>("bsSrc"))),
       svs_(consumes<edm::View<reco::VertexCompositePtrCandidate>>(params.getParameter<edm::InputTag>("svSrc"))),
       svCut_(params.getParameter<std::string>("svCut"), true),
       goodPvCut_(params.getParameter<std::string>("goodPvCut"), true),
       goodPvCutString_(params.getParameter<std::string>("goodPvCut")),
       pvName_(params.getParameter<std::string>("pvName")),
+      bsName_(params.getParameter<std::string>("bsName")),
       svName_(params.getParameter<std::string>("svName")),
       svDoc_(params.getParameter<std::string>("svDoc")),
       dlenMin_(params.getParameter<double>("dlenMin")),
@@ -95,6 +101,7 @@ VertexTableProducer::VertexTableProducer(const edm::ParameterSet& params)
 {
   produces<nanoaod::FlatTable>("pv");
   produces<nanoaod::FlatTable>("otherPVs");
+  produces<nanoaod::FlatTable>("bs");
   produces<nanoaod::FlatTable>("svs");
   produces<edm::PtrVector<reco::Candidate>>();
 }
@@ -138,6 +145,13 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   for (size_t i = 1; i < (*pvsIn).size() && i < 4; i++)
     pvsz.push_back((*pvsIn)[i - 1].position().z());
   otherPVsTable->addColumn<float>("z", pvsz, "Z position of other primary vertices, excluding the main PV", 8);
+
+  edm::Handle<reco::BeamSpot> bsIn;
+  iEvent.getByToken(bs_, bsIn);
+  auto bsTable = std::make_unique<nanoaod::FlatTable>(1, bsName_, true);
+  bsTable->addColumnValue<float>("x", bsIn->x0(), "beam spot x coordinate", 10);
+  bsTable->addColumnValue<float>("y", bsIn->y0(), "beam spot y coordinate", 10);
+  bsTable->addColumnValue<float>("z", bsIn->z0(), "beam spot z coordinate", 16);
 
   edm::Handle<edm::View<reco::VertexCompositePtrCandidate>> svsIn;
   iEvent.getByToken(svs_, svsIn);
@@ -188,6 +202,7 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
 
   iEvent.put(std::move(pvTable), "pv");
   iEvent.put(std::move(otherPVsTable), "otherPVs");
+  iEvent.put(std::move(bsTable), "bs");
   iEvent.put(std::move(svsTable), "svs");
   iEvent.put(std::move(selCandSv));
 }

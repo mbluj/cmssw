@@ -10,11 +10,13 @@ from  PhysicsTools.NanoAOD.common_cff import *
 vertexTable = cms.EDProducer("VertexTableProducer",
     pvSrc = cms.InputTag("offlineSlimmedPrimaryVertices"),
     goodPvCut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.Rho <= 2"), 
+    bsSrc = cms.InputTag("offlineBeamSpot"),
     svSrc = cms.InputTag("slimmedSecondaryVertices"),
     svCut = cms.string(""),
     dlenMin = cms.double(0),
     dlenSigMin = cms.double(3),
     pvName = cms.string("PV"),
+    bsName = cms.string("BeamSpot"),
     svName = cms.string("SV"),
     svDoc  = cms.string("secondary vertices from IVF algorithm"),
 )

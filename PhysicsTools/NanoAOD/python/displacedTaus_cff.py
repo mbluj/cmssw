@@ -42,7 +42,7 @@ def nanoAOD_addDisplacedTaus(process):
     process.displacedTauTask.add(getattr(process,'miniAODTausTask'+postfix))
     process.nanoTableTaskCommon.add(process.displacedTauTask)
     process.nanoTableTaskCommon.add(process.displacedTauTablesTask)
-    process.nanoTableTaskFS.add(process.displacedTauMCTask)
+    process.nanoTableTaskFS.add(process.displacedTauMCTask)#FIXME, correct also for data???
     #FIXME: to be removed after studies
     print("Relax standard taus")
     process.finalTaus.cut = process.finalDisplacedTaus.cut.value()
@@ -62,7 +62,7 @@ finalDisplacedTaus = cms.EDFilter("PATTauRefSelector",
 displacedTauTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src = cms.InputTag("finalDisplacedTaus"),
     cut = cms.string(""), #we should not filter on cross linked collections
-    name= cms.string("DisplacedTau"),
+    name = cms.string("DisplacedTau"),
     doc = cms.string("displacedTaus after basic selection (" + finalDisplacedTaus.cut.value()+")"),
     singleton = cms.bool(False), # the number of entries is variable
     extension = cms.bool(False), # this is the main table for the taus
@@ -131,7 +131,7 @@ displacedTausMCMatchLepTauForTable = tausMCMatchLepTauForTable.clone(
 )
 
 displacedTausMCMatchHadTauForTable = tausMCMatchHadTauForTable.clone(
-    src         = displacedTauTable.src
+    src = displacedTauTable.src
 )
 
 displacedTauMCTable = tauMCTable.clone(
@@ -141,7 +141,16 @@ displacedTauMCTable = tauMCTable.clone(
     objName = displacedTauTable.name
 )
 
+displacedTauTrackTable = cms.EDProducer("TauTrackTableProducer",
+    pfCandidatesSrc = cms.InputTag("packedPFCandidates"),
+    lostTracksSrc = cms.InputTag("lostTracks"),
+    tauSrc = displacedTauTable.src,
+    genTauSrc = displacedTausMCMatchHadTauForTable.matched,
+    pvSrc = cms.InputTag("offlineSlimmedPrimaryVertices"),
+    trkName = cms.string("DisplacedTauTrack"),
+    dRMatch = cms.double(0.15),
+)
 
 displacedTauTask = cms.Task(finalDisplacedTaus)
 displacedTauTablesTask = cms.Task(displacedTauTable)
-displacedTauMCTask = cms.Task(displacedTausMCMatchLepTauForTable,displacedTausMCMatchHadTauForTable,displacedTauMCTable)
+displacedTauMCTask = cms.Task(displacedTausMCMatchLepTauForTable,displacedTausMCMatchHadTauForTable,displacedTauMCTable,displacedTauTrackTable)

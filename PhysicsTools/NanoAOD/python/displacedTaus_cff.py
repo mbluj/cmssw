@@ -4,7 +4,7 @@ from PhysicsTools.NanoAOD.common_cff import *
 ##################### Displaced taus collection #################################
 # Production of displaced taus to be added to the master nano_cff by the
 # following dedicated function
-def nanoAOD_addTauReco(process):
+def nanoAOD_addDisplacedTaus(process):
     print("Add displaced taus")
     postfix = 'Displaced'
     from RecoTauTag.Configuration.tools.adaptToRunAtMiniAOD import adaptToRunAtMiniAOD

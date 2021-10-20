@@ -121,7 +121,7 @@ _variablesMiniV2 = cms.PSet(
     _tauVarsBase,
     _mvaAntiEVars,
     _mvaIsoVars,
-    #_deepTauVars2017v2p1 #FIXME
+    _deepTauVars2017v2p1 #FIXME
 )
 
 displacedTauTable.variables = _variablesMiniV2

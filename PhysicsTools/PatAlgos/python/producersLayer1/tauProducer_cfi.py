@@ -5,6 +5,10 @@ patTaus = cms.EDProducer("PATTauProducer",
     tauSource = cms.InputTag("hpsPFTauProducer"),
     tauTransverseImpactParameterSource = cms.InputTag("hpsPFTauTransverseImpactParameters"),
 
+    # electron KF-tracks for tau on top of miniAOD
+    useEleKFTracks = cms.bool(False),
+    eleKFTracks = cms.InputTag("lostTracks:eleTracks"), #miniAOD collection
+
     # add user data
     userData = cms.PSet(
       # add custom classes here

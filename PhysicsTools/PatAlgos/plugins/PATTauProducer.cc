@@ -109,6 +109,10 @@ namespace pat {
     std::vector<edm::EDGetTokenT<reco::TauDiscriminatorContainer>> pfTauIDContainerTokens_;
     bool skipMissingTauID_;
     edm::ProcessHistoryID phID_;
+
+    bool useEleKFTracks_;
+    edm::EDGetTokenT<pat::PackedCandidateCollection> eleKFTracksToken_;
+
     // tools
     GreaterByPt<Tau> pTTauComparator_;
 
@@ -230,6 +234,8 @@ PATTauProducer::PATTauProducer(const edm::ParameterSet& iConfig)
   pfTauIDTokens_ = edm::vector_transform(
       tauIDSrcs_, [this](NameTag const& tag) { return mayConsume<reco::PFTauDiscriminator>(tag.second); });
   skipMissingTauID_ = iConfig.getParameter<bool>("skipMissingTauID");
+  useEleKFTracks_ = iConfig.getParameter<bool>("useEleKFTracks");
+  eleKFTracksToken_ = consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("eleKFTracks"));
   // IsoDeposit configurables
   if (iConfig.exists("isoDeposits")) {
     edm::ParameterSet depconf = iConfig.getParameter<edm::ParameterSet>("isoDeposits");
@@ -433,6 +439,20 @@ void PATTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else
         edm::LogWarning("Type Error") << "Embedding a PFTau-specific information into a pat::Tau which wasn't made "
                                          "from a reco::PFTau is impossible.\n";
+    }
+
+    edm::Handle<pat::PackedCandidateCollection> eleKFTracks;
+    if (useEleKFTracks_) {
+      const auto& leadingCand =
+          aTau.leadCand();  //MB: it should be present in each correctly reconstructed tau, but it is safe to check
+      if (leadingCand.isNonnull() &&
+          dynamic_cast<const pat::PackedCandidate*>(leadingCand.get())) {  //MB: PFTau built with pat::PackedCandidates
+        iEvent.getByToken(eleKFTracksToken_, eleKFTracks);
+      } else {
+        edm::LogWarning("Type Error")
+            << "KF-electron tracks will not be search for a tau not built with pat::PackedCandidates.\n";
+        useEleKFTracks_ = false;
+      }
     }
 
     if (addTauJetCorrFactors_) {
@@ -668,6 +688,17 @@ void PATTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
             sumEtaTimesEnergy += posAtECal_eta * ipatcand->energy();
             sumEnergy += ipatcand->energy();
             const reco::Track* track = ipatcand->bestTrack();
+            if (useEleKFTracks_ && std::abs(ipatcand->pdgId()) == 11) {
+              for (auto const& eleKFTrack : (*eleKFTracks)) {
+                if (!eleKFTrack.hasTrackDetails())
+                  continue;
+                if (deltaR2(eleKFTrack.eta(), eleKFTrack.phi(), ipatcand->etaAtVtx(), ipatcand->phiAtVtx()) <
+                    0.000025) {  //MB: DR<0.005 to be tuned
+                  track = eleKFTrack.bestTrack();
+                  break;
+                }
+              }
+            }
             if (track != nullptr) {
               if (track->pt() > leadChargedCandPt) {
                 leadChargedCandEtaAtEcalEntrance = posAtECal_eta;
@@ -725,6 +756,17 @@ void PATTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
             hcalEnergyLeadChargedHadrCand =
                 packedCandPtr->caloFraction() * packedCandPtr->energy() * packedCandPtr->hcalFraction();
             const reco::Track* track = packedCandPtr->bestTrack();
+            if (useEleKFTracks_ && std::abs(packedCandPtr->pdgId()) == 11) {
+              for (auto const& eleKFTrack : (*eleKFTracks)) {
+                if (!eleKFTrack.hasTrackDetails())
+                  continue;
+                if (deltaR2(eleKFTrack.eta(), eleKFTrack.phi(), packedCandPtr->etaAtVtx(), packedCandPtr->phiAtVtx()) <
+                    0.000025) {  //MB: DR<0.005, to be tuned
+                  track = eleKFTrack.bestTrack();
+                  break;
+                }
+              }
+            }
             if (track != nullptr) {
               leadingTrackNormChi2 = track->normalizedChi2();
               for (const auto& isoCand : pfTauRef->isolationCands()) {
@@ -908,6 +950,11 @@ void PATTauProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
   edm::ParameterSetDescription isolationPSet;
   isolationPSet.setAllowAnything();  // TODO: the pat helper needs to implement a description.
   iDesc.add("userIsolation", isolationPSet);
+
+  //KF-track of electrons
+  iDesc.add<bool>("useEleKFTracks", false)
+      ->setComment("use kf-electron lost-track collection to access the tracks in case of tau reco on top of miniAOD");
+  iDesc.add<edm::InputTag>("eleKFTracks", edm::InputTag("FIXME"));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

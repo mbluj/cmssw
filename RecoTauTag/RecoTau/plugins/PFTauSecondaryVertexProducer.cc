@@ -44,6 +44,8 @@
 #include "DataFormats/Common/interface/AssociationVector.h"
 #include "DataFormats/Common/interface/RefProd.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 #include <memory>
 
 using namespace reco;
@@ -62,12 +64,16 @@ public:
 private:
   const edm::InputTag PFTauTag_;
   const edm::EDGetTokenT<std::vector<reco::PFTau>> PFTauToken_;
+  bool useEleKFTracks_;
+  const edm::EDGetTokenT<pat::PackedCandidateCollection> eleKFTracksToken_;
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> transTrackBuilderToken_;
 };
 
 PFTauSecondaryVertexProducer::PFTauSecondaryVertexProducer(const edm::ParameterSet& iConfig)
     : PFTauTag_(iConfig.getParameter<edm::InputTag>("PFTauTag")),
       PFTauToken_(consumes<std::vector<reco::PFTau>>(iConfig.getParameter<edm::InputTag>("PFTauTag"))),
+      useEleKFTracks_(iConfig.getParameter<bool>("useEleKFTracks")),
+      eleKFTracksToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("eleKFTracks"))),
       transTrackBuilderToken_(esConsumes(edm::ESInputTag{"", "TransientTrackBuilder"})) {
   produces<edm::AssociationVector<PFTauRefProd, std::vector<std::vector<reco::VertexRef>>>>();
   produces<VertexCollection>("PFTauSecondaryVertices");
@@ -97,6 +103,18 @@ void PFTauSecondaryVertexProducer::produce(edm::StreamID, edm::Event& iEvent, co
   edm::Handle<std::vector<reco::PFTau>> Tau;
   iEvent.getByToken(PFTauToken_, Tau);
 
+  edm::Handle<pat::PackedCandidateCollection> eleKFTracks;
+  if (useEleKFTracks_ && Tau.isValid() && !(*Tau).empty()) {
+    if ((*Tau)[0].leadChargedHadrCand().isNonnull() &&
+        dynamic_cast<const pat::PackedCandidate*>(
+            (*Tau)[0].leadChargedHadrCand().get())) {  //MB: PFTaus built with pat::PackedCandidates
+      iEvent.getByToken(eleKFTracksToken_, eleKFTracks);
+    } else {
+      edm::LogWarning("Type Error")
+          << "KF-electron tracks will not be search for PFTaus not built with pat::PackedCandidates.\n";
+    }
+  }
+
   // Set Association Map
   auto AVPFTauSV = std::make_unique<edm::AssociationVector<PFTauRefProd, std::vector<std::vector<reco::VertexRef>>>>(
       PFTauRefProd(Tau));
@@ -118,6 +136,20 @@ void PFTauSecondaryVertexProducer::produce(edm::StreamID, edm::Event& iEvent, co
           if (cand.isNull())
             continue;
           const reco::Track* track = getTrack(*cand);
+          if (useEleKFTracks_ && std::abs(cand->pdgId()) == 11 && eleKFTracks.isValid()) {
+            const pat::PackedCandidate* pCand = dynamic_cast<const pat::PackedCandidate*>(cand.get());
+            if (pCand != nullptr) {
+              for (auto const& eleKFTrack : (*eleKFTracks)) {
+                if (!eleKFTrack.hasTrackDetails())
+                  continue;
+                if (deltaR2(eleKFTrack.eta(), eleKFTrack.phi(), pCand->etaAtVtx(), pCand->phiAtVtx()) <
+                    0.000025) {  //MB: DR<0.005 to be tuned
+                  track = eleKFTrack.bestTrack();
+                  break;
+                }
+              }
+            }
+          }
           if (track != nullptr)
             transTrk.push_back(transTrackBuilder.build(*track));
         }
@@ -150,6 +182,10 @@ void PFTauSecondaryVertexProducer::fillDescriptions(edm::ConfigurationDescriptio
   // PFTauSecondaryVertexProducer
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("PFTauTag", edm::InputTag("hpsPFTauProducer"));
+  //KF-track of electrons
+  desc.add<bool>("useEleKFTracks", false)
+      ->setComment("use kf-electron lost-track collection to access the tracks in case of tau reco on top of miniAOD");
+  desc.add<edm::InputTag>("eleKFTracks", edm::InputTag("FIXME"));
   descriptions.add("PFTauSecondaryVertexProducer", desc);
 }
 

@@ -18,6 +18,13 @@ namespace reco {
       const pat::PackedCandidate* chargedPFPCand =
           dynamic_cast<const pat::PackedCandidate*>(chargedHadron.getChargedPFCandidate().get());
       if (chargedPFPCand != nullptr) {
+        if (std::abs(chargedPFPCand->pdgId()) == 11) {  //for electrons check if KF-track is stored as lost track
+          const pat::PackedCandidate* lostTrackCand =
+              dynamic_cast<const pat::PackedCandidate*>(chargedHadron.getLostTrackCandidate().get());
+          if (lostTrackCand != nullptr && lostTrackCand->hasTrackDetails()) {
+            return lostTrackCand->bestTrack();
+          }
+        }
         return chargedPFPCand->bestTrack();
       }
       const pat::PackedCandidate* lostTrackCand =

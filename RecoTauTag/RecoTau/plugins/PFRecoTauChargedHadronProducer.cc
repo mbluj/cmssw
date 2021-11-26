@@ -355,6 +355,11 @@ void PFRecoTauChargedHadronProducer::fillDescriptions(edm::ConfigurationDescript
     desc_builders.addOptional<double>("dRmergeNeutralHadron");
     desc_builders.addOptional<double>("dRmergePhoton");
     desc_builders.addOptional<edm::InputTag>("srcTracks");
+    desc_builders.addOptional<bool>("useEleKFTracks", false)
+        ->setComment(
+            "use kf-electron lost-track collection to access the tracks in case of tau reco on top of miniAOD");
+    desc_builders.addOptional<edm::InputTag>("eleKFTracks", edm::InputTag("FIXME"))
+        ->setComment("kf-electron lost-track collection, relevant only when \"useEleKFTracks\" enabled");
 
     edm::ParameterSetDescription desc_qualityCuts;
     reco::tau::RecoTauQualityCuts::fillDescriptions(desc_qualityCuts);

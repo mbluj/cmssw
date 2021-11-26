@@ -34,6 +34,8 @@ chargedPFCandidates = cms.PSet(
     minMergeNeutralHadronEt = cms.double(1.0),
     minMergeGammaEt = cms.double(1.0),
     minMergeChargedHadronPt = cms.double(100.),
+    useEleKFTracks = cms.bool(False), #can be enabled only for running with miniAOD inputs
+    eleKFTracks = cms.InputTag("FIXME"),
     verbosity = cms.int32(0)
 )
 

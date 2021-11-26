@@ -12,6 +12,7 @@
 
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -58,6 +59,9 @@ namespace reco {
 
       std::vector<int> inputParticleIds_;  // type of candidates to clusterize
 
+      bool useEleKFTracks_;
+      edm::EDGetTokenT<pat::PackedCandidateCollection> eleKFTracksToken_;
+
       double dRmergeNeutralHadronWrtChargedHadron_;
       double dRmergeNeutralHadronWrtNeutralHadron_;
       double dRmergeNeutralHadronWrtElectron_;
@@ -85,6 +89,9 @@ namespace reco {
         : PFRecoTauChargedHadronBuilderPlugin(pset, std::move(iC)),
           vertexAssociator_(pset.getParameter<edm::ParameterSet>("qualityCuts"), std::move(iC)),
           qcuts_(nullptr),
+          useEleKFTracks_(pset.getParameter<bool>("useEleKFTracks")),
+          eleKFTracksToken_(
+              iC.consumes<pat::PackedCandidateCollection>(pset.getParameter<edm::InputTag>("eleKFTracks"))),
           bFieldToken_(iC.esConsumes()) {
       edm::ParameterSet qcuts_pset = pset.getParameterSet("qualityCuts").getParameterSet("signalQualityCuts");
       qcuts_ = new RecoTauQualityCuts(qcuts_pset);
@@ -169,6 +176,16 @@ namespace reco {
       // Get the candidates passing our quality cuts
       qcuts_->setPV(vertexAssociator_.associatedVertex(jet));
       CandPtrs candsVector = qcuts_->filterCandRefs(pfCandidates(jet, inputParticleIds_));
+      // Check if the jet is built with pat::PackedCandidates and eventually get kf-electron tracks
+      edm::Handle<pat::PackedCandidateCollection> eleKFTracks;
+      if (useEleKFTracks_) {
+        if (jet.numberOfDaughters() > 0 && dynamic_cast<const pat::PackedCandidate*>(jet.daughterPtr(0).get())) {
+          (*evt()).getByToken(eleKFTracksToken_, eleKFTracks);
+        } else {
+          edm::LogWarning("Type Error")
+              << "KF-electron tracks will not be search for jets not built with pat::PackedCandidates.\n";
+        }
+      }
 
       for (CandPtrs::iterator cand = candsVector.begin(); cand != candsVector.end(); ++cand) {
         if (verbosity_) {
@@ -197,7 +214,24 @@ namespace reco {
             chargedHadron->track_ = edm::refToPtr(pfCand->muonRef()->outerTrack());
           else if (pfCand->gsfTrackRef().isNonnull())
             chargedHadron->track_ = edm::refToPtr(pfCand->gsfTrackRef());
-        }  // TauReco@MiniAOD: Tracks only available dynamically, so no possiblity to save ref here; checked by code downstream
+        } else {
+          // TauReco@MiniAOD: Tracks only available dynamically, so no possiblity to save ref here; checked by code downstream
+          // However one can store packedCandidate of electron KF-track if found
+          if (useEleKFTracks_ && eleKFTracks.isValid() && std::abs((*cand)->pdgId()) == 11) {
+            //static cast as from jet built with pat::PackedCandidates
+            const pat::PackedCandidate* pCand = static_cast<const pat::PackedCandidate*>(&**cand);
+            size_t iEleKFTrack = 0;
+            for (const auto& eleKFTrack : (*eleKFTracks)) {
+              if (deltaR2(eleKFTrack.eta(), eleKFTrack.phi(), pCand->etaAtVtx(), pCand->phiAtVtx()) <
+                  0.000025) {  //MB: DR<0.005, to be tuned
+                const edm::Ptr<pat::PackedCandidate> eleTrack(eleKFTracks, iEleKFTrack);
+                chargedHadron->lostTrackCandidate_ = eleTrack;
+                break;
+              }
+              iEleKFTrack++;
+            }
+          }
+        }
 
         chargedHadron->positionAtECALEntrance_ = atECALEntrance(&**cand, bField_);
         chargedHadron->chargedPFCandidate_ = (*cand);

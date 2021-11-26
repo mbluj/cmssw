@@ -21,10 +21,12 @@ private:
   void nonTauTracksInPVFromPackedCands(const size_t &,
                                        const pat::PackedCandidateCollection &,
                                        const std::vector<edm::Ptr<reco::TrackBase> > &,
-                                       std::vector<const reco::Track *> &);
+                                       std::vector<const reco::Track *> &,
+                                       bool checkPt = true);
 
-  edm::EDGetTokenT<pat::PackedCandidateCollection> packedCandsToken_, lostCandsToken_;
-  edm::Handle<pat::PackedCandidateCollection> packedCands_, lostCands_;
+  edm::EDGetTokenT<pat::PackedCandidateCollection> packedCandsToken_, lostCandsToken_, eleKFTracksToken_;
+  edm::Handle<pat::PackedCandidateCollection> packedCands_, lostCands_, eleKFTracks_;
+  bool useEleKFTracks_;
 };
 
 PFTauMiniAODPrimaryVertexProducer::PFTauMiniAODPrimaryVertexProducer(const edm::ParameterSet &iConfig)
@@ -32,7 +34,10 @@ PFTauMiniAODPrimaryVertexProducer::PFTauMiniAODPrimaryVertexProducer(const edm::
       packedCandsToken_(
           consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedCandidatesTag"))),
       lostCandsToken_(
-          consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("lostCandidatesTag"))) {}
+          consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("lostCandidatesTag"))),
+      eleKFTracksToken_(
+          consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("eleKFTracksTag"))),
+      useEleKFTracks_(iConfig.getParameter<bool>("useEleKFTracks")) {}
 
 PFTauMiniAODPrimaryVertexProducer::~PFTauMiniAODPrimaryVertexProducer() {}
 
@@ -40,6 +45,8 @@ void PFTauMiniAODPrimaryVertexProducer::beginEvent(const edm::Event &iEvent, con
   //Get candidate collections
   iEvent.getByToken(packedCandsToken_, packedCands_);
   iEvent.getByToken(lostCandsToken_, lostCands_);
+  if (useEleKFTracks_)
+    iEvent.getByToken(eleKFTracksToken_, eleKFTracks_);
 }
 
 void PFTauMiniAODPrimaryVertexProducer::nonTauTracksInPV(const reco::VertexRef &thePVRef,
@@ -54,13 +61,18 @@ void PFTauMiniAODPrimaryVertexProducer::nonTauTracksInPV(const reco::VertexRef &
   if (lostCands_.isValid()) {
     nonTauTracksInPVFromPackedCands(thePVRef.key(), *lostCands_, tauTracks, nonTauTracks);
   }
+  //finally electron KF-track lostCandidates
+  if (useEleKFTracks_ && eleKFTracks_.isValid()) {
+    nonTauTracksInPVFromPackedCands(thePVRef.key(), *eleKFTracks_, tauTracks, nonTauTracks, false);
+  }
 }
 
 void PFTauMiniAODPrimaryVertexProducer::nonTauTracksInPVFromPackedCands(
     const size_t &thePVkey,
     const pat::PackedCandidateCollection &cands,
     const std::vector<edm::Ptr<reco::TrackBase> > &tauTracks,
-    std::vector<const reco::Track *> &nonTauTracks) {
+    std::vector<const reco::Track *> &nonTauTracks,
+    bool checkPt) {
   //Find candidates/tracks associated to thePV
   for (const auto &cand : cands) {
     //MB: Skip candidates with ill-defined momentum as they return ill-defined tracks (why it happens?)
@@ -82,10 +94,13 @@ void PFTauMiniAODPrimaryVertexProducer::nonTauTracksInPVFromPackedCands(
     for (const auto &tauTrack : tauTracks) {
       if (std::abs(tauTrack->eta() - track->eta()) < 0.005 &&
           std::abs(deltaPhi(tauTrack->phi(), track->phi())) < 0.005 &&
-          std::abs(tauTrack->pt() / track->pt() - 1.) < 0.005) {
+          (!checkPt || std::abs(tauTrack->pt() / track->pt() - 1.) < 0.005)) {
         matched = true;
         break;
       }
+    }
+    if (useEleKFTracks_ && std::abs(cand.pdgId()) == 11) {
+      matched = true;
     }
     if (!matched)
       nonTauTracks.push_back(track);
@@ -96,6 +111,8 @@ void PFTauMiniAODPrimaryVertexProducer::fillDescriptions(edm::ConfigurationDescr
   auto desc = PFTauPrimaryVertexProducerBase::getDescriptionsBase();
   desc.add<edm::InputTag>("lostCandidatesTag", edm::InputTag("lostTracks"));
   desc.add<edm::InputTag>("packedCandidatesTag", edm::InputTag("packedPFCandidates"));
+  desc.add<bool>("useEleKFTracks", false);
+  desc.add<edm::InputTag>("eleKFTracksTag", edm::InputTag("lostTracks:eleTracks"));
 
   descriptions.add("pfTauMiniAODPrimaryVertexProducer", desc);
 }

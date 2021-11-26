@@ -44,6 +44,8 @@
 #include "DataFormats/Common/interface/RefProd.h"
 #include "TMath.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 #include <memory>
 
 using namespace reco;
@@ -62,6 +64,8 @@ private:
   edm::EDGetTokenT<std::vector<reco::PFTau>> PFTauToken_;
   edm::EDGetTokenT<edm::AssociationVector<PFTauRefProd, std::vector<reco::VertexRef>>> PFTauPVAToken_;
   edm::EDGetTokenT<edm::AssociationVector<PFTauRefProd, std::vector<std::vector<reco::VertexRef>>>> PFTauSVAToken_;
+  bool useEleKFTracks_;
+  const edm::EDGetTokenT<pat::PackedCandidateCollection> eleKFTracksToken_;
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> transTrackBuilderToken_;
   bool useFullCalculation_;
 };
@@ -72,6 +76,8 @@ PFTauTransverseImpactParameters::PFTauTransverseImpactParameters(const edm::Para
           iConfig.getParameter<edm::InputTag>("PFTauPVATag"))),
       PFTauSVAToken_(consumes<edm::AssociationVector<PFTauRefProd, std::vector<std::vector<reco::VertexRef>>>>(
           iConfig.getParameter<edm::InputTag>("PFTauSVATag"))),
+      useEleKFTracks_(iConfig.getParameter<bool>("useEleKFTracks")),
+      eleKFTracksToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("eleKFTracks"))),
       transTrackBuilderToken_(esConsumes(edm::ESInputTag{"", "TransientTrackBuilder"})),
       useFullCalculation_(iConfig.getParameter<bool>("useFullCalculation")) {
   produces<edm::AssociationVector<PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>>();
@@ -120,6 +126,18 @@ void PFTauTransverseImpactParameters::produce(edm::Event& iEvent, const edm::Eve
   reco::PFTauTransverseImpactParameterRefProd TIPRefProd_out =
       iEvent.getRefBeforePut<reco::PFTauTransverseImpactParameterCollection>("PFTauTIP");
 
+  edm::Handle<pat::PackedCandidateCollection> eleKFTracks;
+  if (useEleKFTracks_ && Tau.isValid() && !(*Tau).empty()) {
+    if ((*Tau)[0].leadChargedHadrCand().isNonnull() &&
+        dynamic_cast<const pat::PackedCandidate*>(
+            (*Tau)[0].leadChargedHadrCand().get())) {  //MB: PFTaus built with pat::PackedCandidates
+      iEvent.getByToken(eleKFTracksToken_, eleKFTracks);
+    } else {
+      edm::LogWarning("Type Error")
+          << "KF-electron tracks will not be search for PFTaus not built with pat::PackedCandidates.\n";
+    }
+  }
+
   // For each Tau Run Algorithim
   if (Tau.isValid()) {
     for (reco::PFTauCollection::size_type iPFTau = 0; iPFTau < Tau->size(); iPFTau++) {
@@ -132,6 +150,21 @@ void PFTauTransverseImpactParameters::produce(edm::Event& iEvent, const edm::Eve
       reco::Vertex::Point ip3d_poca(0, 0, 0);
       if (RefPFTau->leadChargedHadrCand().isNonnull()) {
         const reco::Track* track = getTrack(*RefPFTau->leadChargedHadrCand());
+        if (useEleKFTracks_ && std::abs(RefPFTau->leadChargedHadrCand()->pdgId()) == 11 && eleKFTracks.isValid()) {
+          const pat::PackedCandidate* pCand =
+              dynamic_cast<const pat::PackedCandidate*>(RefPFTau->leadChargedHadrCand().get());
+          if (pCand != nullptr) {
+            for (auto const& eleKFTrack : (*eleKFTracks)) {
+              if (!eleKFTrack.hasTrackDetails())
+                continue;
+              if (deltaR2(eleKFTrack.eta(), eleKFTrack.phi(), pCand->etaAtVtx(), pCand->phiAtVtx()) <
+                  0.000025) {  //MB: DR<0.005 to be tuned
+                track = eleKFTrack.bestTrack();
+                break;
+              }
+            }
+          }
+        }
         if (track != nullptr) {
           if (useFullCalculation_) {
             reco::TransientTrack transTrk = transTrackBuilder.build(*track);
@@ -197,6 +230,10 @@ void PFTauTransverseImpactParameters::fillDescriptions(edm::ConfigurationDescrip
   desc.add<bool>("useFullCalculation", false);
   desc.add<edm::InputTag>("PFTauTag", edm::InputTag("hpsPFTauProducer"));
   desc.add<edm::InputTag>("PFTauSVATag", edm::InputTag("PFTauSecondaryVertexProducer"));
+  //KF-track of electrons
+  desc.add<bool>("useEleKFTracks", false)
+      ->setComment("use kf-electron lost-track collection to access the tracks in case of tau reco on top of miniAOD");
+  desc.add<edm::InputTag>("eleKFTracks", edm::InputTag("FIXME"));
   descriptions.add("PFTauTransverseImpactParameters", desc);
 }
 

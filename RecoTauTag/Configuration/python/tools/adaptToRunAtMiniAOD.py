@@ -192,13 +192,9 @@ class adaptToRunAtMiniAOD(object):
 		_tauPVProducer.PVTag = 'offlineSlimmedPrimaryVertices'
 		_tauPVProducer.packedCandidatesTag = cms.InputTag("packedPFCandidates")
 		_tauPVProducer.lostCandidatesTag = cms.InputTag("lostTracks")
+		_tauPVProducer.useEleKFTracks = cms.bool(False)
+		_tauPVProducer.eleKFTracksTag = cms.InputTag("lostTracks:eleTracks")
 
-		# Redefine tau SV producer
-		setattr(self.process,'hpsPFTauSecondaryVertexProducer'+self.postfix,
-			cms.EDProducer("PFTauSecondaryVertexProducer",
-				       PFTauTag = cms.InputTag("hpsPFTauProducer"+self.postfix)
-		))
-	
 		# Remove RecoTau producers which are not supported (yet?), i.e. against-e/mu discriminats
 		for moduleName in self.miniAODTausTask.moduleNames():
 			if 'ElectronRejection' in moduleName or 'MuonRejection' in moduleName:

@@ -13,7 +13,8 @@ class TauIDEmbedder(object):
         "deepTau2017v2", "deepTau2017v2p1", "deepTau2018v2p5",
         "againstEle2018",
         "newDMPhase2v1",
-        "againstElePhase2v1"
+        "againstElePhase2v1",
+        "MVADM_2017_v1"
     ]
 
     def __init__(self, process, debug = False,
@@ -895,6 +896,43 @@ class TauIDEmbedder(object):
                 _againstElectronTauIDPhase2v1Sources
             )
             tauIDSources =_tauIDSourcesWithAgainistElePhase2v1.clone()
+
+        if "MVADM_2017_v1" in self.toKeep:
+            from RecoTauTag.RecoTau.patTauDiscriminationMVADM_cfi import patTauDiscriminationMVADM
+            _mvaDM2017v1ProducerName = "patDiscriminationMVADM2017v1"+self.postfix
+            setattr(self.process,_mvaDM2017v1ProducerName,patTauDiscriminationMVADM.clone(
+                PATTauProducer = self.originalTauName,
+                Prediscriminants = noPrediscriminants,
+            ))
+
+            tauIDSources.MVADM2017v1DMotherraw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DMother'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1DM0raw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DM0'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1DM1raw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DM1'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1DM2raw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DM2'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1DM10raw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DM10'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1DM11raw = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName,'DM11'),
+                workingPointIndex = cms.int32(-99))
+            tauIDSources.MVADM2017v1 = cms.PSet(
+                inputTag = cms.InputTag(_mvaDM2017v1ProducerName),
+                workingPointIndex = cms.int32(-99))
+
+            _patDiscriminationMVADM2017v1Task = cms.Task(
+                getattr(self.process,_mvaDM2017v1ProducerName)
+            )
+            _rerunMvaIsolationTask.add(_patDiscriminationMVADM2017v1Task)
+            _rerunMvaIsolationSequence += cms.Sequence(_patDiscriminationMVADM2017v1Task)
+
         ##
         if self.debug: print('Embedding new TauIDs into \"'+self.updatedTauName+'\"')
         if not hasattr(self.process, self.updatedTauName):

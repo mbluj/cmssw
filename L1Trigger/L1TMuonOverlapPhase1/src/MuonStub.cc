@@ -24,7 +24,8 @@ std::ostream &operator<<(std::ostream &out, const MuonStub &stub) {
       << stub.phiHw  //<<" ("<<std::setw(8)<<stub.phi<<")"
       << " phiBHw: " << std::setw(4) << stub.phiBHw << " etaHw: " << std::setw(4)
       << stub.etaHw  //<<" ("<<std::setw(8)<<stub.eta<<")"
-      << " etaSigmaHw: " << std::setw(3) << stub.etaSigmaHw << " qualityHw: " << std::setw(2) << stub.qualityHw << " "
+      << " etaSigmaHw: " << std::setw(3) << 0 //stub.etaSigmaHw TODO!!!!!!!!!!!!!!!!!!!!!! 0 is to get the same output as in the case of the previous version
+      << " qualityHw: " << std::setw(2) << stub.qualityHw << " "
       << " bx: " << std::setw(1) << stub.bx << " "
       << " timing: " << std::setw(2) << stub.timing << " "
       << " detId: " << std::setw(9) << stub.detId << " ";

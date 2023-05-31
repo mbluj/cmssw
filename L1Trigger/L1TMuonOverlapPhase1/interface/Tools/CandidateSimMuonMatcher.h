@@ -86,6 +86,8 @@ public:
   double genPhi = 0;
 
   const SimTrack* simTrack = nullptr;
+  const SimVertex* simVertex = nullptr;
+
   const TrackingParticle* trackingParticle = nullptr;
 };
 

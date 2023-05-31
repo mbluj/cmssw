@@ -37,7 +37,8 @@ EventCapture::EventCapture(const edm::ParameterSet& edmCfg,
     edm::LogImportant("OMTFReconstruction")
         << "EventCapture::EventCapture: no InputTag simTracksTag found" << std::endl;
 
-  if (this->candidateSimMuonMatcher)
+  //stubsSimHitsMatcher works only with the trackingParticle, because only them are stored in the pilup events
+  if (this->candidateSimMuonMatcher && edmCfg.exists("trackingParticleTag"))
     stubsSimHitsMatcher = std::make_unique<StubsSimHitsMatcher>(edmCfg, omtfConfig, muonGeometryTokens);
 }
 
@@ -96,13 +97,15 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
 
   if (candidateSimMuonMatcher) {
     std::vector<MatchingResult> matchingResults = candidateSimMuonMatcher->getMatchingResults();
-    edm::LogVerbatim("l1tOmtfEventPrint") << "matchingResults.size() " << matchingResults.size() << std::endl;
+    LogTrace("l1tOmtfEventPrint") << "matchingResults.size() " << matchingResults.size() << std::endl;
 
     //candidateSimMuonMatcher should use the  trackingParticles, because the simTracks are not stored for the pile-up events
     for (auto& matchingResult : matchingResults) {
       //TODO choose a condition, to print the desired candidates
-      if (matchingResult.muonCand && matchingResult.muonCand->hwQual() >= 12 &&
-          matchingResult.muonCand->hwPt() > 38) {  //&& matchingResult.genPt < 20
+      if (matchingResult.muonCand )
+          //&& matchingResult.muonCand->hwQual() >= 12 &&
+          //matchingResult.muonCand->hwPt() > 38)
+      {  //&& matchingResult.genPt < 20
         dump = true;
 
         bool runStubsSimHitsMatcher = false;
@@ -113,7 +116,15 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                << std::setw(9) << trackingParticle->pt()  //<<" Beta "<<simMuon->momentum().Beta()
                << " eta " << std::setw(9) << trackingParticle->momentum().eta() << " phi " << std::setw(9)
                << trackingParticle->momentum().phi() << std::endl;
-        } else {
+        }
+        else if (matchingResult.simTrack) {
+          runStubsSimHitsMatcher = true;
+          ostr << "SimMuon: eventId " << matchingResult.simTrack->eventId().event() << " pdgId " << std::setw(3) << matchingResult.simTrack->type()
+               << " pt " << std::setw(9) << matchingResult.simTrack->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
+               << " eta " << std::setw(9) << matchingResult.simTrack->momentum().eta() << " phi " << std::setw(9)
+               << matchingResult.simTrack->momentum().phi() << std::endl;
+        }
+        else {
           ostr << "no simMuon ";
           runStubsSimHitsMatcher = true;
         }
@@ -124,7 +135,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
              << " hwPhi " << finalCandidate->hwPhi() << "    eta " << std::setw(9)
              << (finalCandidate->hwEta() * 0.010875) << " phi " << std::endl;
 
-        if (runStubsSimHitsMatcher)
+        if (stubsSimHitsMatcher && runStubsSimHitsMatcher)
           stubsSimHitsMatcher->match(iEvent, matchingResult.muonCand, matchingResult.procMuon, ostr);
       }
     }
@@ -134,8 +145,8 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
     bool wasSimMuInOmtfNeg = false;
     for (auto& simMuon : simMuons) {
       //TODO choose a condition, to print the desired events
-      if (simMuon->eventId().event() == 0 && abs(simMuon->momentum().eta()) > 0.82 &&
-          abs(simMuon->momentum().eta()) < 1.24 && simMuon->momentum().pt() >= 3.) {
+      if (simMuon->eventId().event() == 0 && fabs(simMuon->momentum().eta()) > 0.82 &&
+          fabs(simMuon->momentum().eta()) < 1.24 && simMuon->momentum().pt() >= 3.) {
         ostr << "SimMuon: eventId " << simMuon->eventId().event() << " pdgId " << std::setw(3) << simMuon->type()
              << " pt " << std::setw(9) << simMuon->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
              << " eta " << std::setw(9) << simMuon->momentum().eta() << " phi " << std::setw(9)
@@ -208,7 +219,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
       std::bitset<18> layerHitBits(layerHits);
 
       edm::LogVerbatim("l1tOmtfEventPrint")
-          << " bx " << bx << " hwPt " << finalCandidate.hwPt() << " hwSign " << finalCandidate.hwSign() << " hwQual "
+          << " bx " << bx << " hwPt " << finalCandidate.hwPt()
+          << " hwUPt " << finalCandidate.hwPtUnconstrained()
+          << " hwSign " << finalCandidate.hwSign() << " hwQual "
           << finalCandidate.hwQual() << " hwEta " << std::setw(4) << finalCandidate.hwEta() << std::setw(4) << " hwPhi "
           << finalCandidate.hwPhi() << "    eta " << std::setw(9) << (finalCandidate.hwEta() * 0.010875) << " phi "
           << std::setw(9) << globalPhi << " " << layerHitBits << " processor "
@@ -263,7 +276,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
         if (algoMuon->isValid()) {
           edm::LogVerbatim("l1tOmtfEventPrint")
               << board.name() << " " << *algoMuon << " RefHitNum " << algoMuon->getRefHitNumber() << std::endl;
-          edm::LogVerbatim("l1tOmtfEventPrint") << algoMuon->getGpResult() << std::endl;
+          edm::LogVerbatim("l1tOmtfEventPrint") << algoMuon->getGpResult();
+          if(algoMuon->getGpResultUpt().isValid() )
+            edm::LogVerbatim("l1tOmtfEventPrint") <<"GpResultUpt "<< algoMuon->getGoldenPaternUpt()->key()<<"\n"<< algoMuon->getGpResultUpt()<< std::endl;
 
           if (goldenPatterns)  //watch out with the golden patterns
             for (auto& gp : *goldenPatterns) {

@@ -93,11 +93,13 @@ void CscDigiToStubsConverterOmtf::addCSCstubs(MuonStubPtrs2D& muonStubsInLayers,
   unsigned int iLayer = config->getHwToLogicLayer().at(hwNumber);
   unsigned int iInput = OMTFinputMaker::getInputNumber(config, rawid, iProcessor, procTyp);
 
+  float r = 0;
   MuonStub stub;
   stub.type = MuonStub::CSC_PHI_ETA;
   stub.phiHw = angleConverter->getProcessorPhi(
       OMTFinputMaker::getProcessorPhiZero(config, iProcessor), procTyp, CSCDetId(rawid), digi);
-  stub.etaHw = angleConverter->getGlobalEta(rawid, digi);
+  stub.etaHw = angleConverter->getGlobalEta(rawid, digi, r);
+  stub.etaSigmaHw = round(r);
   stub.phiBHw = digi.getPattern();  //TODO change to phiB when implemented
   stub.qualityHw = digi.getQuality();
 
@@ -166,7 +168,10 @@ void RpcDigiToStubsConverterOmtf::addRPCstub(MuonStubPtrs2D& muonStubsInLayers,
   stub.type = MuonStub::RPC;
   stub.phiHw = angleConverter->getProcessorPhi(
       OMTFinputMaker::getProcessorPhiZero(config, iProcessor), procTyp, roll, cluster.firstStrip, cluster.lastStrip);
-  stub.etaHw = angleConverter->getGlobalEtaRpc(rawid, cluster.firstStrip);
+
+  float r = 0;
+  stub.etaHw = angleConverter->getGlobalEtaRpc(rawid, cluster.firstStrip, r);
+  stub.etaSigmaHw = round(r);
 
   stub.qualityHw = cluster.size();
 

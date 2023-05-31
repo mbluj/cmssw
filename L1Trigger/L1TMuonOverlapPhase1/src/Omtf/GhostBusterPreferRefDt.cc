@@ -7,9 +7,13 @@
 
 namespace {
 
-  struct AlgoMuonEtaFix : public AlgoMuon {
-    AlgoMuonEtaFix(const AlgoMuon& mu) : AlgoMuon(mu), fixedEta(mu.getEtaHw()) {}
+  struct AlgoMuonEtaFix {
+    AlgoMuonEtaFix(const AlgoMuonPtr& mu) : mu(mu), fixedEta(mu->getEtaHw()) {}
+    const AlgoMuonPtr mu;
     unsigned int fixedEta;
+    const AlgoMuon* operator -> () {
+      return mu.get();
+    }
   };
 
 }  // namespace
@@ -84,8 +88,8 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
       return true;
   };
 
-  auto customLessByReLayer = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b) -> bool {
-    if (!a->isValid()) {
+  auto customByRefLayer = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b)->bool {
+    if(!a->isValid()) {
       return true;
     }
     if (!b->isValid()) {
@@ -98,10 +102,9 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
     if (aRefLayerLogicNum < bRefLayerLogicNum) {
       return false;
     }
-    //TODO maybe use getQ here?
     // if(a->getQ() > b->getQ())
     //   return false;
-    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() > b->getDisc())
+    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() > b->getDisc()) //TODO how about getPdfSumUpt ????
       return false;
     else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() == b->getDisc() &&
              a->getPatternNumber() > b->getPatternNumber())
@@ -117,46 +120,44 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
     std::sort(muonsIN.rbegin(), muonsIN.rend(), customLessByLLH);
   else if (omtfConfig->getGhostBusterType() == "byFPLLH")
     std::sort(muonsIN.rbegin(), muonsIN.rend(), customLessByFPLLH);
-  else if (omtfConfig->getGhostBusterType() == "byReLayer")
-    std::sort(muonsIN.rbegin(), muonsIN.rend(), customLessByReLayer);
+  else if (omtfConfig->getGhostBusterType() == "byRefLayer")
+    std::sort(muonsIN.rbegin(), muonsIN.rend(), customByRefLayer);
   else
     std::sort(muonsIN.rbegin(), muonsIN.rend(), customLess);
 
   // actual GhostBusting. Overwrite eta in case of no DT info.
   std::vector<AlgoMuonEtaFix> refHitCleanCandsFixedEta;
-  for (const auto& muIN : muonsIN) {
-    if (!muIN->isValid())
+
+  for (unsigned int iMu1 = 0; iMu1 < muonsIN.size(); iMu1++) {
+    auto& muIN1 = muonsIN[iMu1];
+    if (!muIN1->isValid() || muIN1->isKilled())
       continue;
 
-    //LogTrace("l1tOmtfEventPrint")<< "GhostBusting "<<*muIN<<" phiGMT "<<omtfConfig->procPhiToGmtPhi(muIN->getPhi())<< std::endl;
+    refHitCleanCandsFixedEta.push_back(muIN1);
+    for (unsigned int iMu2 = iMu1+1; iMu2 < muonsIN.size(); iMu2++) {
+      auto& muIN2 = muonsIN[iMu2];
+      if (muIN2->isValid() &&
+          std::abs(omtfConfig->procPhiToGmtPhi(muIN1->getPhi()) - omtfConfig->procPhiToGmtPhi(muIN2->getPhi())) < 8) {
+        //the candidates are sorted, so only the  muIN2 can be killed, as it is "worse" than the muIN1
+        muonsIN[iMu2]->kill();
+        muonsIN[iMu1]->getKilledMuons().emplace_back(muIN2);
 
-    refHitCleanCandsFixedEta.push_back(*muIN);  //FIXME to much copying here...
-    auto killIt = refHitCleanCandsFixedEta.end();
+        if ((omtfConfig->fwVersion() >= 6) &&
+            ((abs(muIN1->getEtaHw()) == 75 || abs(muIN1->getEtaHw()) == 79 || abs(muIN1->getEtaHw()) == 92)) &&
+            ((abs(muIN2->getEtaHw()) != 75 && abs(muIN2->getEtaHw()) != 79 && abs(muIN2->getEtaHw()) != 92))) {
 
-    //do not accept candidates with similar phi (any charge combination)
-    //veto window 5 degree in GMT scale is 5/360*576=8 units
-    for (auto it1 = refHitCleanCandsFixedEta.begin(); it1 != refHitCleanCandsFixedEta.end(); ++it1) {
-      for (auto it2 = std::next(it1); it2 != refHitCleanCandsFixedEta.end(); ++it2) {
-        if (it2->isValid() &&
-            std::abs(omtfConfig->procPhiToGmtPhi(it1->getPhi()) - omtfConfig->procPhiToGmtPhi(it2->getPhi())) < 8) {
-          killIt = it2;
-          if ((omtfConfig->fwVersion() >= 6) &&
-              ((abs(it1->getEtaHw()) == 75 || abs(it1->getEtaHw()) == 79 || abs(it1->getEtaHw()) == 92)) &&
-              ((abs(it2->getEtaHw()) != 75 && abs(it2->getEtaHw()) != 79 && abs(it2->getEtaHw()) != 92)))
-            it1->fixedEta = it2->getEtaHw();
+          refHitCleanCandsFixedEta.back().fixedEta = muIN2->getEtaHw();
+
         }
       }
     }
-    if (killIt != refHitCleanCandsFixedEta.end())
-      refHitCleanCandsFixedEta.erase(killIt);
   }
 
   // fill outgoing collection
   AlgoMuons refHitCleanCands;
   for (const auto& mu : refHitCleanCandsFixedEta) {
-    AlgoMuon fixed = mu;
-    fixed.setEta(mu.fixedEta);
-    refHitCleanCands.emplace_back(new AlgoMuon(fixed));
+    refHitCleanCands.emplace_back(new AlgoMuon( *(mu.mu) ));
+    refHitCleanCands.back()->setEta(mu.fixedEta);
     if (refHitCleanCands.size() >= 3)
       break;
   }

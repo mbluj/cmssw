@@ -60,6 +60,8 @@ void DataROOTDumper2::initializeTTree(std::string rootFileName) {
   rootTree->Branch("muonPt", &omtfEvent.muonPt);
   rootTree->Branch("muonEta", &omtfEvent.muonEta);
   rootTree->Branch("muonPhi", &omtfEvent.muonPhi);
+  rootTree->Branch("muonPropEta", &omtfEvent.muonPropEta);
+  rootTree->Branch("muonPropPhi", &omtfEvent.muonPropPhi);
   rootTree->Branch("muonCharge", &omtfEvent.muonCharge);
 
   rootTree->Branch("muonDxy", &omtfEvent.muonDxy);
@@ -83,6 +85,9 @@ void DataROOTDumper2::initializeTTree(std::string rootFileName) {
   rootTree->Branch("killed", &omtfEvent.killed);
   
   rootTree->Branch("hits", &omtfEvent.hits);
+
+  rootTree->Branch("deltaEta", &omtfEvent.deltaEta);
+  rootTree->Branch("deltaPhi", &omtfEvent.deltaPhi);
 
   ptGenPos = fs->make<TH1I>("ptGenPos", "ptGenPos, eta at vertex 0.8 - 1.24", 400, 0, 200); //TODO
   ptGenNeg = fs->make<TH1I>("ptGenNeg", "ptGenNeg, eta at vertex 0.8 - 1.24", 400, 0, 200);
@@ -144,14 +149,18 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       omtfEvent.muonPt = trackingParticle->pt();
       omtfEvent.muonEta = trackingParticle->momentum().eta();
-
       omtfEvent.muonPhi = trackingParticle->momentum().phi();
+      omtfEvent.muonPropEta = matchingResult.propagatedEta;
+      omtfEvent.muonPropPhi = matchingResult.propagatedPhi;
       omtfEvent.muonCharge = (abs(trackingParticle->pdgId()) == 13) ? trackingParticle->pdgId() / -13 : 0;;  //TODO
 
-      //omtfEvent.muonDxy = TODO
-      if(trackingParticle->parentVertex().isNonnull())
+      if(trackingParticle->parentVertex().isNonnull()) {
+        omtfEvent.muonDxy = trackingParticle->dxy();
         omtfEvent.muonRho = trackingParticle->parentVertex()->position().Rho();
+      }
 
+      omtfEvent.deltaEta = matchingResult.deltaEta;
+      omtfEvent.deltaPhi = matchingResult.deltaPhi;
 
       LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId " << trackingParticle->eventId().event() << " pdgId " << std::setw(3)
                  << trackingParticle->pdgId() << " trackId " << trackingParticle->g4Tracks().at(0).trackId() << " pt "
@@ -173,13 +182,19 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       omtfEvent.muonPt = simTrack->momentum().pt();
       omtfEvent.muonEta = simTrack->momentum().eta();
-
       omtfEvent.muonPhi = simTrack->momentum().phi();
-      omtfEvent.muonCharge = (abs(simTrack->type()) == 13) ? simTrack->type() / -13 : 0;;  //TODO
+      omtfEvent.muonPropEta = matchingResult.propagatedEta;
+      omtfEvent.muonPropPhi = matchingResult.propagatedPhi;
+      omtfEvent.muonCharge = simTrack->charge();
 
-      //omtfEvent.muonDxy = TODO
-      //if(trackingParticle->parentVertex().isNonnull()) //TODO!!!!!!!!!!!!!!!!!!
-      //  omtfEvent.muonRho = trackingParticle->parentVertex()->position().Rho();
+      if (!simTrack->noVertex() && matchingResult.simVertex) {
+	const math::XYZTLorentzVectorD& vtxPos = matchingResult.simVertex->position();
+	omtfEvent.muonDxy = (-vtxPos.X() * simTrack->momentum().py() + vtxPos.Y() * simTrack->momentum().px()) / simTrack->momentum().pt();
+	omtfEvent.muonRho = vtxPos.Rho();
+      }
+
+      omtfEvent.deltaEta = matchingResult.deltaEta;
+      omtfEvent.deltaPhi = matchingResult.deltaPhi;
 
       LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId " << simTrack->eventId().event() << " pdgId " << std::setw(3)
                  << simTrack->type() //<< " trackId " << simTrack->g4Tracks().at(0).trackId()
@@ -198,9 +213,13 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       omtfEvent.muonEvent = -1;
 
       omtfEvent.muonPt = 0;
-      omtfEvent.muonEta = 0;
 
+      omtfEvent.muonEta = 0;
       omtfEvent.muonPhi = 0;
+
+      omtfEvent.muonPropEta = 0;
+      omtfEvent.muonPropPhi = 0;
+
       omtfEvent.muonCharge = 0;  //TODO
 
       omtfEvent.muonDxy = 0;

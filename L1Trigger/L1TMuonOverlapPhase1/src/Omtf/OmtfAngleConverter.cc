@@ -22,6 +22,10 @@
 #include "DataFormats/L1DTTrackFinder/interface/L1MuDTChambThContainer.h"
 #include "DataFormats/RPCDigi/interface/RPCDigi.h"
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
+#include <math.h>
+
 namespace {
   template <typename T>
   int sgn(T val) {
@@ -150,6 +154,25 @@ int OmtfAngleConverter::getGlobalEta(const DTChamberId dTChamberId,
   //const DTChamberId dTChamberId(aDigi.whNum(),aDigi.stNum(),aDigi.scNum()+1);
   DTTrigGeom trig_geom(_geodt->chamber(dTChamberId), false);
 
+  /* debug printout to check the geometry of the chambers
+  Local2DPoint chamberMiddleLP(0, 0);
+  GlobalPoint chamberMiddleGP = _geodt->chamber(dTChamberId)->toGlobal(chamberMiddleLP);
+  float phin = (dTChamberId.sector()-1)*Geom::pi()/6;
+  float phiRF = _geodt->chamber(dTChamberId)->position().phi();
+  float deltaPhi = phiRF - phin;
+
+  LogTrace("l1tOmtfEventPrint")<<"OmtfAngleConverter::getGlobalEta "<<dTChamberId
+    <<" perp "<<chamberMiddleGP.perp()
+    //<<" chamber()->position().perp() "<<_geodt->chamber(dTChamberId)->position().perp()
+    <<" x "<<_geodt->chamber(dTChamberId)->position().x()
+    <<" y "<<_geodt->chamber(dTChamberId)->position().y()
+    <<" z "<<_geodt->chamber(dTChamberId)->position().z()
+    <<" - phiRF "<<phiRF << " rad "<< phiRF * 180. / M_PI<<" deg "
+    <<" - phin "<<phin<< " rad "<< phin * 180. / M_PI<<" deg "
+    <<" - deltaPhi "<<deltaPhi<<" r "<<chamberMiddleGP.perp() * cos(deltaPhi);
+    //<<" distSL "<<trig_geom.distSL();
+  */
+
   // super layer one is the theta superlayer in a DT chamber
   // station 4 does not have a theta super layer
   // the BTI index from the theta trigger is an OR of some BTI outputs
@@ -192,7 +215,7 @@ int OmtfAngleConverter::getGlobalEta(const DTChamberId dTChamberId,
 
 ///////////////////////////////////////
 ///////////////////////////////////////
-int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTDigi &aDigi) const {
+int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTDigi &aDigi, float& r) const {
   ///Code taken from GeometryTranslator.
   ///Will be replaced by direct CSC phi local to global scale
   ///transformation as used in FPGA implementation
@@ -241,6 +264,9 @@ int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTD
   const GlobalPoint final_gp(
       GlobalPoint::Polar(coarse_gp.theta(), (coarse_gp.phi().value() + phi_offset), coarse_gp.mag()));
 
+  r = final_gp.perp();
+
+
   //  LogTrace("l1tOmtfEventPrint")<<id<<" st: " << id.station()<< "ri: "<<id.ring()<<" eta: " <<  final_gp.eta()
   //           <<" etaCode_simple: " <<  etaVal2Code( final_gp.eta() )<< " KW: "<<keyWG <<" etaKeyWG2Code: "<<etaKeyWG2Code(id,keyWG)<< std::endl;
   //  int station = (id.endcap()==1) ? id.station() : -id.station();
@@ -250,11 +276,32 @@ int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTD
 }
 ///////////////////////////////////////
 ///////////////////////////////////////
-int OmtfAngleConverter::getGlobalEtaRpc(unsigned int rawid, const unsigned int &strip) const {
+int OmtfAngleConverter::getGlobalEtaRpc(unsigned int rawid, const unsigned int &strip, float& r) const {
   const RPCDetId id(rawid);
   auto roll = _georpc->roll(id);
   const LocalPoint lp = roll->centreOfStrip((int)strip);
   const GlobalPoint gp = roll->toGlobal(lp);
+
+  if(id.region() == 0) { //barrel
+    /* //debug printout to check the geometry of the chambers
+    float phin = (id.sector()-1)*Geom::pi()/6;
+    float phiHit = gp.phi();
+    float deltaPhi = phiHit - phin;
+
+    LogTrace("l1tOmtfEventPrint")<<"OmtfAngleConverter::getGlobalEtaRpc "<<id
+        <<" perp "<<gp.perp()
+        //<<" chamber()->position().perp() "<<_geodt->chamber(dTChamberId)->position().perp()
+        <<" x "<<gp.x()
+        <<" y "<<gp.y()
+        <<" z "<<gp.z()
+        <<" - phiRF "<<phiHit << " rad "<< phiHit * 180. / M_PI<<" deg "
+        <<" - phin "<<phin<< " rad "<< phin * 180. / M_PI<<" deg "
+        <<" - deltaPhi "<<deltaPhi<<" r "<<gp.perp() * cos(deltaPhi);
+        */
+  }
+  else {
+    r = gp.perp();
+  }
 
   return etaVal2Code(gp.eta());
 }

@@ -169,7 +169,7 @@ int AngleConverterBase::getProcessorPhi(
   double stripPhi2 = (roll->toGlobal(roll->centreOfStrip((int)digi2))).phi();  // note [-pi,pi]
 
   // the case when the two strips are on different sides of phi = pi
-  if (std::signbit(stripPhi1) != std::signbit(stripPhi2) && abs(stripPhi1) > M_PI / 2.) {
+  if (std::signbit(stripPhi1) != std::signbit(stripPhi2) && fabs(stripPhi1) > M_PI / 2.) {
     if (std::signbit(stripPhi1)) {  //stripPhi1 is negative
       stripPhi1 += 2 * M_PI;
     } else  //stripPhi2 is negative
@@ -410,7 +410,7 @@ EtaValue AngleConverterBase::getGlobalEta(unsigned int rawid, const unsigned int
   const GlobalPoint gpNeigh = rollNeigh->toGlobal(lpNeigh);
 
   EtaValue etaValue = {config->etaToHwEta(gp.eta()),
-                       config->etaToHwEta(abs(gp.eta() - gpNeigh.eta())) /
+                       config->etaToHwEta(fabs(gp.eta() - gpNeigh.eta())) /
                            2,  //half of the size of the strip in eta - not precise, but OK
                        0};
 

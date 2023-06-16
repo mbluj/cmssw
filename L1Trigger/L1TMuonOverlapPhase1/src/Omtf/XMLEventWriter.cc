@@ -12,14 +12,46 @@
 #include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/OMTFinput.h"
 #include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/XMLEventWriter.h"
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
+#include <boost/property_tree/xml_parser.hpp>
+
+#include <bitset>
+
 XMLEventWriter::XMLEventWriter(const OMTFConfiguration* aOMTFConfig, std::string fName)
-    : omtfConfig(aOMTFConfig), xmlWriter(aOMTFConfig), currentElement(nullptr), fName(fName) {
+    : omtfConfig(aOMTFConfig), fName(fName) {
   //std::string fName = "OMTF";
-  xmlWriter.initialiseXMLDocument("OMTF");
   eventNum = 0;
+
+  unsigned int version = aOMTFConfig->patternsVersion();
+  unsigned int mask16bits = 0xFFFF;
+
+  version &= mask16bits;
+
+  std::ostringstream stringStr;
+  stringStr.str("");
+  stringStr << "0x" << std::hex << std::setfill('0') << std::setw(4) << version;
+
+  tree.put("OMTF.<xmlattr>.version", stringStr.str());
 };
 
 XMLEventWriter::~XMLEventWriter() {}
+
+void XMLEventWriter::observeProcesorBegin(unsigned int iProcessor, l1t::tftype mtfType) {
+  if (eventNum > 5000)
+    return;
+
+  procTree.clear();
+
+  int endcap = (mtfType == l1t::omtf_neg) ? -1 : ((mtfType == l1t::omtf_pos) ? +1 : 0);
+  OmtfName board(iProcessor, endcap);
+  procTree.add("<xmlattr>.board", board.name());
+  procTree.add("<xmlattr>.iProcessor", iProcessor);
+
+  std::ostringstream stringStr;
+  stringStr << (board.position() == 1 ? "+" : "")<< board.position();
+  procTree.add("<xmlattr>.position", stringStr.str());
+}
 
 void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
                                               l1t::tftype mtfType,
@@ -36,24 +68,109 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
   if (candMuons.empty())
     return;
 
-  //if(currentElement == nullptr)
-  //  currentElement = xmlWriter.writeEventHeader(eventId);
+  for (unsigned int iLayer = 0; iLayer < omtfConfig->nLayers(); ++iLayer) {
+    boost::property_tree::ptree layerTree;
 
-  xercesc::DOMElement* aProcElement = xmlWriter.writeEventData(currentElement, board, *(input.get()));
+    for (unsigned int iHit = 0; iHit < input->getMuonStubs()[iLayer].size(); ++iHit) {
+      int hitPhi = input->getPhiHw(iLayer, iHit);
+      if (hitPhi >= (int)omtfConfig->nPhiBins())
+        continue;
+
+      auto& hitTree = layerTree.add("Hit", "");
+
+      hitTree.add("<xmlattr>.iInput", iHit);
+      hitTree.add("<xmlattr>.iEta", OMTFConfiguration::eta2Bits(abs(input->getHitEta(iLayer, iHit))));
+      hitTree.add("<xmlattr>.iPhi", hitPhi);
+      hitTree.add("<xmlattr>.iQual", input->getHitQual(iLayer, iHit));
+
+    }
+
+    if(layerTree.size()) {
+      layerTree.add("<xmlattr>.iLayer", iLayer);
+      procTree.add_child("Layer", layerTree);
+    }
+  }
 
   for (auto& algoCand : algoCandidates) {
     ///Dump only regions, where a candidate was found
     if (algoCand->isValid()) {
-      xmlWriter.writeAlgoMuon(aProcElement, *algoCand);
-      /*if(dumpDetailedResultToXML){
-        for(auto & itKey: results[iRefHit])
-          xmlWriter.writeResultsData(aProcElement, iRefHit, itKey.first,itKey.second);
-      }*/
+      auto& algoMuonTree = procTree.add("AlgoMuon", "");
+      algoMuonTree.add("<xmlattr>.charge", algoCand->getCharge());
+      algoMuonTree.add("<xmlattr>.disc", algoCand->getDisc());
+      algoMuonTree.add("<xmlattr>.pdfSum", algoCand->getGpResult().getPdfSum());
+      algoMuonTree.add("<xmlattr>.pdfSumUpt", algoCand->getGpResultUpt().getPdfSumUpt());
+      algoMuonTree.add("<xmlattr>.etaCode", OMTFConfiguration::eta2Bits(abs(algoCand->getEtaHw())));
+      algoMuonTree.add("<xmlattr>.iRefHit", algoCand->getRefHitNumber());
+      algoMuonTree.add("<xmlattr>.iRefLayer", algoCand->getRefLayer());
+      algoMuonTree.add("<xmlattr>.layers", std::bitset<18>(algoCand->getFiredLayerBits()));
+      algoMuonTree.add("<xmlattr>.nHits", algoCand->getQ());
+      algoMuonTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumber());
+      algoMuonTree.add("<xmlattr>.phiCode", algoCand->getPhi());
+      algoMuonTree.add("<xmlattr>.phiRHit", algoCand->getPhiRHit());
+      algoMuonTree.add("<xmlattr>.ptCode", algoCand->getPt());
+
+      auto& gpResultTree = algoMuonTree.add("gpResult", "");
+      auto& gpResult = algoCand->getGpResult();
+
+      gpResultTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumber());
+      gpResultTree.add("<xmlattr>.pdfSum", gpResult.getPdfSum());
+
+      for (unsigned int iLogicLayer = 0; iLogicLayer < gpResult.getStubResults().size(); ++iLogicLayer) {
+        auto& layerTree = gpResultTree.add("layer", "");
+        layerTree.add("<xmlattr>.num", iLogicLayer);
+        auto pdfBin = gpResult.getStubResults()[iLogicLayer].getPdfBin();
+        if(pdfBin == 5400)
+          pdfBin = 0;
+        layerTree.add("<xmlattr>.pdfBin", pdfBin);
+        layerTree.add("<xmlattr>.pdfVal", gpResult.getStubResults()[iLogicLayer].getPdfVal());
+        layerTree.add("<xmlattr>.fired", gpResult.isLayerFired(iLogicLayer));
+      }
+
+      if(algoCand->getGpResultUpt().isValid() ) {
+        auto& gpResultTree = algoMuonTree.add("gpResultUpt", "");
+        auto& gpResult = algoCand->getGpResultUpt();
+
+        gpResultTree.add("<xmlattr>.patNum", algoCand->getGoldenPaternUpt()->key().getHwPatternNumber());
+        gpResultTree.add("<xmlattr>.pdfSum", gpResult.getPdfSumUpt());
+
+        for (unsigned int iLogicLayer = 0; iLogicLayer < gpResult.getStubResults().size(); ++iLogicLayer) {
+          auto& layerTree = gpResultTree.add("layer", "");
+          layerTree.add("<xmlattr>.num", iLogicLayer);
+          auto pdfBin = gpResult.getStubResults()[iLogicLayer].getPdfBin();
+          if(pdfBin == 5400)
+            pdfBin = 0;
+          layerTree.add("<xmlattr>.pdfBin", pdfBin);
+          layerTree.add("<xmlattr>.pdfVal", gpResult.getStubResults()[iLogicLayer].getPdfVal());
+          layerTree.add("<xmlattr>.fired", gpResult.isLayerFired(iLogicLayer));
+        }
+      }
     }
   }
 
-  for (auto& candMuon : candMuons)
-    xmlWriter.writeCandMuon(aProcElement, candMuon);
+  for (auto& candMuon : candMuons) {
+    auto& candMuonTree = procTree.add("CandMuon", "");
+    candMuonTree.add("<xmlattr>.hwEta", candMuon.hwEta());
+    candMuonTree.add("<xmlattr>.hwPhi", candMuon.hwPhi());
+    candMuonTree.add("<xmlattr>.hwPt", candMuon.hwPt());
+    candMuonTree.add("<xmlattr>.hwQual", candMuon.hwQual());
+    candMuonTree.add("<xmlattr>.hwSign", candMuon.hwSign());
+    candMuonTree.add("<xmlattr>.hwSignValid", candMuon.hwSignValid());
+    candMuonTree.add("<xmlattr>.hwTrackAddress", std::bitset<29>(candMuon.trackAddress().at(0)));
+    candMuonTree.add("<xmlattr>.link", candMuon.link());
+    candMuonTree.add("<xmlattr>.processor", candMuon.processor());
+
+    std::ostringstream stringStr;
+    if (candMuon.trackFinderType() == l1t::omtf_neg)
+      stringStr << "OMTF_NEG";
+    else if (candMuon.trackFinderType() == l1t::omtf_pos)
+      stringStr << "OMTF_POS";
+    else
+      stringStr << candMuon.trackFinderType();
+    candMuonTree.add("<xmlattr>.trackFinderType", stringStr.str());
+  }
+
+  if(procTree.size())
+    eventTree->add_child("Processor", procTree);
 }
 
 void XMLEventWriter::observeEventBegin(const edm::Event& iEvent) {
@@ -63,12 +180,20 @@ void XMLEventWriter::observeEventBegin(const edm::Event& iEvent) {
     return;
   //currentElement = xmlWriter.writeEventHeader(iEvent.id().event());
   eventId = iEvent.id().event();
-  currentElement = xmlWriter.writeEventHeader(eventId);
+
+  eventTree = &(tree.add("OMTF.Event", ""));
+  eventTree->add("<xmlattr>.iEvent", eventId);
+
+  eventTree = &(eventTree->add("bx", ""));
+  eventTree->add("<xmlattr>.iBx", 2*eventId);
 }
 
 void XMLEventWriter::observeEventEnd(const edm::Event& iEvent,
                                      std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) {
-  currentElement = nullptr;
 }
 
-void XMLEventWriter::endJob() { xmlWriter.finaliseXMLDocument(fName); }
+void XMLEventWriter::endJob() {
+  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the date to the xml - starting";
+  boost::property_tree::write_xml(fName, tree, std::locale(), boost::property_tree::xml_parser::xml_writer_make_settings<std::string>(' ', 2));
+  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the date to the xml - done";
+}

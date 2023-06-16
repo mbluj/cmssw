@@ -27,6 +27,7 @@ public:
   ///Method used in DiMuon studies.
   void mergeData(const OMTFinput *aInput);
 
+  //TODOO make it: if the layer is bending layer, the phiB from the iLayer -1 is returned, change in all places it is used
   const MuonStubPtr getMuonStub(unsigned int iLayer, unsigned int iInput) const {
     return muonStubsInLayers.at(iLayer).at(iInput);
   }
@@ -36,6 +37,9 @@ public:
 
   //if the layer is bending layer, the eta from the iLayer -1 is returned
   const int getHitEta(unsigned int iLayer, unsigned int iInput) const;
+
+  //if the layer is bending layer, the eta from the iLayer -1 is returned
+  const int getHitQual(unsigned int iLayer, unsigned int iInput) const;
 
   std::bitset<128> getRefHits(unsigned int iProcessor) const;
 

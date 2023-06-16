@@ -158,7 +158,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
                 auto strip = roll->strip(simHit.localPosition());
                 double simHitStripGlobalPhi = (roll->toGlobal(roll->centreOfStrip((int)strip))).phi();
 
-                if (abs(stubGlobalPhi - simHitStripGlobalPhi) < 0.02) {
+                if (fabs(stubGlobalPhi - simHitStripGlobalPhi) < 0.02) {
                   matchedTrackInfos.insert(MatchedTrackInfo(simHit.eventId().event(), simHit.trackId()));
                 }
 
@@ -185,7 +185,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
                 auto strip = rpcDigiSimLink.getStrip();
                 double simHitStripGlobalPhi = (roll->toGlobal(roll->centreOfStrip((int)strip))).phi();
 
-                if (abs(stubGlobalPhi - simHitStripGlobalPhi) < 0.02) {
+                if (fabs(stubGlobalPhi - simHitStripGlobalPhi) < 0.02) {
                   auto matchedTrackInfo = matchedTrackInfos.insert(
                       MatchedTrackInfo(rpcDigiSimLink.getEventId().event(), rpcDigiSimLink.getTrackId()));
                   matchedTrackInfo.first->matchedDigiCnt.at(iLogicLayer)++;
@@ -250,7 +250,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
                   LocalPoint point(wireX, 0, 0);
                   auto digiWireGlobal = layer->toGlobal(point);
 
-                  if (abs(stubGlobalPhi - digiWireGlobal.phi()) < 0.03) {
+                  if (fabs(stubGlobalPhi - digiWireGlobal.phi()) < 0.03) {
                     auto matchedTrackInfo = matchedTrackInfos.insert(
                         MatchedTrackInfo(dtDigiSimLink->eventId().event(), dtDigiSimLink->SimTrackId()));
                     matchedTrackInfo.first->matchedDigiCnt.at(iLogicLayer)++;
@@ -316,7 +316,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
                   auto strip = cscDigiSimLink.channel();
                   auto digiStripGlobalPhi = layer->centerOfStrip(strip).phi();
 
-                  if (abs(stubGlobalPhi - digiStripGlobalPhi) < 0.03) {
+                  if (fabs(stubGlobalPhi - digiStripGlobalPhi) < 0.03) {
                     auto matchedTrackInfo = matchedTrackInfos.insert(
                         MatchedTrackInfo(cscDigiSimLink.eventId().event(), cscDigiSimLink.SimTrackId()));
                     matchedTrackInfo.first->matchedDigiCnt.at(iLogicLayer)++;

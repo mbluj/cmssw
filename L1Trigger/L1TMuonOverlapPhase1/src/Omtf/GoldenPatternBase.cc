@@ -45,7 +45,8 @@ void GoldenPatternBase::setConfig(const OMTFConfiguration* omtfConfig) {
 StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
                                                      unsigned int iLayer,
                                                      MuonStubPtrs1D layerStubs,
-                                                     const MuonStubPtr refStub) {
+                                                     const std::vector<int>& extrapolatedPhi,
+                                                     const MuonStubPtr& refStub) {
   //if (this->getDistPhiBitShift(iLayer, iRefLayer) != 0) LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<":"<<__LINE__<<key()<<this->getDistPhiBitShift(iLayer, iRefLayer)<<std::endl;
 
   int phiMean = this->meanDistPhiValue(iLayer, iRefLayer, refStub->phiBHw);
@@ -63,7 +64,9 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
     phiRefHit = 0;  //phi ref hit for the bending layer set to 0, since it should not be included in the phiDist
   }
 
-  for (auto& stub : layerStubs) {
+
+  for (unsigned int iStub = 0; iStub < layerStubs.size(); iStub++) {
+    auto& stub = layerStubs[iStub];
     if (!stub)  //empty pointer
       continue;
 
@@ -76,7 +79,7 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
     if (hitPhi >= (int)myOmtfConfig->nPhiBins())  //TODO is this needed now? the empty hit will be empty stub
       continue;  //empty itHits are marked with nPhiBins() in OMTFProcessor::restrictInput
 
-    int phiDist = this->myOmtfConfig->foldPhi(hitPhi - phiMean - phiRefHit);
+    int phiDist = this->myOmtfConfig->foldPhi(hitPhi - extrapolatedPhi[iStub] - phiMean - phiRefHit);
     //for standard omtf foldPhi is not needed, but if one processor works for full phi then it is
     //if (this->getDistPhiBitShift(iLayer, iRefLayer) != 0)
     /*LogTrace("l1tOmtfEventPrint") <<"\n"<<__FUNCTION__<<":"<<__LINE__<<" "<<theKey<<std::endl;

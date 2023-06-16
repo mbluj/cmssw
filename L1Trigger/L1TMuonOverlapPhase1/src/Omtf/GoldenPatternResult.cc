@@ -78,6 +78,8 @@ void GoldenPatternResult::init(const OMTFConfiguration* omtfConfig) {
     finalise = [this]() { finalise8(); };
   else if (finalizeFunction == 9)
     finalise = [this]() { finalise9(); };
+  else if (finalizeFunction == 10)
+    finalise = [this]() { finalise10(); };
   else
     finalise = [this]() { finalise0(); };
 
@@ -94,6 +96,7 @@ void GoldenPatternResult::reset() {
   phi = 0;
   eta = 0;
   pdfSum = 0;
+  pdfSumUpt = 0;
   firedLayerCnt = 0;
   firedLayerBits = 0;
   refHitPhi = 0;
@@ -316,6 +319,57 @@ void GoldenPatternResult::finalise9() {
   //by default result becomes valid here, but can be overwritten later
 }
 
+void GoldenPatternResult::finalise10() {
+  for (unsigned int iLogicLayer = 0; iLogicLayer < stubResults.size(); ++iLogicLayer) {
+    unsigned int connectedLayer = omtfConfig->getLogicToLogic().at(iLogicLayer);
+
+    if (omtfConfig->isBendingLayer(iLogicLayer)) {  //the DT phiB layer is counted only when the phi layer is fired
+      if (firedLayerBits & (1 << iLogicLayer)) {
+        if (firedLayerBits & (1 << connectedLayer)) {
+          firedLayerCnt++;
+          pdfSum += stubResults[iLogicLayer].getPdfVal();
+        } else {
+          firedLayerBits &= ~(1 << iLogicLayer);
+          stubResults[iLogicLayer].setValid(false);
+          //if(stubResults[iLogicLayer].getPdfVal() == 0) pdfSum -= 64;; //there was hit, but it did not fire to the pdf - this is not possible here, since the banding layer if fired here
+          //so in this case simply:
+          //pdfSum += 0;
+        }
+      } else {
+        //bending layer fired, but not fits to the pdf, N.B works only with the patterns having "no hit value" and with noHitValueInPdf = True
+        /*if (stubResults[iLogicLayer].getPdfVal() == 0)
+          pdfSum -= 32; //has no sense with extrapolation from the ref layer using the phiB
+        else*/
+        pdfSum += stubResults[iLogicLayer].getPdfVal();  //bending layer not fired at all
+      }
+    } else {
+      if (iLogicLayer < 10 && stubResults[iLogicLayer].getPdfVal() == 0)
+        pdfSum -= 32;
+      else
+        pdfSum += stubResults[iLogicLayer].getPdfVal();
+      if (firedLayerBits & (1 << iLogicLayer)) {  //pdfSum is counted always
+        firedLayerCnt++;
+      }
+    }
+  }
+
+  if( (omtfConfig->getUsePhiBExtrapolationMB1() && refLayer == 0) ||
+      (omtfConfig->getUsePhiBExtrapolationMB2() && refLayer == 2)    ) {
+    auto refLayerLogicNumber = omtfConfig->getRefToLogicNumber()[refLayer];
+    //Unconstrained pt is obtained by not including the pdfValue from the phiB of the refHit
+    pdfSumUpt = pdfSum - stubResults[refLayerLogicNumber +1].getPdfVal(); //TODO get logic layer from connectedLayer
+
+    //hard cut - the phiB of the refHit must fit to the pdf
+    if(stubResults[refLayerLogicNumber +1].getPdfVal() == 0)
+      pdfSum = 0;
+  }
+  else
+    pdfSumUpt = 0;
+
+  valid = true;
+  //by default result becomes valid here, but can be overwritten later
+}
+
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& out, const GoldenPatternResult& gpResult) {
@@ -350,6 +404,9 @@ std::ostream& operator<<(std::ostream& out, const GoldenPatternResult& gpResult)
 
   out << " sumOverFiredLayers: ";
   out << sumOverFiredLayers << "\t";
+
+  out << " Sum over layers upt: ";
+  out << gpResult.getPdfSumUpt() << "\t";
 
   out << " Number of hits: ";
   out << gpResult.getFiredLayerCnt() << "\t";

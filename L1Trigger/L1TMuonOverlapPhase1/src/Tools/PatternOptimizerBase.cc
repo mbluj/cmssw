@@ -24,6 +24,7 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TStyle.h"
 #include <cstdlib>
 #include <iostream>
@@ -73,6 +74,9 @@ PatternOptimizerBase::PatternOptimizerBase(const edm::ParameterSet& edmCfg,
 
   simMuPtSpectrum = new TH1F("simMuPtSpectrum", "simMuPtSpectrum", 800, 0, 400);
 
+  simMuPtVsDispl = new TH2I("simMuPtVsDispl", "simMuPtVsDispl;pt [GeV];dxy [cm]", 100, 0, 400, 100, 0, 400);
+  simMuPtVsRho = new TH2I("simMuPtVsRho", "simMuPtVsRho;pt [GeV];rho [cm]", 100, 0, 400, 100, 0, 400);
+
   if (edmCfg.exists("simTracksTag") == false)
     edm::LogError("l1tOmtfEventPrint") << "simTracksTag not found !!!" << std::endl;
 }
@@ -105,6 +109,8 @@ void PatternOptimizerBase::observeEventEnd(const edm::Event& iEvent,
   double ptSim = simMuon->momentum().pt();
   int chargeSim = (abs(simMuon->type()) == 13) ? simMuon->type() / -13 : 0;
 
+  //double muDxy = (-1 * genMuon->vx() * genMuon->py() + genMuon->vy() * genMuon->px()) / genMuon->pt();;
+
   unsigned int exptPatNum = omtfConfig->getPatternNum(ptSim, chargeSim);
   GoldenPatternWithStat* exptCandGp = goldenPatterns.at(exptPatNum).get();  // expected pattern
   simMuFoundByOmtfPt->Fill(exptCandGp->key().theNumber);                    //TODO add weight of the muons pt spectrum
@@ -133,6 +139,8 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
   simMuFoundByOmtfPt->Write();
 
   simMuPtSpectrum->Write();
+  simMuPtVsDispl->Write();
+  simMuPtVsRho->Write();
 
   outfile.mkdir("patternsPdfs")->cd();
   outfile.mkdir("patternsPdfs/canvases");
@@ -196,15 +204,35 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
 
         /////////////////////// histLayerStat
         if (writeLayerStat) {
-          string histName = "histLayerStat_" + ostrName.str();
-          unsigned int binCnt = gp->getStatistics()[iLayer][iRefLayer].size();
-          TH1I* histLayerStat = new TH1I(histName.c_str(), histName.c_str(), binCnt, -0.5, binCnt - 0.5);
-          for (unsigned int iBin = 0; iBin < binCnt; iBin++) {
-            histLayerStat->Fill(iBin, gp->getStatistics()[iLayer][iRefLayer][iBin][0]);
-          }
+          bool saveTh2 = false;
+          if(gp->getStatistics()[iLayer][iRefLayer][0].size() > 1)
+            saveTh2 = true;
 
           outfile.cd("layerStats");
-          histLayerStat->Write();
+
+          string histName = "histLayerStat_" + ostrName.str();
+          unsigned int binCnt1 = gp->getStatistics()[iLayer][iRefLayer].size();
+          if(!saveTh2) {
+            TH1I* histLayerStat = new TH1I(histName.c_str(), histName.c_str(), binCnt1, -0.5, binCnt1 - 0.5);
+            for (unsigned int iBin = 0; iBin < binCnt1; iBin++) {
+              histLayerStat->Fill(iBin, gp->getStatistics()[iLayer][iRefLayer][iBin][0]);
+            }
+            histLayerStat->Write();
+          }
+          else {
+            if(iRefLayer == 0 || iRefLayer == 2) { //TODO!!!!!!!!!!!!!!!!!!!!!!!!
+              unsigned int binCnt2 = gp->getStatistics()[iLayer][iRefLayer][0].size();
+              //TH2I* histLayerStat = new TH2I(histName.c_str(), (histName  + ";ref phiB;delta_phi").c_str(), binCnt2, -0.5, binCnt2 - 0.5, binCnt1, -0.5, binCnt1 - 0.5);
+              TH2I* histLayerStat = new TH2I(histName.c_str(), (histName  + ";ref phiB;delta_phi").c_str(), binCnt2, -0.5 - binCnt2/2, binCnt2/2 - 0.5, binCnt1, -0.5 - binCnt1/2, binCnt1/2 - 0.5);
+              for (unsigned int iBin1 = 0; iBin1 < binCnt1; iBin1++) { //deltaPhi
+                for (unsigned int iBin2 = 0; iBin2 < binCnt2; iBin2++) {//phiB
+                  //histLayerStat->Fill(iBin2, iBin1, gp->getStatistics()[iLayer][iRefLayer][iBin1][iBin2]); //looks that using Fill leads to huge memory cosumption
+                  histLayerStat->SetBinContent(iBin2+1, iBin1+1, gp->getStatistics()[iLayer][iRefLayer][iBin1][iBin2]);
+                }
+              }
+              histLayerStat->Write();
+            }
+          }
         }
       }
     }

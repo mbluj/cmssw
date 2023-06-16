@@ -47,6 +47,22 @@ const int OMTFinput::getHitEta(unsigned int iLayer, unsigned int iInput) const {
   return myOmtfConfig->nPhiBins();
 }
 
+const int OMTFinput::getHitQual(unsigned int iLayer, unsigned int iInput) const {
+  /*  assert(iLayer < muonStubsInLayers.size());
+  assert(iInput < muonStubsInLayers[iLayer].size());*/
+  if (this->myOmtfConfig->isBendingLayer(iLayer)) {
+    MuonStubPtr stub = getMuonStub(iLayer - 1, iInput);
+    if (stub)
+      return stub->qualityHw;
+  }
+
+  MuonStubPtr stub = getMuonStub(iLayer, iInput);
+  if (stub)
+    return stub->qualityHw;
+
+  return myOmtfConfig->nPhiBins();
+}
+
 ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////
 std::bitset<128> OMTFinput::getRefHits(unsigned int iProcessor) const {
@@ -54,9 +70,13 @@ std::bitset<128> OMTFinput::getRefHits(unsigned int iProcessor) const {
 
   unsigned int iRefHit = 0;
   for (auto iRefHitDef : myOmtfConfig->getRefHitsDefs()[iProcessor]) {
-    int iPhi = getPhiHw(myOmtfConfig->getRefToLogicNumber()[iRefHitDef.iRefLayer], iRefHitDef.iInput);
+    auto refHitLogicLayer = myOmtfConfig->getRefToLogicNumber()[iRefHitDef.iRefLayer];
+
+    int iPhi = getPhiHw(refHitLogicLayer, iRefHitDef.iInput);
     if (iPhi < (int)myOmtfConfig->nPhiBins()) {
-      refHits.set(iRefHit, iRefHitDef.fitsRange(iPhi));
+      //TODO use a constant defined somewhere instead of 6
+      if(refHitLogicLayer >= 6 || getMuonStub(refHitLogicLayer, iRefHitDef.iInput)->qualityHw >= myOmtfConfig->getDtRefHitMinQuality())
+        refHits.set(iRefHit, iRefHitDef.fitsRange(iPhi));
     }
     iRefHit++;
   }

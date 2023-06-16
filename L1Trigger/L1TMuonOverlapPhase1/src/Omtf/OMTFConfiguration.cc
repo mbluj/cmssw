@@ -224,6 +224,31 @@ void OMTFConfiguration::configureFromEdmParameterSet(const edm::ParameterSet &ed
   }
 
   setFixCscGeometryOffset(true);  //for the OMTF by default is true, read from python if needed
+
+  if (edmParameterSet.exists("usePhiBExtrapolationFromMB1")) {
+    usePhiBExtrapolationFromMB1 = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB1");
+    edm::LogVerbatim("OMTFReconstruction")
+        << "usePhiBExtrapolationFromMB1: " << usePhiBExtrapolationFromMB1 << std::endl;
+  }
+
+  if (edmParameterSet.exists("usePhiBExtrapolationFromMB2")) {
+    usePhiBExtrapolationFromMB2 = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB2");
+    edm::LogVerbatim("OMTFReconstruction")
+        << "usePhiBExtrapolationFromMB2: " << usePhiBExtrapolationFromMB2 << std::endl;
+  }
+
+  if (edmParameterSet.exists("dtRefHitMinQuality")) {
+    dtRefHitMinQuality = edmParameterSet.getParameter<int>("dtRefHitMinQuality");
+    edm::LogVerbatim("OMTFReconstruction")
+        << "dtRefHitMinQuality: " << dtRefHitMinQuality << std::endl;
+  }
+
+  if (edmParameterSet.exists("dumpResultToXML")) {
+      if (edmParameterSet.getParameter<bool>("dumpResultToXML"))
+        dumpResultToXML = true;
+      else
+        dumpResultToXML = false;
+  }
 }
 
 ///////////////////////////////////////////////
@@ -322,6 +347,38 @@ uint32_t OMTFConfiguration::getLayerNumber(uint32_t rawId) const {
   int hwNumber = aLayer + 100 * detId.subdetId();
 
   return hwNumber;
+}
+
+unsigned int OMTFConfiguration::eta2Bits(unsigned int eta) {
+  if (eta == 73)
+    return 0b100000000;
+  else if (eta == 78)
+    return 0b010000000;
+  else if (eta == 85)
+    return 0b001000000;
+  else if (eta == 90)
+    return 0b000100000;
+  else if (eta == 94)
+    return 0b000010000;
+  else if (eta == 99)
+    return 0b000001000;
+  else if (eta == 103)
+    return 0b000000100;
+  else if (eta == 110)
+    return 0b000000010;
+  else if (eta == 75)
+    return 0b110000000;
+  else if (eta == 79)
+    return 0b011000000;
+  else if (eta == 92)
+    return 0b000110000;
+  else if (eta == 115)
+    return 0b000000001;
+  else if (eta == 121)
+    return 0b000000000;
+  else
+    return 0b111111111;
+  ;
 }
 
 ///////////////////////////////////////////////

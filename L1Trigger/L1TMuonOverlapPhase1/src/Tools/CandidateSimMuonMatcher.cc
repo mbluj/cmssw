@@ -636,7 +636,7 @@ std::vector<MatchingResult> CandidateSimMuonMatcher::match(std::vector<const l1t
         }
         int vtxInd = simTrack.vertIndex();
         if (vtxInd >= 0) {
-          //result.simVertex = &(simVertices->at(vtxInd)); //TODO ?????? something strange is here, was commented in the previous version
+          result.simVertex = &(simVertices->at(vtxInd)); //TODO ?????? something strange is here, was commented in the previous version
         }
         if (result.result == MatchingResult::ResultType::matched) {
           matchingResults.push_back(result);

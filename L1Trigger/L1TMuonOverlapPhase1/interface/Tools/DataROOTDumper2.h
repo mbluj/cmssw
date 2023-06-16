@@ -31,7 +31,7 @@ public:
 
   //muonPt = 0 means that no muon was matched to the candidate
   short muonEvent = -1;
-  float muonPt = 0, muonEta = 0, muonPhi = 0;
+  float muonPt = 0, muonEta = 0, muonPhi = 0, muonPropEta = 0, muonPropPhi = 0;
   char muonCharge = 0;
   float muonDxy = 0;
   float muonRho = 0;
@@ -51,6 +51,8 @@ public:
 
   bool killed = false;
 
+  float deltaPhi = 0, deltaEta = 0;
+  
   //float omtfPtCont = 0;
 
   struct Hit {

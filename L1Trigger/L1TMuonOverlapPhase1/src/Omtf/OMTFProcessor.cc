@@ -441,8 +441,6 @@ int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFP(const int& refLogicLay
 {
   int phiExtr = 0; //delta phi extrapolated
 
-  double hsPhiPitch = 2 * M_PI / omtfConfig->nPhiBins(); //rad/halfStrip
-
   int hsPhiPitchInt = 305; //hsPhiPitch * 512
 
   int reflLayerIndex = refLogicLayer == 0 ? 0 : 1;

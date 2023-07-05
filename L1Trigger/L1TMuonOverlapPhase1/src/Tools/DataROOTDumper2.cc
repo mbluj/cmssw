@@ -68,7 +68,7 @@ void DataROOTDumper2::initializeTTree(std::string rootFileName) {
   rootTree->Branch("muonRho", &omtfEvent.muonRho);
 
   rootTree->Branch("omtfPt", &omtfEvent.omtfPt);
-  rootTree->Branch("omtfUncPt", &omtfEvent.omtfUncPt);
+  rootTree->Branch("omtfUPt", &omtfEvent.omtfUPt);
   rootTree->Branch("omtfEta", &omtfEvent.omtfEta);
   rootTree->Branch("omtfPhi", &omtfEvent.omtfPhi);
   rootTree->Branch("omtfCharge", &omtfEvent.omtfCharge);
@@ -229,11 +229,11 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
 
     auto addOmtfCand = [&](AlgoMuonPtr& procMuon) {
-      omtfEvent.omtfPt = omtfConfig->hwPtToGev(procMuon->getPt());
-      omtfEvent.omtfUncPt = omtfConfig->hwPtToGev(procMuon->getPtUnconstrained());
+      omtfEvent.omtfPt = omtfConfig->hwPtToGev(procMuon->getPtConstr());
+      omtfEvent.omtfUPt = omtfConfig->hwPtToGev(procMuon->getPtUnconstr());
       omtfEvent.omtfEta = omtfConfig->hwEtaToEta(procMuon->getEtaHw());
       omtfEvent.omtfPhi = procMuon->getPhi();
-      omtfEvent.omtfCharge = procMuon->getCharge();
+      omtfEvent.omtfCharge = procMuon->getChargeConstr();
       omtfEvent.omtfScore = procMuon->getPdfSum();
 
       omtfEvent.omtfHwEta = procMuon->getEtaHw();
@@ -244,7 +244,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       omtfEvent.hits.clear();
 
-      auto& gpResult = procMuon->getGpResult();
+      auto& gpResult = procMuon->getGpResultConstr();
       /*
         edm::LogVerbatim("l1tOmtfEventPrint")<<"DataROOTDumper2:;observeEventEnd muonPt "<<event.muonPt<<" muonCharge "<<event.muonCharge
             <<" omtfPt "<<event.omtfPt<<" RefLayer "<<event.omtfRefLayer<<" omtfPtCont "<<event.omtfPtCont
@@ -305,7 +305,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
     };
 
-    if (matchingResult.muonCand && matchingResult.procMuon->getPt() >= 0 && matchingResult.muonCand->hwQual() >= 1) //TODO set the quality
+    if (matchingResult.muonCand && matchingResult.procMuon->getPtConstr() >= 0 && matchingResult.muonCand->hwQual() >= 1) //TODO set the quality
     {  //&& matchingResult.genPt < 20
 
       omtfEvent.omtfQuality = matchingResult.muonCand->hwQual();  //procMuon->getQ();
@@ -335,7 +335,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd no matching omtfCand" << std::endl;
 
       omtfEvent.omtfPt = 0;
-      omtfEvent.omtfUncPt = 0;
+      omtfEvent.omtfUPt = 0;
       omtfEvent.omtfEta = 0;
       omtfEvent.omtfPhi = 0;
       omtfEvent.omtfCharge = 0;

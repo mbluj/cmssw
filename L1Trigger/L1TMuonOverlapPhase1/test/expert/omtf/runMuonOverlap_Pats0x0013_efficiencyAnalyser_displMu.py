@@ -13,9 +13,9 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v2'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v6_test'
 
-runDebug = "INFO" # or "INFO" DEBUG
+runDebug = "DEBUG" # or "INFO" DEBUG
 useExtraploationAlgo = True;
 
 if verbose: 
@@ -188,6 +188,7 @@ process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi')
 
 if(runDebug == "DEBUG") :
     process.simOmtfDigis.dumpResultToXML = cms.bool(True)
+    process.simOmtfDigis.XMLDumpFileName = cms.string("TestEvents_" + version + ".xml")
 else :
     process.simOmtfDigis.dumpResultToXML = cms.bool(False)
 

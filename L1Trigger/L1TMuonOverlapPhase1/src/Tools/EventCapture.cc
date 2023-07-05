@@ -276,9 +276,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
         if (algoMuon->isValid()) {
           edm::LogVerbatim("l1tOmtfEventPrint")
               << board.name() << " " << *algoMuon << " RefHitNum " << algoMuon->getRefHitNumber() << std::endl;
-          edm::LogVerbatim("l1tOmtfEventPrint") << algoMuon->getGpResult();
-          if(algoMuon->getGpResultUpt().isValid() )
-            edm::LogVerbatim("l1tOmtfEventPrint") <<"GpResultUpt "<< algoMuon->getGoldenPaternUpt()->key()<<"\n"<< algoMuon->getGpResultUpt()<< std::endl;
+          edm::LogVerbatim("l1tOmtfEventPrint") << algoMuon->getGpResultConstr();
+          if(algoMuon->getGpResultUnconstr().isValid() )
+            edm::LogVerbatim("l1tOmtfEventPrint") <<"GpResultUnconstr "<< algoMuon->getGoldenPaternUnconstr()->key()<<"\n"<< algoMuon->getGpResultUnconstr()<< std::endl;
 
           if (goldenPatterns)  //watch out with the golden patterns
             for (auto& gp : *goldenPatterns) {
@@ -301,6 +301,80 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
       for (auto& gbCandidate : gbCandidatesInProcs[iProc])
         if (gbCandidate->isValid())
           edm::LogVerbatim("l1tOmtfEventPrint") << board.name() << " " << *gbCandidate << std::endl;
+
+
+      {
+          edm::LogVerbatim("l1tOmtfEventPrint")<< std::endl << std::endl <<"gb_test "<< board.name()<< std::endl;
+          for (auto& algoMuon : algoMuonsInProcs[iProc]) {
+            edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
+                           <<std::setw(5)<<algoMuon->getHwPatternNumConstr()<<","
+                           <<std::setw(5)<<algoMuon->getHwPatternNumUnconstr()<<","
+
+                           <<std::setw(5)<<algoMuon->getGpResultConstr().getFiredLayerCnt()<<","
+                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getFiredLayerCnt()<<","
+
+                           <<std::setw(5)<<algoMuon->getGpResultConstr().getFiredLayerBits()<<","
+                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getFiredLayerBits()<<","
+
+                           <<std::setw(5)<<algoMuon->getGpResultConstr().getPdfSum()<<","
+                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPdfSumUnconstr()<<","
+
+                           <<std::setw(5)<<algoMuon->getGpResultConstr().getPhi()<<","
+                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPhi()<<","
+
+                           <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<","
+                           <<"), "<< std::endl;
+          }
+          edm::LogVerbatim("l1tOmtfEventPrint")<<"\ngbCandidates"<<std::endl;
+          for (auto& gbCandidate : gbCandidatesInProcs[iProc])
+            edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
+            <<std::setw(5)<< gbCandidate->getPtConstr()<<","
+            <<std::setw(5)<< gbCandidate->getPtUnconstr()<<","
+
+            <<std::setw(5)<<gbCandidate->getGpResultConstr().getFiredLayerCnt()<<","
+            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getFiredLayerCnt()<<","
+
+            <<std::setw(5)<<gbCandidate->getGpResultConstr().getFiredLayerBits()<<","
+            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getFiredLayerBits()<<","
+
+            <<std::setw(5)<<gbCandidate->getGpResultConstr().getPdfSum()<<","
+            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPdfSumUnconstr()<<","
+
+            <<std::setw(5)<<gbCandidate->getGpResultConstr().getPhi()<<","
+            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPhi()<<","
+
+            <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<","
+            <<"), "<< std::endl;
+
+          edm::LogVerbatim("l1tOmtfEventPrint") << "finalCandidates " << std::endl;
+
+          if(finalCandidates->size(0) > 0) {
+            for (auto finalCandidateIt = finalCandidates->begin(0); finalCandidateIt != finalCandidates->end(0);
+                finalCandidateIt++) {
+              auto& finalCandidate = *finalCandidateIt;
+
+              auto omtfName = OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType());
+
+              if(omtfName == board.name()) {
+                int layerHits = (int)finalCandidate.trackAddress().at(0);
+                std::bitset<18> layerHitBits(layerHits);
+
+                edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
+                    <<std::setw(5)<< finalCandidate.hwPt()<<","
+                    <<std::setw(5)<< finalCandidate.hwPtUnconstrained()<<","
+                    <<std::setw(5)<< finalCandidate.hwSign()<<","
+                    <<std::setw(5)<< finalCandidate.hwQual()<<","
+                    //<<std::setw(9)<< layerHitBits<<","
+                    <<std::setw(5)<< layerHits<<","
+                    <<std::setw(5)<< finalCandidate.hwPhi()<<","
+                    <<std::setw(5)<< finalCandidate.hwEta()<<","
+                    <<"), "<<std::endl;
+              }
+            }
+          }
+
+
+      }
 
       edm::LogVerbatim("l1tOmtfEventPrint") << std::endl;
     }

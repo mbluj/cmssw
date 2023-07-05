@@ -131,7 +131,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
     std::set<MatchedTrackInfo> matchedTrackInfos;
     ostr << board.name() << " " << *procMuon << std::endl;
 
-    auto& gpResult = procMuon->getGpResult();
+    auto& gpResult = procMuon->getGpResultConstr();
     for (unsigned int iLogicLayer = 0; iLogicLayer < gpResult.getStubResults().size(); ++iLogicLayer) {
       auto& stub = gpResult.getStubResults()[iLogicLayer].getMuonStub();
       if (stub && gpResult.isLayerFired(iLogicLayer)) {
@@ -351,7 +351,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
     }
 
     ostr << board.name() << " " << *procMuon << std::endl;
-    ostr << procMuon->getGpResult() << std::endl << std::endl;
+    ostr << procMuon->getGpResultConstr() << std::endl << std::endl;
 
     int maxMatchedStubs = 0;
     const TrackingParticle* bestMatchedPart = nullptr;

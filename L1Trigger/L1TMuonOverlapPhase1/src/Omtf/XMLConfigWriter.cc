@@ -224,7 +224,7 @@ void XMLConfigWriter::writeAlgoMuon(xercesc::DOMElement* aTopElement, const Algo
   stringStr << aCand.getRefHitNumber();
   aResult->setAttribute(_toDOMS("iRefHit"), _toDOMS(stringStr.str()));
   stringStr.str("");
-  stringStr << aCand.getPt();
+  stringStr << aCand.getPtConstr();
   aResult->setAttribute(_toDOMS("ptCode"), _toDOMS(stringStr.str()));
   stringStr.str("");
   stringStr << aCand.getPhi();
@@ -233,7 +233,7 @@ void XMLConfigWriter::writeAlgoMuon(xercesc::DOMElement* aTopElement, const Algo
   stringStr << eta2Bits(abs(aCand.getEtaHw()));
   aResult->setAttribute(_toDOMS("etaCode"), _toDOMS(stringStr.str()));
   stringStr.str("");
-  stringStr << aCand.getCharge();
+  stringStr << aCand.getChargeConstr();
   aResult->setAttribute(_toDOMS("charge"), _toDOMS(stringStr.str()));
   stringStr.str("");
   stringStr << aCand.getQ();
@@ -251,7 +251,7 @@ void XMLConfigWriter::writeAlgoMuon(xercesc::DOMElement* aTopElement, const Algo
   stringStr << aCand.getPhiRHit();
   aResult->setAttribute(_toDOMS("phiRHit"), _toDOMS(stringStr.str()));
   stringStr.str("");
-  stringStr << aCand.getHwPatternNumber();
+  stringStr << aCand.getHwPatternNumConstr();
   aResult->setAttribute(_toDOMS("patNum"), _toDOMS(stringStr.str()));
 
   aTopElement->appendChild(aResult);

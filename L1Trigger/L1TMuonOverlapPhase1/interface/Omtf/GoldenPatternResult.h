@@ -28,7 +28,7 @@ private:
   ///Number of fired layers - excluding bending layers
   ///Sum of pdfValues without vertex constraint (unconstrained pt)
   //i.e. not counting the pdfValue of the phiB of the refLayer
-  double pdfSumUpt = 0;
+  double pdfSumUnconstr = 0;
 
   ///Number of fired layers
   unsigned int firedLayerCnt = 0;
@@ -84,7 +84,7 @@ public:
    */
   PdfValueType getPdfSum() const { return pdfSum; }
 
-  PdfValueType getPdfSumUpt() const { return pdfSumUpt; }
+  PdfValueType getPdfSumUnconstr() const { return pdfSumUnconstr; }
 
   const StubResults& getStubResults() const { return stubResults; }
 

@@ -28,7 +28,7 @@ void EmulationObserverBase::observeProcesorEmulation(unsigned int iProcessor,
   unsigned int i = 0;
   for (auto& gbCandidate : gbCandidates) {
     if (gbCandidate->getGoldenPatern() != nullptr &&
-        gbCandidate->getGpResult().getFiredLayerCnt() > omtfCand->getGpResult().getFiredLayerCnt()) {
+        gbCandidate->getGpResultConstr().getFiredLayerCnt() > omtfCand->getGpResultConstr().getFiredLayerCnt()) {
       //LogTrace("l1tOmtfEventPrint") <<__FUNCTION__<<":"<<__LINE__<<" gbCandidate "<<gbCandidate<<" "<<std::endl;
       omtfCand = gbCandidate;
 

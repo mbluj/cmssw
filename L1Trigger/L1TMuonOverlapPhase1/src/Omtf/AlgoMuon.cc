@@ -5,50 +5,12 @@
 #include <bitset>
 #include <iostream>
 
-bool AlgoMuon::isValid() const {
-  return getPt() > 0;  //should this realy be pt or quality ?? FIXME
-}
-
-bool AlgoMuon::operator<(const AlgoMuon &o) const {
-  if (this->getQ() > o.getQ())
-    return false;
-  else if (this->getQ() == o.getQ() && this->getDisc() > o.getDisc())
-    return false;
-  else if (getQ() == o.getQ() && getDisc() == o.getDisc() && getPatternNumber() > o.getPatternNumber())
-    return false;
-  else if (getQ() == o.getQ() && getDisc() == o.getDisc() && getPatternNumber() == o.getPatternNumber() &&
-           getRefHitNumber() < o.getRefHitNumber())
-    return false;
-  else
-    return true;
-}
-
-PdfValueType AlgoMuon::getDisc() const {
-  return (gpResultUpt.getPdfSumUpt() > gpResult.getPdfSum() ? gpResultUpt.getPdfSumUpt() : gpResult.getPdfSum() );
-}
-
-int AlgoMuon::getPhi() const {
-  return (gpResultUpt.getPdfSumUpt() > gpResult.getPdfSum() ? gpResultUpt.getPhi() : gpResult.getPhi() );
-}
-
-unsigned int AlgoMuon::getFiredLayerBits() const {
-  return (gpResultUpt.getPdfSumUpt() > gpResult.getPdfSum() ? gpResultUpt.getFiredLayerBits() : gpResult.getFiredLayerBits() );
-}
-
-int AlgoMuon::getQ() const {
-  //if the gpResultUpt was not set, the getFiredLayerCnt() is 0, so no other checks are needed here
-  if(gpResultUpt.getFiredLayerCnt() > gpResult.getFiredLayerCnt() )
-    return gpResultUpt.getFiredLayerCnt();
-
-  return gpResult.getFiredLayerCnt();
-}
-
 std::ostream &operator<<(std::ostream &out, const AlgoMuon &o) {
   out << "AlgoMuon: ";
-  out << " pt: " << o.getPt() << ", phi: " << o.getPhi() << ", eta: " << o.getEtaHw()
+  out << " pt: " << o.getPtConstr() << ", phi: " << o.getPhi() << ", eta: " << o.getEtaHw()
       << ", hits: " << std::bitset<18>(o.getFiredLayerBits()).to_string() << ", q: " << o.getQ()
-      << ", bx: " << o.getBx() << ", charge: " << o.getCharge() << ", disc: " << o.getDisc()
-      << " refLayer: " << o.getRefLayer() << " m_patNumb: " << o.getPatternNumber();
+      << ", bx: " << o.getBx() << ", charge: " << o.getChargeConstr() << ", disc: " << o.getDisc()
+      << " refLayer: " << o.getRefLayer() << " m_patNumb: " << o.getPatternNumConstr();
 
   return out;
 }

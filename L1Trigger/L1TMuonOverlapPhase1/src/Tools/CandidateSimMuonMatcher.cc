@@ -20,6 +20,8 @@
 
 #include "TrackingTools/TrajectoryParametrization/interface/GlobalTrajectoryParameters.h"
 
+#include "boost/dynamic_bitset.hpp"
+
 #include "TFile.h"
 #include "TH1D.h"
 
@@ -76,7 +78,7 @@ void CandidateSimMuonMatcher::observeProcesorEmulation(unsigned int iProcessor,
   //debug
   unsigned int procIndx = omtfConfig->getProcIndx(iProcessor, mtfType);
   for (auto& gbCandidate : gbCandidates) {
-    if (gbCandidate->getPt() > 0) {
+    if (gbCandidate->getPtConstr() > 0) {
       LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::observeProcesorEmulation procIndx" << procIndx<<" "<< *gbCandidate << std::endl;
       this->gbCandidates.emplace_back(gbCandidate);
     }

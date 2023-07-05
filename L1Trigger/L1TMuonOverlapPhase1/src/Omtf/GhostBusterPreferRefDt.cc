@@ -20,6 +20,7 @@ namespace {
 
 AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
   // sorting within GB.
+  //this function is only for the OMTF version without unconstrained pt
   auto customLess = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b) -> bool {
     if (!a->isValid()) {
       return true;
@@ -30,17 +31,17 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
 
     int aRefLayerLogicNum = omtfConfig->getRefToLogicNumber()[a->getRefLayer()];
     int bRefLayerLogicNum = omtfConfig->getRefToLogicNumber()[b->getRefLayer()];
-    if (a->getQ() > b->getQ())
+    if (a->getFiredLayerCntConstr() > b->getFiredLayerCntConstr())
       return false;
-    else if (a->getQ() == b->getQ() && aRefLayerLogicNum < bRefLayerLogicNum) {
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum < bRefLayerLogicNum) {
       return false;
-    } else if (a->getQ() == b->getQ() && aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() > b->getDisc())
+    } else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() > b->getPdfSumConstr())
       return false;
-    else if (a->getQ() == b->getQ() && aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() == b->getDisc() &&
-             a->getPatternNumber() > b->getPatternNumber())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() == b->getPdfSumConstr() &&
+             a->getPatternNumConstr() > b->getPatternNumConstr())
       return false;
-    else if (a->getQ() == b->getQ() && aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() == b->getDisc() &&
-             a->getPatternNumber() == b->getPatternNumber() && a->getRefHitNumber() < b->getRefHitNumber())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() == b->getPdfSumConstr() &&
+             a->getPatternNumConstr() == b->getPatternNumConstr() && a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
       return true;
@@ -54,15 +55,15 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
       return false;
     }
 
-    if (a->getQ() > b->getQ())
+    if (a->getFiredLayerCntConstr() > b->getFiredLayerCntConstr())
       return false;
-    else if (a->getQ() == b->getQ()) {
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr()) {
       return false;
-    } else if (a->getQ() == b->getQ() && a->getDisc() > b->getDisc())
+    } else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() > b->getPdfSumConstr())
       return false;
-    else if (a->getQ() == b->getQ() && a->getDisc() == b->getDisc() && a->getPatternNumber() > b->getPatternNumber())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() > b->getPatternNumConstr())
       return false;
-    else if (a->getQ() == b->getQ() && a->getDisc() == b->getDisc() && a->getPatternNumber() == b->getPatternNumber() &&
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
              a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
@@ -77,17 +78,18 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
       return false;
     }
 
-    if (a->getDisc() > b->getDisc())
+    if (a->getPdfSumConstr() > b->getPdfSumConstr())
       return false;
-    else if (a->getDisc() == b->getDisc() && a->getPatternNumber() > b->getPatternNumber())
+    else if (a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() > b->getPatternNumConstr())
       return false;
-    else if (a->getDisc() == b->getDisc() && a->getPatternNumber() == b->getPatternNumber() &&
+    else if (a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
              a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
       return true;
   };
 
+  //this function is for the OMTF version with unconstrained pt
   auto customByRefLayer = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b)->bool {
     if(!a->isValid()) {
       return true;
@@ -104,13 +106,13 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
     }
     // if(a->getQ() > b->getQ())
     //   return false;
-    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() > b->getDisc()) //TODO how about getPdfSumUpt ????
+    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSum() > b->getPdfSum())
       return false;
-    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() == b->getDisc() &&
-             a->getPatternNumber() > b->getPatternNumber())
+    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSum() == b->getPdfSum() &&
+             a->getPatternNum() > b->getPatternNum())
       return false;
-    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getDisc() == b->getDisc() &&
-             a->getPatternNumber() == b->getPatternNumber() && a->getRefHitNumber() < b->getRefHitNumber())
+    else if (aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSum() == b->getPdfSum() &&
+             a->getPatternNum() == b->getPatternNum() && a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
       return true;

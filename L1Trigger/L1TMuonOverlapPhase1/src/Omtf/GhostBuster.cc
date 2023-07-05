@@ -11,7 +11,24 @@ AlgoMuons GhostBuster::select(AlgoMuons refHitCands, int charge) {
   AlgoMuons refHitCleanCands;
   // Sort candidates with decreased goodness,
   auto customLess = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b) -> bool {
-    return (*a) < (*b);  //< operator of AlgoMuon
+    if (!a->isValid()) {
+      return true;
+    }
+    if (!b->isValid()) {
+      return false;
+    }
+
+    if (a->getQ() > b->getQ())
+      return false;
+    else if (a->getQ() == b->getQ() && a->getDisc() > b->getDisc())
+      return false;
+    else if (a->getQ() == b->getQ() && a->getDisc() == b->getDisc() && a->getPatternNumConstr() > b->getPatternNumConstr())
+      return false;
+    else if (a->getQ() == b->getQ() && a->getDisc() == b->getDisc() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
+        a->getRefHitNumber() < b->getRefHitNumber())
+      return false;
+    else
+      return true;
   };
 
   std::sort(refHitCands.rbegin(), refHitCands.rend(), customLess);

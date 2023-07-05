@@ -152,7 +152,7 @@ PtAssignmentNNRegression::~PtAssignmentNNRegression() {
 std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoMuon,
     std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   LogTrace("l1tOmtfEventPrint") <<" "<<__FUNCTION__<<":"<<__LINE__<<std::endl;
-  auto& gpResult = algoMuon->getGpResult();
+  auto& gpResult = algoMuon->getGpResultConstr();
   //int pdfMiddle = 1<<(omtfConfig->nPdfAddrBits()-1);
 
   LogTrace("l1tOmtfEventPrint") <<" "<<__FUNCTION__<<":"<<__LINE__<<std::endl;
@@ -239,9 +239,9 @@ std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoM
 
   //algoMuon->setPtNN(omtfConfig->ptGevToHw(nnResult.at(0)));
   auto calibratedHwPt = lutNetworkFP->getCalibratedHwPt();
-  algoMuon->setPtNN(calibratedHwPt);
+  algoMuon->setPtNNConstr(calibratedHwPt);
 
-  algoMuon->setChargeNN(nnResult[1] >= 0 ? 1 : -1);
+  algoMuon->setChargeNNConstr(nnResult[1] >= 0 ? 1 : -1);
 
 	//TODO add some if here, such that the property_tree is filled only when needed
   boost::property_tree::ptree procDataTree;
@@ -261,7 +261,7 @@ std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoM
 
   procDataTree.add("calibratedHwPt.<xmlattr>.val", calibratedHwPt);
 
-  procDataTree.add("hwSign.<xmlattr>.val", algoMuon->getChargeNN() < 0 ? 1 : 0);
+  procDataTree.add("hwSign.<xmlattr>.val", algoMuon->getChargeNNConstr() < 0 ? 1 : 0);
 
   for (auto& obs : observers)
     obs->addProcesorData("regressionNN", procDataTree);

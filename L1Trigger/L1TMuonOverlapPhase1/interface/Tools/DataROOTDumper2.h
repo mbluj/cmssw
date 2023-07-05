@@ -36,7 +36,7 @@ public:
   float muonDxy = 0;
   float muonRho = 0;
 
-  float omtfPt = 0, omtfEta = 0, omtfPhi = 0;
+  float omtfPt = 0, omtfEta = 0, omtfPhi = 0, omtfUPt = 0;
   char omtfCharge = 0;
   char omtfProcessor = 0;
   short omtfScore = 0;

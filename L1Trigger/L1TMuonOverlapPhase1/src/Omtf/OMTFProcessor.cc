@@ -95,12 +95,12 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::getFinalcan
     l1t::RegionalMuonCand candidate;
 
     if(ptAssignment) {
-      candidate.setHwPt(myCand->getPtNN());
-      candidate.setHwSign(myCand->getChargeNN() < 0 ? 1 : 0);
+      candidate.setHwPt(myCand->getPtNNConstr());
+      candidate.setHwSign(myCand->getChargeNNConstr() < 0 ? 1 : 0);
     }
     else {
-      candidate.setHwPt(myCand->getPt());
-      candidate.setHwSign(myCand->getCharge() < 0 ? 1 : 0);
+      candidate.setHwPt(myCand->getPtConstr());
+      candidate.setHwSign(myCand->getChargeConstr() < 0 ? 1 : 0);
     }
 
     candidate.setHwEta(myCand->getEtaHw());
@@ -114,8 +114,8 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::getFinalcan
 
     candidate.setHwSignValid(1);
 
-    if(myCand->getPtUnconstrained() >= 0) //empty PtUnconstrained is -1, maybe should be corrected on the source
-      candidate.setHwPtUnconstrained(myCand->getPtUnconstrained());
+    if(myCand->getPtUnconstr() >= 0) //empty PtUnconstrained is -1, maybe should be corrected on the source
+      candidate.setHwPtUnconstrained(myCand->getPtUnconstr());
     else
       candidate.setHwPtUnconstrained(0);
 
@@ -262,7 +262,7 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::getFinalcan
     trackAddr[0] = myCand->getFiredLayerBits();
     trackAddr[1] = myCand->getRefLayer();
     trackAddr[2] = myCand->getDisc();
-    trackAddr[3] = myCand->getGpResultUpt().getPdfSumUpt();
+    trackAddr[3] = myCand->getGpResultUnconstr().getPdfSumUnconstr();
     if (candidate.hwPt() > 0) {
       candidate.setTrackAddress(trackAddr);
       candidate.setTFIdentifiers(iProcessor, mtfType);

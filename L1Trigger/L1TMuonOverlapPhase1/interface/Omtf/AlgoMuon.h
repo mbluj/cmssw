@@ -1,93 +1,123 @@
 #ifndef L1T_OmtfP1_AlgoMuon_H
 #define L1T_OmtfP1_AlgoMuon_H
 
-#include "L1Trigger/L1TMuonOverlapPhase1/interface/AlgoMuonBase.h"
 #include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/GoldenPatternBase.h"
 #include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/GoldenPatternResult.h"
 #include <ostream>
 
-class AlgoMuon : public AlgoMuonBase {
+class AlgoMuon {
 public:
-  AlgoMuon() : AlgoMuonBase() {}
+  AlgoMuon() {}
 
   AlgoMuon(const GoldenPatternResult& gpResult, GoldenPatternBase* gp, unsigned int refHitNumber, int bx = 0)
-      : AlgoMuonBase(gp->getConfig()),
-        gpResult(gpResult),
-        goldenPatern(gp),
+      : gpResultConstr(gpResult),
+        goldenPaternConstr(gp),
         //m_q(gpResult.getFiredLayerCnt()),  //initial value of quality, can be altered later
         m_bx(bx),
         m_rhitNumb(refHitNumber) {}
 
-  GoldenPatternBase* getGoldenPatern() const { return goldenPatern; }
+  GoldenPatternBase* getGoldenPatern() const { return goldenPaternConstr; }
 
-  ~AlgoMuon() override {}
+  ~AlgoMuon() {}
 
-  const GoldenPatternResult& getGpResult() const { return gpResult; }
+  //vertex-constrained golden pattern result
+  const GoldenPatternResult& getGpResultConstr() const { return gpResultConstr; }
 
-  PdfValueType getDisc() const;
-  int getPhi() const;
-  int getEtaHw() const override { return gpResult.getEta(); }
-  int getRefLayer() const { return gpResult.getRefLayer(); }
-  unsigned int getFiredLayerBits() const;
-  int getQ() const;// { return m_q; }
-  int getBx() const { return m_bx; }
+  const GoldenPatternResult& getGpResultUnconstr() const { return gpResultUnconstr; }
 
-  int getPt() const {
-    if (goldenPatern == nullptr)
-      return -1; //TODO maybe it should be 0?
-    return goldenPatern->key().thePt;
-  }
+  void setGpResultUnconstr(const GoldenPatternResult& gpResultUnconstr) { this->gpResultUnconstr = gpResultUnconstr; }
 
-  int getPtUnconstrained() const {
-    if (goldenPaternUpt == nullptr)
-      return -1; //TODO maybe it should be 0?
-    return goldenPaternUpt->key().thePt;
-  }
+  void setEta(int eta) { gpResultConstr.setEta(eta); }
 
-  //TODO how about charge Unconstrained?
-  int getCharge() const {
-    if (goldenPatern == nullptr)
-      return 0;
-    return goldenPatern->key().theCharge;
-  }
-  int getPhiRHit() const { return gpResult.getRefHitPhi(); }
-
-  //TODO how about goldenPaternUpt?
-  unsigned int getPatternNumber() const {
-    if (goldenPatern == nullptr)
-      return 0;
-    return goldenPatern->key().theNumber;
-  }
-
-  //TODO how about goldenPaternUpt?
-  unsigned int getHwPatternNumber() const {
-    if (goldenPatern == nullptr)
-      return 0;
-    return goldenPatern->key().getHwPatternNumber();
-  }
+  int getEtaHw() const { return gpResultConstr.getEta(); }
 
   unsigned int getRefHitNumber() const { return m_rhitNumb; }
 
-  //void setQ(int q) { m_q = q; }
-  void setEta(int eta) { gpResult.setEta(eta); }
-
   void setRefHitNumber(unsigned int aRefHitNum) { m_rhitNumb = aRefHitNum; }
 
-  bool isValid() const override;
+  int getRefLayer() const { return gpResultConstr.getRefLayer(); }
 
-  unsigned int getFiredLayerCnt() const override { return gpResult.getFiredLayerCnt(); }
+  int getBx() const { return m_bx; }
 
-  double getPdfSum() const override { return gpResult.getPdfSum(); }
+  int getPtConstr() const {
+    //TODO maybe it should return 0 and not -1?
+    return goldenPaternConstr == nullptr ? -1 : goldenPaternConstr->key().thePt;
+  }
 
-  const StubResult& getStubResult(unsigned int iLayer) const override { return gpResult.getStubResults().at(iLayer); }
+  int getPtUnconstr() const {
+    //TODO maybe it should return 0 and not -1?
+    return goldenPaternUnconstr == nullptr ? -1 : goldenPaternUnconstr->key().thePt;
+  }
 
-  const StubResults& getStubResults() const override { return gpResult.getStubResults(); }
+  int getChargeConstr() const {
+    return goldenPaternConstr == nullptr ? -1 : goldenPaternConstr->key().theCharge;
+  }
+
+  int getPhiRHit() const { return gpResultConstr.getRefHitPhi(); }
+
+  unsigned int getPatternNum() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? goldenPaternUnconstr->key().theNumber : goldenPaternConstr->key().theNumber );
+  }
+
+  unsigned int getPatternNumConstr() const {
+    return goldenPaternConstr == nullptr ? 0 : goldenPaternConstr->key().theNumber;
+  }
+
+  unsigned int getPatternNumUnconstr() const {
+    return goldenPaternUnconstr == nullptr ? 0 : goldenPaternUnconstr->key().theNumber;
+  }
+
+  unsigned int getHwPatternNumConstr() const {
+    return goldenPaternConstr == nullptr ? 0 : goldenPaternConstr->key().getHwPatternNumber();
+  }
+
+  unsigned int getHwPatternNumUnconstr() const {
+    return goldenPaternUnconstr == nullptr ? 0 : goldenPaternUnconstr->key().getHwPatternNumber();
+  }
+
+  bool isValid() const {
+    return (getPtConstr() > 0) || (getPtUnconstr() > 0);  //should this really be pt or quality ?? FIXME
+  }
+
+  double getPdfSumConstr()  const {
+    return gpResultConstr.getPdfSum();
+  }
+
+  double getPdfSum()  const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr() : gpResultConstr.getPdfSum() );
+  }
+
+  PdfValueType getDisc() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr() : gpResultConstr.getPdfSum() );
+  }
+
+  int getPhi() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPhi() : gpResultConstr.getPhi() );
+  }
+
+  unsigned int getFiredLayerCnt() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt() : gpResultConstr.getFiredLayerCnt() );
+  }
+
+  unsigned int getFiredLayerCntConstr() const {
+    return gpResultConstr.getFiredLayerCnt();
+  }
+
+  unsigned int getFiredLayerBits() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerBits() : gpResultConstr.getFiredLayerBits() );
+  }
+
+  int getQ() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt() : gpResultConstr.getFiredLayerCnt() );
+  }
+
+  const StubResult& getStubResult(unsigned int iLayer) const { return gpResultConstr.getStubResults().at(iLayer); }
+
+  const StubResults& getStubResultsConstr() const { return gpResultConstr.getStubResults(); }
 
   const bool isKilled() const { return killed; }
 
   void kill() { killed = true; }
-
-  bool operator<(const AlgoMuon& o) const;
 
   friend std::ostream& operator<<(std::ostream& out, const AlgoMuon& o);
 
@@ -95,50 +125,58 @@ public:
     return killedMuons;
   }
   
-  const GoldenPatternResult& getGpResultUpt() const {
-    return gpResultUpt;
+  GoldenPatternBase* getGoldenPaternUnconstr() const {
+    return goldenPaternUnconstr;
   }
 
-  void setGpResultUpt(const GoldenPatternResult& gpResultUpt) {
-    this->gpResultUpt = gpResultUpt;
+  void setGoldenPaternUnconstr(GoldenPatternBase* goldenPaternUnconstr) {
+    this->goldenPaternUnconstr = goldenPaternUnconstr;
   }
 
-  GoldenPatternBase* getGoldenPaternUpt() const {
-    return goldenPaternUpt;
+  int getChargeNNConstr() const {
+    return chargeNNConstr;
   }
 
-  void setGoldenPaternUpt(GoldenPatternBase* goldenPaternUpt) {
-    this->goldenPaternUpt = goldenPaternUpt;
+  void setChargeNNConstr(int chargeNn = 0) {
+    chargeNNConstr = chargeNn;
   }
 
-  int getChargeNN() const {
-    return chargeNN;
+  int getPtNNConstr() const {
+    return ptNNConstr;
   }
 
-  void setChargeNN(int chargeNn = 0) {
-    chargeNN = chargeNn;
+  void setPtNNConstr(int ptNn = 0) {
+    ptNNConstr = ptNn;
   }
 
-  int getPtNN() const {
-    return ptNN;
+  int getChargeNNUnconstr() const {
+    return chargeNNUnconstr;
   }
 
-  void setPtNN(int ptNn = 0) {
-    ptNN = ptNn;
+  void setChargeNNUnconstr(int chargeNnUnconstr = 0) {
+    chargeNNUnconstr = chargeNnUnconstr;
+  }
+
+  int getPtNNUnconstr() const {
+    return ptNNUnconstr;
+  }
+
+  void setPtNNUnconstr(int ptNnUnconstr = 0) {
+    ptNNUnconstr = ptNnUnconstr;
   }
 
 private:
   ///FIXME maybe the gpResult cannot be a reference or pointer, ad not a copy
-  GoldenPatternResult gpResult;
+  GoldenPatternResult gpResultConstr;
 
   //GoldenPatternResult without vertex constraint (unconstrained pt)
   //TODO make it pointer
-  GoldenPatternResult gpResultUpt;
+  GoldenPatternResult gpResultUnconstr;
 
-  GoldenPatternBase* goldenPatern = nullptr;
+  GoldenPatternBase* goldenPaternConstr = nullptr;
 
   //GoldenPattern without vertex constraint (unconstrained pt)
-  GoldenPatternBase* goldenPaternUpt = nullptr;
+  GoldenPatternBase* goldenPaternUnconstr = nullptr;
 
   //int m_q = -1;
   int m_bx = 0;
@@ -151,8 +189,11 @@ private:
 
   std::vector<std::shared_ptr<AlgoMuon>> killedMuons;
 
-  int ptNN = 0;
-  int chargeNN = 0;
+  int ptNNConstr = 0;
+  int chargeNNConstr = 0;
+
+  int ptNNUnconstr = 0;
+  int chargeNNUnconstr = 0;
 };
 
 typedef std::shared_ptr<AlgoMuon> AlgoMuonPtr;

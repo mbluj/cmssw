@@ -96,7 +96,7 @@ void GoldenPatternResult::reset() {
   phi = 0;
   eta = 0;
   pdfSum = 0;
-  pdfSumUpt = 0;
+  pdfSumUnconstr = 0;
   firedLayerCnt = 0;
   firedLayerBits = 0;
   refHitPhi = 0;
@@ -357,14 +357,25 @@ void GoldenPatternResult::finalise10() {
       (omtfConfig->getUsePhiBExtrapolationMB2() && refLayer == 2)    ) {
     auto refLayerLogicNumber = omtfConfig->getRefToLogicNumber()[refLayer];
     //Unconstrained pt is obtained by not including the pdfValue from the phiB of the refHit
-    pdfSumUpt = pdfSum - stubResults[refLayerLogicNumber +1].getPdfVal(); //TODO get logic layer from connectedLayer
+    pdfSumUnconstr = pdfSum - stubResults[refLayerLogicNumber +1].getPdfVal(); //TODO get logic layer from connectedLayer
+    //here there is an issue with the firedLayerBits and quality assignment:
+    //in case if the displaced muon the phiB layer of the ref hit might not be fired (pdfVal might be 0)
+    //which in principle has no sense, because by the displaced algorithm construction it is fired
+    //an effect of that is that some fraction of displaced muons get the quality 8 assigned
+    //the efficiency difference between quality 8a dn 12 seems to be at a level of 1-2%
+    //but in the uGT menu e.g. the L1_DoubleMu0_Upt6_IP_Min1_Upt4 uses quality >= 0, so should be OK
+
 
     //hard cut - the phiB of the refHit must fit to the pdf
+    //but this cut has sometimes side effect: there can be a muon which has has pdfSum = 0 for every pattern,
+    //then in the OMTFSorter<GoldenPatternType>::sortRefHitResults the first pattern that has FiredLayerCnt >= 3 is chosen
+    //and not the one with highest pdfSum as it should be
+    //TODO what should be done is to set the pt of such a muons to 0, but after the sorter
     if(stubResults[refLayerLogicNumber +1].getPdfVal() == 0)
       pdfSum = 0;
   }
   else
-    pdfSumUpt = 0;
+    pdfSumUnconstr = 0;
 
   valid = true;
   //by default result becomes valid here, but can be overwritten later
@@ -405,8 +416,8 @@ std::ostream& operator<<(std::ostream& out, const GoldenPatternResult& gpResult)
   out << " sumOverFiredLayers: ";
   out << sumOverFiredLayers << "\t";
 
-  out << " Sum over layers upt: ";
-  out << gpResult.getPdfSumUpt() << "\t";
+  out << " Sum over layers unconstr: ";
+  out << gpResult.getPdfSumUnconstr() << "\t";
 
   out << " Number of hits: ";
   out << gpResult.getFiredLayerCnt() << "\t";

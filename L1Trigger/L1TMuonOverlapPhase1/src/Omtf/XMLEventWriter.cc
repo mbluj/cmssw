@@ -95,43 +95,63 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
     ///Dump only regions, where a candidate was found
     if (algoCand->isValid()) {
       auto& algoMuonTree = procTree.add("AlgoMuon", "");
-      algoMuonTree.add("<xmlattr>.charge", algoCand->getCharge());
+      algoMuonTree.add("<xmlattr>.charge", algoCand->getChargeConstr());
       algoMuonTree.add("<xmlattr>.disc", algoCand->getDisc());
-      algoMuonTree.add("<xmlattr>.pdfSum", algoCand->getGpResult().getPdfSum());
-      algoMuonTree.add("<xmlattr>.pdfSumUpt", algoCand->getGpResultUpt().getPdfSumUpt());
+      algoMuonTree.add("<xmlattr>.pdfSumConstr", algoCand->getGpResultConstr().getPdfSum());
+      algoMuonTree.add("<xmlattr>.pdfSumUnconstr", algoCand->getGpResultUnconstr().getPdfSumUnconstr());
       algoMuonTree.add("<xmlattr>.etaCode", OMTFConfiguration::eta2Bits(abs(algoCand->getEtaHw())));
       algoMuonTree.add("<xmlattr>.iRefHit", algoCand->getRefHitNumber());
       algoMuonTree.add("<xmlattr>.iRefLayer", algoCand->getRefLayer());
-      algoMuonTree.add("<xmlattr>.layers", std::bitset<18>(algoCand->getFiredLayerBits()));
+
+      //algoMuonTree.add("<xmlattr>.layers", std::bitset<18>(algoCand->getFiredLayerBits()));
+
+
+      algoMuonTree.add("<xmlattr>.layersConstr", std::bitset<18>(algoCand->getGpResultConstr().getFiredLayerBits()));
+      algoMuonTree.add("<xmlattr>.layersUnconstr", std::bitset<18>(algoCand->getGpResultUnconstr().getFiredLayerBits()));
+
       algoMuonTree.add("<xmlattr>.nHits", algoCand->getQ());
-      algoMuonTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumber());
+
+      algoMuonTree.add("<xmlattr>.firedCntConstr", algoCand->getGpResultConstr().getFiredLayerCnt());
+      algoMuonTree.add("<xmlattr>.firedCntUnconstr", algoCand->getGpResultUnconstr().getFiredLayerCnt());
+
+      algoMuonTree.add("<xmlattr>.patNumConstr", algoCand->getHwPatternNumConstr());
+      algoMuonTree.add("<xmlattr>.patNumUnconstr", algoCand->getHwPatternNumUnconstr());
+
       algoMuonTree.add("<xmlattr>.phiCode", algoCand->getPhi());
+
+      algoMuonTree.add("<xmlattr>.phiConstr", algoCand->getGpResultConstr().getPhi());
+      algoMuonTree.add("<xmlattr>.phiUnConstr", algoCand->getGpResultUnconstr().getPhi());
+
       algoMuonTree.add("<xmlattr>.phiRHit", algoCand->getPhiRHit());
-      algoMuonTree.add("<xmlattr>.ptCode", algoCand->getPt());
 
-      auto& gpResultTree = algoMuonTree.add("gpResult", "");
-      auto& gpResult = algoCand->getGpResult();
+      algoMuonTree.add("<xmlattr>.ptCodeConstr", algoCand->getPtConstr());
+      algoMuonTree.add("<xmlattr>.ptCodeUnconstr", algoCand->getPtUnconstr());
 
-      gpResultTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumber());
-      gpResultTree.add("<xmlattr>.pdfSum", gpResult.getPdfSum());
 
-      for (unsigned int iLogicLayer = 0; iLogicLayer < gpResult.getStubResults().size(); ++iLogicLayer) {
+
+      auto& gpResultTree = algoMuonTree.add("gpResultConstr", "");
+      auto& gpResultConstr = algoCand->getGpResultConstr();
+
+      gpResultTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumConstr());
+      gpResultTree.add("<xmlattr>.pdfSum", gpResultConstr.getPdfSum());
+
+      for (unsigned int iLogicLayer = 0; iLogicLayer < gpResultConstr.getStubResults().size(); ++iLogicLayer) {
         auto& layerTree = gpResultTree.add("layer", "");
         layerTree.add("<xmlattr>.num", iLogicLayer);
-        auto pdfBin = gpResult.getStubResults()[iLogicLayer].getPdfBin();
+        auto pdfBin = gpResultConstr.getStubResults()[iLogicLayer].getPdfBin();
         if(pdfBin == 5400)
           pdfBin = 0;
         layerTree.add("<xmlattr>.pdfBin", pdfBin);
-        layerTree.add("<xmlattr>.pdfVal", gpResult.getStubResults()[iLogicLayer].getPdfVal());
-        layerTree.add("<xmlattr>.fired", gpResult.isLayerFired(iLogicLayer));
+        layerTree.add("<xmlattr>.pdfVal", gpResultConstr.getStubResults()[iLogicLayer].getPdfVal());
+        layerTree.add("<xmlattr>.fired", gpResultConstr.isLayerFired(iLogicLayer));
       }
 
-      if(algoCand->getGpResultUpt().isValid() ) {
-        auto& gpResultTree = algoMuonTree.add("gpResultUpt", "");
-        auto& gpResult = algoCand->getGpResultUpt();
+      if(algoCand->getGpResultUnconstr().isValid() ) {
+        auto& gpResultTree = algoMuonTree.add("gpResultUnconstr", "");
+        auto& gpResult = algoCand->getGpResultUnconstr();
 
-        gpResultTree.add("<xmlattr>.patNum", algoCand->getGoldenPaternUpt()->key().getHwPatternNumber());
-        gpResultTree.add("<xmlattr>.pdfSum", gpResult.getPdfSumUpt());
+        gpResultTree.add("<xmlattr>.patNum", algoCand->getHwPatternNumUnconstr());
+        gpResultTree.add("<xmlattr>.pdfSum", gpResult.getPdfSumUnconstr());
 
         for (unsigned int iLogicLayer = 0; iLogicLayer < gpResult.getStubResults().size(); ++iLogicLayer) {
           auto& layerTree = gpResultTree.add("layer", "");
@@ -152,6 +172,7 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
     candMuonTree.add("<xmlattr>.hwEta", candMuon.hwEta());
     candMuonTree.add("<xmlattr>.hwPhi", candMuon.hwPhi());
     candMuonTree.add("<xmlattr>.hwPt", candMuon.hwPt());
+    candMuonTree.add("<xmlattr>.hwUPt", candMuon.hwPtUnconstrained());
     candMuonTree.add("<xmlattr>.hwQual", candMuon.hwQual());
     candMuonTree.add("<xmlattr>.hwSign", candMuon.hwSign());
     candMuonTree.add("<xmlattr>.hwSignValid", candMuon.hwSignValid());
@@ -193,7 +214,7 @@ void XMLEventWriter::observeEventEnd(const edm::Event& iEvent,
 }
 
 void XMLEventWriter::endJob() {
-  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the date to the xml - starting";
+  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the data to the xml - starting";
   boost::property_tree::write_xml(fName, tree, std::locale(), boost::property_tree::xml_parser::xml_writer_make_settings<std::string>(' ', 2));
-  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the date to the xml - done";
+  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the data to the xml - done";
 }

@@ -20,7 +20,7 @@ AlgoMuons::value_type OMTFSorter<GoldenPatternType>::sortRefHitResults(
   GoldenPatternType* bestGP = nullptr;  //the GoldenPattern with the best result for this iRefHit
   //std::cout <<" ====== sortRefHitResults: " << std::endl;
 
-  GoldenPatternType* bestGpUpt = nullptr;
+  GoldenPatternType* bestGpUnconstr = nullptr;
 
   for (auto& itGP : gPatterns) {
     if (!itGP->getResults()[procIndx][iRefHit].isValid())
@@ -47,30 +47,30 @@ AlgoMuons::value_type OMTFSorter<GoldenPatternType>::sortRefHitResults(
     }
 
 
-    if (bestGpUpt == nullptr) {
-      if(itGP->getResults()[procIndx][iRefHit].getPdfSumUpt() > 0)
-        bestGpUpt = itGP.get();
+    if (bestGpUnconstr == nullptr) {
+      if(itGP->getResults()[procIndx][iRefHit].getPdfSumUnconstr() > 0)
+        bestGpUnconstr = itGP.get();
     } else if (myType == 0 && itGP->getResults()[procIndx][iRefHit].getFiredLayerCnt() >
-                              bestGpUpt->getResults()[procIndx][iRefHit].getFiredLayerCnt()) {
-      bestGpUpt = itGP.get();
+                              bestGpUnconstr->getResults()[procIndx][iRefHit].getFiredLayerCnt()) {
+      bestGpUnconstr = itGP.get();
     } else if (myType == 1 || (itGP->getResults()[procIndx][iRefHit].getFiredLayerCnt() ==
-                               bestGpUpt->getResults()[procIndx][iRefHit].getFiredLayerCnt())) {
-      if (itGP->getResults()[procIndx][iRefHit].getPdfSumUpt() > bestGpUpt->getResults()[procIndx][iRefHit].getPdfSumUpt()) {
+                               bestGpUnconstr->getResults()[procIndx][iRefHit].getFiredLayerCnt())) {
+      if (itGP->getResults()[procIndx][iRefHit].getPdfSumUnconstr() > bestGpUnconstr->getResults()[procIndx][iRefHit].getPdfSumUnconstr()) {
         //if the PdfWeigtSum is equal, we take the GP with the lower number, i.e. lower pt = check if this is ok for physics FIXME (KB)
-        bestGpUpt = itGP.get();
+        bestGpUnconstr = itGP.get();
       }
     }
 
 //    LogTrace("OMTFReconstruction")<<"OMTFSorter::sortRefHitResults() " << itGP->key()<<" getFiredLayer "<< itGP->getResults()[procIndx][iRefHit].getFiredLayerCnt()
 //    <<" PdfSum "<< itGP->getResults()[procIndx][iRefHit].getPdfSum()
-//    <<" PdfSumUpt "<< itGP->getResults()[procIndx][iRefHit].getPdfSumUpt()<< std::endl;
+//    <<" PdfSumUnconstr "<< itGP->getResults()[procIndx][iRefHit].getPdfSumUnconstr()<< std::endl;
   }
   if (bestGP) {
     AlgoMuons::value_type candidate(new AlgoMuon(bestGP->getResults()[procIndx][iRefHit], bestGP, iRefHit));
 
-    if(bestGpUpt) {
-      candidate->setGpResultUpt(bestGpUpt->getResults()[procIndx][iRefHit]);
-      candidate->setGoldenPaternUpt(bestGpUpt);
+    if(bestGpUnconstr) {
+      candidate->setGpResultUnconstr(bestGpUnconstr->getResults()[procIndx][iRefHit]);
+      candidate->setGoldenPaternUnconstr(bestGpUnconstr);
     }
 
     //std::cout<<__FUNCTION__<<" line "<<__LINE__ <<" return: " << *candidate << std::endl;

@@ -130,7 +130,8 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
         }
         ostr << "matched to: " << std::endl;
         auto finalCandidate = matchingResult.muonCand;
-        ostr << " hwPt " << finalCandidate->hwPt() << " hwSign " << finalCandidate->hwSign() << " hwQual "
+        ostr << " hwPt " << finalCandidate->hwPt() << " hwUPt " << finalCandidate->hwPtUnconstrained()
+             << " hwSign " << finalCandidate->hwSign() << " hwQual "
              << finalCandidate->hwQual() << " hwEta " << std::setw(4) << finalCandidate->hwEta() << std::setw(4)
              << " hwPhi " << finalCandidate->hwPhi() << "    eta " << std::setw(9)
              << (finalCandidate->hwEta() * 0.010875) << " phi " << std::endl;
@@ -304,7 +305,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
 
 
       {
-          edm::LogVerbatim("l1tOmtfEventPrint")<< std::endl << std::endl <<"gb_test "<< board.name()<< std::endl;
+          edm::LogVerbatim("l1tOmtfEventPrint")<< std::endl << std::endl <<"\ngb_test "<< board.name()<< std::endl;
           for (auto& algoMuon : algoMuonsInProcs[iProc]) {
             edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
                            <<std::setw(5)<<algoMuon->getHwPatternNumConstr()<<","
@@ -313,8 +314,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                            <<std::setw(5)<<algoMuon->getGpResultConstr().getFiredLayerCnt()<<","
                            <<std::setw(5)<<algoMuon->getGpResultUnconstr().getFiredLayerCnt()<<","
 
-                           <<std::setw(5)<<algoMuon->getGpResultConstr().getFiredLayerBits()<<","
-                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getFiredLayerBits()<<","
+                           //in the FW there is LSB added for some reason, therefore we multiply by 2 here
+                           <<std::setw(6)<<algoMuon->getGpResultConstr().getFiredLayerBits()*2<<","
+                           <<std::setw(6)<<algoMuon->getGpResultUnconstr().getFiredLayerBits()*2<<","
 
                            <<std::setw(5)<<algoMuon->getGpResultConstr().getPdfSum()<<","
                            <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPdfSumUnconstr()<<","
@@ -322,7 +324,11 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                            <<std::setw(5)<<algoMuon->getGpResultConstr().getPhi()<<","
                            <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPhi()<<","
 
-                           <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<","
+                           <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<", "
+
+                           //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[algoMuon->getRefLayer()]<<""
+                           <<std::setw(5)<<algoMuon->getRefLayer()<<""
+
                            <<"), "<< std::endl;
           }
           edm::LogVerbatim("l1tOmtfEventPrint")<<"\ngbCandidates"<<std::endl;
@@ -334,8 +340,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
             <<std::setw(5)<<gbCandidate->getGpResultConstr().getFiredLayerCnt()<<","
             <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getFiredLayerCnt()<<","
 
-            <<std::setw(5)<<gbCandidate->getGpResultConstr().getFiredLayerBits()<<","
-            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getFiredLayerBits()<<","
+            //in the FW there is LSB added for some reason, therefore we multiply by 2 here
+            <<std::setw(6)<<gbCandidate->getGpResultConstr().getFiredLayerBits()*2<<","
+            <<std::setw(6)<<gbCandidate->getGpResultUnconstr().getFiredLayerBits()*2<<","
 
             <<std::setw(5)<<gbCandidate->getGpResultConstr().getPdfSum()<<","
             <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPdfSumUnconstr()<<","
@@ -343,12 +350,17 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
             <<std::setw(5)<<gbCandidate->getGpResultConstr().getPhi()<<","
             <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPhi()<<","
 
-            <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<","
+            <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<", "
+
+            //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[gbCandidate->getRefLayer()]<<""
+            <<std::setw(5)<<gbCandidate->getRefLayer()<<""
+
             <<"), "<< std::endl;
 
           edm::LogVerbatim("l1tOmtfEventPrint") << "finalCandidates " << std::endl;
 
           if(finalCandidates->size(0) > 0) {
+            int iMu = 1;
             for (auto finalCandidateIt = finalCandidates->begin(0); finalCandidateIt != finalCandidates->end(0);
                 finalCandidateIt++) {
               auto& finalCandidate = *finalCandidateIt;
@@ -359,20 +371,32 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                 int layerHits = (int)finalCandidate.trackAddress().at(0);
                 std::bitset<18> layerHitBits(layerHits);
 
-                edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
-                    <<std::setw(5)<< finalCandidate.hwPt()<<","
-                    <<std::setw(5)<< finalCandidate.hwPtUnconstrained()<<","
-                    <<std::setw(5)<< finalCandidate.hwSign()<<","
-                    <<std::setw(5)<< finalCandidate.hwQual()<<","
+                unsigned int trackAddr = finalCandidate.trackAddress().at(0);
+                unsigned int uPt = finalCandidate.hwPtUnconstrained();
+                if(uPt == 0)
+                  uPt = 9; //TODO remove when fixed in the FW
+                trackAddr = (uPt << 18) + trackAddr;
+
+                edm::LogVerbatim("l1tOmtfEventPrint")<<"M"<<iMu<<":"
+                    <<std::setw(4)<< finalCandidate.hwPt()<<","
+                    <<std::setw(4)<< finalCandidate.hwQual()<<","
+                    <<std::setw(4)<< finalCandidate.hwPhi()<<","
+                    <<std::setw(4)<< abs(finalCandidate.hwEta() )<<","
+                    //<<std::setw(10)<< finalCandidate.trackAddress().at(0)<<""
+                    <<std::setw(10)<< trackAddr<<""
+                    <<std::setw(4)<< 0<<"," //Halo
+                    <<std::setw(4)<< finalCandidate.hwSign()<<","
+                    <<std::setw(4)<< 1<<"; "; //ChValid
+                    //<<std::setw(5)<< finalCandidate.hwPtUnconstrained()<<","
+
                     //<<std::setw(9)<< layerHitBits<<","
-                    <<std::setw(5)<< layerHits<<","
-                    <<std::setw(5)<< finalCandidate.hwPhi()<<","
-                    <<std::setw(5)<< finalCandidate.hwEta()<<","
-                    <<"), "<<std::endl;
+                    //<<std::setw(6)<< layerHits<<","
+
+                iMu++;
               }
             }
+            edm::LogVerbatim("l1tOmtfEventPrint")<<std::endl;
           }
-
 
       }
 

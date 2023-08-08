@@ -94,6 +94,7 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::getFinalcan
   for (auto& myCand : algoCands) {
     l1t::RegionalMuonCand candidate;
 
+    //the charge is only for the constrained measurement. The constrained measurement is always defined for a valid candidate
     if(ptAssignment) {
       candidate.setHwPt(myCand->getPtNNConstr());
       candidate.setHwSign(myCand->getChargeNNConstr() < 0 ? 1 : 0);
@@ -114,8 +115,10 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::getFinalcan
 
     candidate.setHwSignValid(1);
 
-    if(myCand->getPtUnconstr() >= 0) //empty PtUnconstrained is -1, maybe should be corrected on the source
-      candidate.setHwPtUnconstrained(myCand->getPtUnconstr());
+    if(myCand->getPtUnconstr() >= 0) {//empty PtUnconstrained is -1, maybe should be corrected on the source
+      candidate.setHwPtUnconstrained( (myCand->getPtUnconstr() - 1) / 2 + 1);
+      //the upt has different hardware scale than the pt, the upt unit is 1 GeV,
+    }
     else
       candidate.setHwPtUnconstrained(0);
 

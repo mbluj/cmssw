@@ -123,6 +123,9 @@ process.esProd = cms.EDAnalyzer("EventSetupRecordDataGetter",
 process.load('L1Trigger.L1TMuonOverlapPhase2.simOmtfPhase2Digis_cfi')
 
 process.simOmtfPhase2Digis.dumpResultToXML = cms.bool(True)
+
+process.simOmtfPhase2Digis.eventCaptureDebug = cms.bool(True)
+
 process.simOmtfPhase2Digis.rpcMaxClusterSize = cms.int32(3)
 process.simOmtfPhase2Digis.rpcMaxClusterCnt = cms.int32(2)
 process.simOmtfPhase2Digis.rpcDropAllClustersIfMoreThanMax = cms.bool(True)

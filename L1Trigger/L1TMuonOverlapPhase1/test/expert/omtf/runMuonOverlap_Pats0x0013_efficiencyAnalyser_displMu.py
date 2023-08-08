@@ -13,7 +13,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v6_test'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v8_test'
 
 runDebug = "DEBUG" # or "INFO" DEBUG
 useExtraploationAlgo = True;

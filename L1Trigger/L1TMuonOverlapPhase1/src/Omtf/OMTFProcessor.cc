@@ -74,6 +74,13 @@ void OMTFProcessor<GoldenPatternType>::init(const edm::ParameterSet& edmCfg, edm
 
   useStubQualInExtr = false;
   useEndcapStubsRInExtr = false;
+  std::string extrapolFactorsFilename = "ExtrapolationFactors_simple.xml";
+
+  //TODO alternative config
+  /*
+  useStubQualInExtr = true;
+  useEndcapStubsRInExtr = true;
+  std::string extrapolFactorsFilename = "ExtrapolationFactors_withQAndEta.xml"; */
 
   edm::LogVerbatim("OMTFReconstruction") << "useStubQualInExtr "  << useStubQualInExtr
                                          <<" useEndcapStubsRInExtr "<<useEndcapStubsRInExtr<< std::endl;
@@ -82,7 +89,7 @@ void OMTFProcessor<GoldenPatternType>::init(const edm::ParameterSet& edmCfg, edm
   extrapolFactorsNorm.resize(2, std::vector<std::map<int, int> >(this->myOmtfConfig->nLayers()));
 
   if(this->myOmtfConfig->getUsePhiBExtrapolationMB1() || this->myOmtfConfig->getUsePhiBExtrapolationMB2() )
-    loadExtrapolFactors();
+    loadExtrapolFactors(extrapolFactorsFilename);
 }
 
 template <class GoldenPatternType>
@@ -750,11 +757,8 @@ void OMTFProcessor<GoldenPatternType>::saveExtrapolFactors() {
 }
 
 template <class GoldenPatternType>
-void OMTFProcessor<GoldenPatternType>::loadExtrapolFactors() {
+void OMTFProcessor<GoldenPatternType>::loadExtrapolFactors(const std::string& filename) {
   boost::property_tree::ptree tree;
-  std::string filename = "ExtrapolationFactors_simple.xml";
-  if(useStubQualInExtr)
-    filename = "ExtrapolationFactors_withQAndEta.xml";
 
   boost::property_tree::read_xml(filename, tree);
 

@@ -244,7 +244,12 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       omtfEvent.hits.clear();
 
-      auto& gpResult = procMuon->getGpResultConstr();
+
+      //TODO choose, which gpResult should be dumped
+      //auto& gpResult = procMuon->getGpResultConstr();
+      auto& gpResult = (procMuon->getGpResultUnconstr().getPdfSumUnconstr() > procMuon->getGpResultConstr().getPdfSum() ) ?
+                        procMuon->getGpResultUnconstr() : procMuon->getGpResultConstr();
+
       /*
         edm::LogVerbatim("l1tOmtfEventPrint")<<"DataROOTDumper2:;observeEventEnd muonPt "<<event.muonPt<<" muonCharge "<<event.muonCharge
             <<" omtfPt "<<event.omtfPt<<" RefLayer "<<event.omtfRefLayer<<" omtfPtCont "<<event.omtfPtCont

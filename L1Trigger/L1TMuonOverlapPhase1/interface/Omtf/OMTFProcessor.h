@@ -99,7 +99,7 @@ public:
   void printInfo() const override;
 
   void saveExtrapolFactors();
-  void loadExtrapolFactors();
+  void loadExtrapolFactors(const std::string& filename);
 
 private:
   virtual void init(const edm::ParameterSet& edmCfg, edm::EventSetup const& evSetup);

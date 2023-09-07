@@ -20,7 +20,8 @@ void DtDigiToStubsConverter::loadDigis(const edm::Event& event) {
 }
 
 void DtDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo) {
+    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
+    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!dtPhDigis)
     return;
 
@@ -48,7 +49,8 @@ void DtDigiToStubsConverter::makeStubs(
 ///////////////////////////////////////
 
 void CscDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo) {
+    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
+    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!cscDigis)
     return;
 
@@ -74,7 +76,8 @@ void CscDigiToStubsConverter::makeStubs(
 }
 
 void RpcDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo) {
+    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
+    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!rpcDigis)
     return;
   //LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ <<" RPC HITS, processor : " << iProcessor<<" "<<std::endl;
@@ -157,10 +160,11 @@ void MuonStubMakerBase::loadAndFilterDigis(const edm::Event& event) {
 }
 
 void MuonStubMakerBase::buildInputForProcessor(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo) {
+    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
+    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   //LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " iProcessor " << iProcessor << " preocType "
   //                              << procTyp << std::endl;
 
   for (auto& digiToStubsConverter : digiToStubsConverters)
-    digiToStubsConverter->makeStubs(muonStubsInLayers, iProcessor, procTyp, bxFrom, bxTo);
+    digiToStubsConverter->makeStubs(muonStubsInLayers, iProcessor, procTyp, bxFrom, bxTo, observers);
 }

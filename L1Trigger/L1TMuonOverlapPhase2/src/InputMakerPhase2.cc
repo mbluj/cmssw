@@ -8,6 +8,8 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/MuonDetId/interface/DTChamberId.h"
 #include "L1Trigger/L1TMuonOverlapPhase2/interface/InputMakerPhase2.h"
+#include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/OmtfName.h"
+
 #include <iostream>
 
 /////////////////////////////////////
@@ -17,20 +19,35 @@ void DtPhase2DigiToStubsConverter::loadDigis(const edm::Event& event) {
 }
 
 void DtPhase2DigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo) {
+    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
+    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!dtPhDigis)
     return;
 
+  boost::property_tree::ptree procDataTree;
+
   for (const auto& digiIt : *dtPhDigis->getContainer()) {
     DTChamberId detid(digiIt.whNum(), digiIt.stNum(), digiIt.scNum() + 1);
+
 
     ///Check it the data fits into given processor input range
     if (!acceptDigi(detid, iProcessor, procTyp))
       continue;
 
     // HACK for Phase-2  (DT TPs are centered in bX=20)
-    if (digiIt.bxNum() - 20 >= bxFrom && digiIt.bxNum() - 20 <= bxTo)
+    if (digiIt.bxNum() - 20 >= bxFrom && digiIt.bxNum() - 20 <= bxTo) {
       addDTphiDigi(muonStubsInLayers, digiIt, dtThDigis.product(), iProcessor, procTyp);
+
+      auto& dtP2Digi = procDataTree.add_child("dtP2Digi", boost::property_tree::ptree());
+      dtP2Digi.add("<xmlattr>.whNum", digiIt.whNum());
+      dtP2Digi.add("<xmlattr>.scNum", digiIt.scNum());
+      dtP2Digi.add("<xmlattr>.stNum", digiIt.stNum());
+      dtP2Digi.add("<xmlattr>.slNum", digiIt.slNum());
+      dtP2Digi.add("<xmlattr>.quality", digiIt.quality());
+      dtP2Digi.add("<xmlattr>.rpcFlag", digiIt.rpcFlag());
+      dtP2Digi.add("<xmlattr>.phi", digiIt.phi());
+      dtP2Digi.add("<xmlattr>.phiBend", digiIt.phiBend());
+    }
   }
 
   if (!mergePhiAndTheta) {
@@ -43,6 +60,9 @@ void DtPhase2DigiToStubsConverter::makeStubs(
   //std::cout<<__FUNCTION__<<":"<<__LINE__<<" iProcessor "<<iProcessor<<std::endl;
   //angleConverter->AngleConverterBase::getGlobalEta(dtThDigis, 0, 0);std::endl;
   //angleConverter->AngleConverterBase::getGlobalEta(dtThDigis, 0, 0);
+
+  for (auto& obs : observers)
+    obs->addProcesorData("linkData", procDataTree);
 }
 
 //dtThDigis is provided as argument, because in the OMTF implementation the phi and eta digis are merged (even thought it is artificial)
@@ -88,6 +108,17 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
   stub.logicLayer = iLayer;
   stub.detId = detid;
 
+  OmtfName board(iProcessor);
+  edm::LogVerbatim("l1tOmtfEventPrint")<<board.name()<<" L1Phase2MuDTPhDigi: detid "<<detid<<" digi "
+      <<" whNum "<<digi.whNum()
+      <<" scNum "<<digi.scNum()
+      <<" stNum "<<digi.stNum()
+      <<" slNum "<<digi.slNum()
+      <<" quality "<<digi.quality()
+      <<" rpcFlag "<<digi.rpcFlag()
+      <<" phi "<<digi.phi()
+      <<" phiBend "<<digi.phiBend()
+      <<std::endl;
   OMTFinputMaker::addStub(config, muonStubsInLayers, iLayer, iInput, stub);
 }
 

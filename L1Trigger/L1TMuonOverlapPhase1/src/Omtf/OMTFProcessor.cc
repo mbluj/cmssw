@@ -667,7 +667,7 @@ std::vector<l1t::RegionalMuonCand> OMTFProcessor<GoldenPatternType>::run(
 
   //input is shared_ptr because the observers may need them after the run() method execution is finished
   std::shared_ptr<OMTFinput> input = std::make_shared<OMTFinput>(this->myOmtfConfig);
-  inputMaker->buildInputForProcessor(input->getMuonStubs(), iProcessor, mtfType, bx, bx);
+  inputMaker->buildInputForProcessor(input->getMuonStubs(), iProcessor, mtfType, bx, bx, observers);
 
   //LogTrace("l1tOmtfEventPrint")<<"buildInputForProce "; t.report();
   processInput(iProcessor, mtfType, *(input.get()), observers);

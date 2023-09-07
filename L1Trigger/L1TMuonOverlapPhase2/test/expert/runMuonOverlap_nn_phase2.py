@@ -23,7 +23,7 @@ if verbose:
        omtfEventPrint = cms.untracked.PSet(    
                          filename  = cms.untracked.string('log_MuonOverlap_nn'),
                          extension = cms.untracked.string('.txt'),                
-                         threshold = cms.untracked.string('INFO'),
+                         threshold = cms.untracked.string('DEBUG'),
                          default = cms.untracked.PSet( limit = cms.untracked.int32(0) ), 
                          #INFO   =  cms.untracked.int32(0),
                          #DEBUG   = cms.untracked.int32(0),
@@ -53,8 +53,8 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
 process.load('SimGeneral.MixingModule.mixNoPU_cfi')
-process.load('Configuration.Geometry.GeometryExtended2026D41Reco_cff')
-process.load('Configuration.Geometry.GeometryExtended2026D41_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D86Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D86_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 #process.load('Configuration.StandardSequences.SimL1Emulator_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
@@ -111,9 +111,9 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string('omtfAn
 ####OMTF Emulator
 process.load('L1Trigger.L1TMuonOverlapPhase2.simOmtfPhase2Digis_cfi')
 
-process.simOmtfPhase2Digis.dumpResultToXML = cms.bool(False)
+process.simOmtfPhase2Digis.dumpResultToXML = cms.bool(True)
 process.simOmtfPhase2Digis.dumpResultToROOT = cms.bool(False)
-process.simOmtfPhase2Digis.eventCaptureDebug = cms.bool(False)
+process.simOmtfPhase2Digis.eventCaptureDebug = cms.bool(True)
 
 #process.simOmtfPhase2Digis.patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0009_oldSample_3_10Files.xml")
 #process.simOmtfPhase2Digis.patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0009_oldSample_3_10Files_classProb1.xml")

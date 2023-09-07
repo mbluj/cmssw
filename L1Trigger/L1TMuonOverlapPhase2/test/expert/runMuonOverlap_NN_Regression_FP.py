@@ -8,6 +8,8 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
 verbose = True
 
+version = "_p2DT_v3"
+
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",
        #suppressInfo       = cms.untracked.vstring('AfterSource', 'PostModule'),
@@ -20,7 +22,7 @@ if verbose:
                     ),
        categories        = cms.untracked.vstring('l1tOmtfEventPrint', 'OMTFReconstruction'),
        omtfEventPrint = cms.untracked.PSet(    
-                         filename  = cms.untracked.string('log_MuonOverlap_nn'),
+                         filename  = cms.untracked.string('log_MuonOverlap_nn' + version),
                          extension = cms.untracked.string('.txt'),                
                          threshold = cms.untracked.string('DEBUG'),
                          default = cms.untracked.PSet( limit = cms.untracked.int32(0) ), 
@@ -35,7 +37,7 @@ if verbose:
 
     #process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
 if not verbose:
-    process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(1000)
+    process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
     process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(False), 
                                          #SkipEvent = cms.untracked.vstring('ProductNotFound') 
                                      )
@@ -85,7 +87,7 @@ process.CalibratedDigis.dtDigiTag = "simMuonDTDigis" #turn to 0 to use the DB  ,
 process.CalibratedDigis.scenario = 0 # 0 for mc, 1 for data, 2 for slice test
 
 #DTTriggerPhase2
-#process.load("L1Trigger.DTTriggerPhase2.dtTriggerPhase2PrimitiveDigis_cfi")
+process.load("L1Trigger.DTTriggerPhase2.dtTriggerPhase2PrimitiveDigis_cfi")
 #process.dtTriggerPhase2PrimitiveDigis.trigger_with_sl = 3  #4 means SL 1 and 3
 #for the moment the part working in phase2 format is the slice test
 #process.dtTriggerPhase2PrimitiveDigis.p2_df = True
@@ -94,8 +96,9 @@ process.CalibratedDigis.scenario = 0 # 0 for mc, 1 for data, 2 for slice test
 #process.dtTriggerPhase2PrimitiveDigis.pinta = True
 #process.dtTriggerPhase2PrimitiveDigis.min_phinhits_match_segment = 4
 #process.dtTriggerPhase2PrimitiveDigis.debug = True
-#process.dtTriggerPhase2PrimitiveDigis.scenario = 0
-#process.dtTriggerPhase2PrimitiveDigis.dump = True
+process.dtTriggerPhase2PrimitiveDigis.scenario = 0
+process.dtTriggerPhase2PrimitiveDigis.dump = True
+
 
 ####Event Setup Producer
 process.load('L1Trigger.L1TMuonOverlapPhase1.fakeOmtfParams_cff')
@@ -123,6 +126,7 @@ process.esProd = cms.EDAnalyzer("EventSetupRecordDataGetter",
 process.load('L1Trigger.L1TMuonOverlapPhase2.simOmtfPhase2Digis_cfi')
 
 process.simOmtfPhase2Digis.dumpResultToXML = cms.bool(True)
+process.simOmtfPhase2Digis.XMLDumpFileName = cms.string("TestEvents_" + version + ".xml")
 
 process.simOmtfPhase2Digis.eventCaptureDebug = cms.bool(True)
 
@@ -132,8 +136,11 @@ process.simOmtfPhase2Digis.rpcDropAllClustersIfMoreThanMax = cms.bool(True)
 
 process.simOmtfPhase2Digis.lctCentralBx = cms.int32(8);#<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!TODO this was changed in CMSSW 10(?) to 8. if the data were generated with the previous CMSSW then you have to use 6
 
-process.simOmtfPhase2Digis.dropDTPrimitives = cms.bool(False)
-process.simOmtfPhase2Digis.usePhase2DTPrimitives = cms.bool(False)
+process.simOmtfPhase2Digis.dropDTPrimitives = cms.bool(True)
+process.simOmtfPhase2Digis.usePhase2DTPrimitives = cms.bool(True)
+
+process.simOmtfPhase2Digis.dropRPCPrimitives = cms.bool(True)     #TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                  
+process.simOmtfPhase2Digis.dropCSCPrimitives = cms.bool(True)   #TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
 
 #process.simOmtfPhase2Digis.patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0003.xml")
 
@@ -149,7 +156,7 @@ process.L1TMuonSeq = cms.Sequence( process.esProd
 )
 
 process.L1TMuonPath = cms.Path(process.CalibratedDigis * 
-							#process.dtTriggerPhase2PrimitiveDigis * 
+							process.dtTriggerPhase2PrimitiveDigis * 
 							process.L1TMuonSeq)
 
 process.out = cms.OutputModule("PoolOutputModule", 

@@ -6,6 +6,7 @@
  */
 
 #include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/OmtfAngleConverter.h"
+#include "L1Trigger/L1TMuonOverlapPhase1/interface/Omtf/OMTFConfiguration.h"
 
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "Geometry/Records/interface/MuonGeometryRecord.h"
@@ -24,7 +25,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace {
   template <typename T>
@@ -48,57 +49,10 @@ namespace {
 
   int etaVal2Bit(float eta) { return bounds.rend() - std::lower_bound(bounds.rbegin(), bounds.rend(), fabs(eta)); }
 
-  int etaBit2Code(unsigned int bit) {
-    int code = 73;
-    switch (bit) {
-      case 0: {
-        code = 115;
-        break;
-      }
-      case 1: {
-        code = 110;
-        break;
-      }
-      case 2: {
-        code = 103;
-        break;
-      }
-      case 3: {
-        code = 99;
-        break;
-      }
-      case 4: {
-        code = 94;
-        break;
-      }
-      case 5: {
-        code = 90;
-        break;
-      }
-      case 6: {
-        code = 85;
-        break;
-      }
-      case 7: {
-        code = 78;
-        break;
-      }
-      case 8: {
-        code = 73;
-        break;
-      }
-      default: {
-        code = 95;
-        break;
-      }
-    }
-    return code;
-  }
-
   int etaVal2Code(double etaVal) {
     int sign = sgn(etaVal);
     int bit = etaVal2Bit(fabs(etaVal));
-    int code = etaBit2Code(bit);
+    int code = OMTFConfiguration::etaBit2Code(bit);
     return sign * code;
   }
 
@@ -108,33 +62,33 @@ namespace {
       if (keyWG < 49)
         etaCode = 121;
       else if (keyWG <= 57)
-        etaCode = etaBit2Code(0);
+        etaCode = OMTFConfiguration::etaBit2Code(0);
       else if (keyWG <= 63)
-        etaCode = etaBit2Code(1);
+        etaCode = OMTFConfiguration::etaBit2Code(1);
     } else if (detId.station() == 1 && detId.ring() == 3) {
       if (keyWG <= 2)
-        etaCode = etaBit2Code(2);
+        etaCode = OMTFConfiguration::etaBit2Code(2);
       else if (keyWG <= 8)
-        etaCode = etaBit2Code(3);
+        etaCode = OMTFConfiguration::etaBit2Code(3);
       else if (keyWG <= 15)
-        etaCode = etaBit2Code(4);
+        etaCode = OMTFConfiguration::etaBit2Code(4);
       else if (keyWG <= 23)
-        etaCode = etaBit2Code(5);
+        etaCode = OMTFConfiguration::etaBit2Code(5);
       else if (keyWG <= 31)
-        etaCode = etaBit2Code(6);
+        etaCode = OMTFConfiguration::etaBit2Code(6);
     } else if ((detId.station() == 2 || detId.station() == 3) && detId.ring() == 2) {
       if (keyWG < 24)
         etaCode = 121;
       else if (keyWG <= 29)
-        etaCode = etaBit2Code(0);
+        etaCode = OMTFConfiguration::etaBit2Code(0);
       else if (keyWG <= 43)
-        etaCode = etaBit2Code(1);
+        etaCode = OMTFConfiguration::etaBit2Code(1);
       else if (keyWG <= 49)
-        etaCode = etaBit2Code(2);
+        etaCode = OMTFConfiguration::etaBit2Code(2);
       else if (keyWG <= 56)
-        etaCode = etaBit2Code(3);
+        etaCode = OMTFConfiguration::etaBit2Code(3);
       else if (keyWG <= 63)
-        etaCode = etaBit2Code(4);
+        etaCode = OMTFConfiguration::etaBit2Code(4);
     }
 
     if (detId.endcap() == 2)
@@ -210,12 +164,18 @@ int OmtfAngleConverter::getGlobalEta(const DTChamberId dTChamberId,
   }
   int signEta = sgn(dTChamberId.wheel());
   iEta *= signEta;
-  return iEta;
+
+  if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::bits)
+    return OMTFConfiguration::eta2Bits(abs(iEta));
+  else if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::valueP1Scale)
+    return abs(iEta);
+
+  return 0;
 }
 
 ///////////////////////////////////////
 ///////////////////////////////////////
-int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTDigi &aDigi, float& r) const {
+int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTDigi &aDigi, float &r) const {
   ///Code taken from GeometryTranslator.
   ///Will be replaced by direct CSC phi local to global scale
   ///transformation as used in FPGA implementation
@@ -266,23 +226,31 @@ int OmtfAngleConverter::getGlobalEta(unsigned int rawid, const CSCCorrelatedLCTD
 
   r = final_gp.perp();
 
+  //edm::LogVerbatim("l1tOmtfEventPrint")<<id<<" ETA_CSC st: " << id.station()<< "ri: "<<id.ring()<<" eta: " <<  final_gp.eta()
+  //           <<" etaCode_simple: " <<  etaVal2Code( final_gp.eta() )<< " keyWG: "<<keyWG <<" etaKeyWG2Code: "<<etaKeyWG2Code(id,keyWG)<< std::endl;
 
-  //  LogTrace("l1tOmtfEventPrint")<<id<<" st: " << id.station()<< "ri: "<<id.ring()<<" eta: " <<  final_gp.eta()
-  //           <<" etaCode_simple: " <<  etaVal2Code( final_gp.eta() )<< " KW: "<<keyWG <<" etaKeyWG2Code: "<<etaKeyWG2Code(id,keyWG)<< std::endl;
-  //  int station = (id.endcap()==1) ? id.station() : -id.station();
-  //  LogTrace("l1tOmtfEventPrint")<<"ETA_CSC: " << station <<" "<<id.ring()<<" "<< final_gp.eta()<<" "<<keyWG <<" "<< etaKeyWG2Code(id,keyWG) << std::endl;
+  if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::bits)
+    return OMTFConfiguration::eta2Bits(abs(etaKeyWG2Code(id, keyWG)));
+  else if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::valueP1Scale) {
+    const LocalPoint lpWg = layer_geom->localCenterOfWireGroup(keyWG);
+    const GlobalPoint gpWg = layer->surface().toGlobal(lpWg);
 
-  return etaKeyWG2Code(id, keyWG);
+    //edm::LogVerbatim("l1tOmtfEventPrint")<<"gpWg.eta() " << gpWg.eta()<<" etaToHwEta(gpWg.eta()) "<<config->etaToHwEta(gpWg.eta()) << std::endl;
+
+    return config->etaToHwEta(abs(gpWg.eta()));
+  } else {
+    return 0;
+  }
 }
 ///////////////////////////////////////
 ///////////////////////////////////////
-int OmtfAngleConverter::getGlobalEtaRpc(unsigned int rawid, const unsigned int &strip, float& r) const {
+int OmtfAngleConverter::getGlobalEtaRpc(unsigned int rawid, const unsigned int &strip, float &r) const {
   const RPCDetId id(rawid);
   auto roll = _georpc->roll(id);
   const LocalPoint lp = roll->centreOfStrip((int)strip);
   const GlobalPoint gp = roll->toGlobal(lp);
 
-  if(id.region() == 0) { //barrel
+  if (id.region() == 0) {  //barrel
     /* //debug printout to check the geometry of the chambers
     float phin = (id.sector()-1)*Geom::pi()/6;
     float phiHit = gp.phi();
@@ -298,12 +266,16 @@ int OmtfAngleConverter::getGlobalEtaRpc(unsigned int rawid, const unsigned int &
         <<" - phin "<<phin<< " rad "<< phin * 180. / M_PI<<" deg "
         <<" - deltaPhi "<<deltaPhi<<" r "<<gp.perp() * cos(deltaPhi);
         */
-  }
-  else {
+  } else {
     r = gp.perp();
   }
 
-  return etaVal2Code(gp.eta());
+  if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::bits)
+    return OMTFConfiguration::eta2Bits(abs(etaVal2Code(gp.eta())));
+  else if (config->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::valueP1Scale)
+    return abs(config->etaToHwEta((gp.eta())));
+
+  return 0;
 }
 
 ///////////////////////////////////////

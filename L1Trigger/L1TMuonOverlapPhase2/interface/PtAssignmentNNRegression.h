@@ -13,18 +13,18 @@
 
 //#include "lutNN/lutNN2/interface/ClassifierToRegression.h"
 
-class PtAssignmentNNRegression: public PtAssignmentBase {
+class PtAssignmentNNRegression : public PtAssignmentBase {
 public:
-  PtAssignmentNNRegression(const edm::ParameterSet& edmCfg, const OMTFConfiguration* omtfConfig, std::string networkFile);
+  PtAssignmentNNRegression(const edm::ParameterSet& edmCfg,
+                           const OMTFConfiguration* omtfConfig,
+                           std::string networkFile);
   ~PtAssignmentNNRegression() override;
 
   std::vector<float> getPts(AlgoMuons::value_type& algoMuon,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
+                            std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
 
 private:
   unique_ptr<lutNN::LutNetworkFixedPointRegressionBase> lutNetworkFP;
-
 };
-
 
 #endif /* INTERFACE_OMTF_PTASSIGNMENTNN_H_ */

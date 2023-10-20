@@ -5,19 +5,6 @@
 
 #include <sstream>
 
-namespace {
-
-  struct AlgoMuonEtaFix {
-    AlgoMuonEtaFix(const AlgoMuonPtr& mu) : mu(mu), fixedEta(mu->getEtaHw()) {}
-    const AlgoMuonPtr mu;
-    unsigned int fixedEta;
-    const AlgoMuon* operator -> () {
-      return mu.get();
-    }
-  };
-
-}  // namespace
-
 AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
   // sorting within GB.
   //this function is only for the OMTF version without unconstrained pt
@@ -35,13 +22,15 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
       return false;
     else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum < bRefLayerLogicNum) {
       return false;
-    } else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() > b->getPdfSumConstr())
+    } else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum &&
+               a->getPdfSumConstr() > b->getPdfSumConstr())
       return false;
-    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() == b->getPdfSumConstr() &&
-             a->getPatternNumConstr() > b->getPatternNumConstr())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum &&
+             a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() > b->getPatternNumConstr())
       return false;
-    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum && a->getPdfSumConstr() == b->getPdfSumConstr() &&
-             a->getPatternNumConstr() == b->getPatternNumConstr() && a->getRefHitNumber() < b->getRefHitNumber())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && aRefLayerLogicNum == bRefLayerLogicNum &&
+             a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
+             a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
       return true;
@@ -57,13 +46,13 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
 
     if (a->getFiredLayerCntConstr() > b->getFiredLayerCntConstr())
       return false;
-    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr()) {
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() > b->getPdfSumConstr())
       return false;
-    } else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() > b->getPdfSumConstr())
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() &&
+             a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() > b->getPatternNumConstr())
       return false;
-    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() > b->getPatternNumConstr())
-      return false;
-    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() && a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
+    else if (a->getFiredLayerCntConstr() == b->getFiredLayerCntConstr() &&
+             a->getPdfSumConstr() == b->getPdfSumConstr() && a->getPatternNumConstr() == b->getPatternNumConstr() &&
              a->getRefHitNumber() < b->getRefHitNumber())
       return false;
     else
@@ -90,8 +79,8 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
   };
 
   //this function is for the OMTF version with unconstrained pt
-  auto customByRefLayer = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b)->bool {
-    if(!a->isValid()) {
+  auto customByRefLayer = [&](const AlgoMuons::value_type& a, const AlgoMuons::value_type& b) -> bool {
+    if (!a->isValid()) {
       return true;
     }
     if (!b->isValid()) {
@@ -128,28 +117,41 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
     std::sort(muonsIN.rbegin(), muonsIN.rend(), customLess);
 
   // actual GhostBusting. Overwrite eta in case of no DT info.
-  std::vector<AlgoMuonEtaFix> refHitCleanCandsFixedEta;
+  AlgoMuons refHitCleanCandsFixedEta;
 
   for (unsigned int iMu1 = 0; iMu1 < muonsIN.size(); iMu1++) {
-    auto& muIN1 = muonsIN[iMu1];
+    refHitCleanCandsFixedEta.emplace_back(new AlgoMuon(*(muonsIN[iMu1])));
+
+    if (omtfConfig->getStubEtaEncoding() == ProcConfigurationBase::StubEtaEncoding::bits)
+      refHitCleanCandsFixedEta.back()->setEta(OMTFConfiguration::etaBits2HwEta(muonsIN[iMu1]->getEtaHw()));
+  }
+
+  for (unsigned int iMu1 = 0; iMu1 < refHitCleanCandsFixedEta.size(); iMu1++) {
+    auto& muIN1 = refHitCleanCandsFixedEta[iMu1];
+    //watch out: the muIN1 is AlgoMuonPtr, so setting the eta here changes the eta in the input muonsIN
+    //this affects algoCandidates in OMTFProcessor<GoldenPatternType>::run
+
     if (!muIN1->isValid() || muIN1->isKilled())
       continue;
 
-    refHitCleanCandsFixedEta.push_back(muIN1);
-    for (unsigned int iMu2 = iMu1+1; iMu2 < muonsIN.size(); iMu2++) {
-      auto& muIN2 = muonsIN[iMu2];
+    //refHitCleanCandsFixedEta.push_back(muIN1);
+    //for (unsigned int iMu2 = iMu1+1; iMu2 < refHitCleanCandsFixedEta.size(); iMu2++) {
+    for (unsigned int iMu2 = refHitCleanCandsFixedEta.size() - 1; iMu2 >= iMu1 + 1; iMu2--) {
+      auto& muIN2 = refHitCleanCandsFixedEta[iMu2];
       if (muIN2->isValid() &&
           std::abs(omtfConfig->procPhiToGmtPhi(muIN1->getPhi()) - omtfConfig->procPhiToGmtPhi(muIN2->getPhi())) < 8) {
         //the candidates are sorted, so only the  muIN2 can be killed, as it is "worse" than the muIN1
-        muonsIN[iMu2]->kill();
-        muonsIN[iMu1]->getKilledMuons().emplace_back(muIN2);
+        refHitCleanCandsFixedEta[iMu2]->kill();
+        refHitCleanCandsFixedEta[iMu1]->getKilledMuons().emplace_back(muIN2);
 
-        if ((omtfConfig->fwVersion() >= 6) &&
+        //for the DT stubs, if there is no eta, the middle of the chamber is set as the stub eta, i.e. 75, 79 or 92 respectively
+        //in this case the eta can be replaced by the eta from the killed algoMuon
+        if (omtfConfig->getRefToLogicNumber()[muIN1->getRefLayer()] <= 5 && (omtfConfig->fwVersion() >= 6) &&
             ((abs(muIN1->getEtaHw()) == 75 || abs(muIN1->getEtaHw()) == 79 || abs(muIN1->getEtaHw()) == 92)) &&
-            ((abs(muIN2->getEtaHw()) != 75 && abs(muIN2->getEtaHw()) != 79 && abs(muIN2->getEtaHw()) != 92))) {
+            ((abs(muIN2->getEtaHw()) != 75 && abs(muIN2->getEtaHw()) != 79 &&
+              abs(muIN2->getEtaHw()) != 92))) {  //FIXME condition in this do not affects the final result
 
-          refHitCleanCandsFixedEta.back().fixedEta = muIN2->getEtaHw();
-
+          muIN1->setEta(muIN2->getEtaHw());
         }
       }
     }
@@ -158,8 +160,9 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
   // fill outgoing collection
   AlgoMuons refHitCleanCands;
   for (const auto& mu : refHitCleanCandsFixedEta) {
-    refHitCleanCands.emplace_back(new AlgoMuon( *(mu.mu) ));
-    refHitCleanCands.back()->setEta(mu.fixedEta);
+    if (mu->isValid() && !(mu->isKilled()))
+      refHitCleanCands.emplace_back(mu);
+    //refHitCleanCands.back()->setEta(mu.fixedEta);
     if (refHitCleanCands.size() >= 3)
       break;
   }

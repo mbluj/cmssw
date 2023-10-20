@@ -21,7 +21,7 @@ public:
   virtual ~PtAssignmentBase();
 
   virtual std::vector<float> getPts(AlgoMuons::value_type& algoMuon,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) = 0;
+                                    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) = 0;
 
 protected:
   const OMTFConfiguration* omtfConfig = nullptr;

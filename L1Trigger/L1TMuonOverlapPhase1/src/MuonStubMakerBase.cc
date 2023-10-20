@@ -19,9 +19,12 @@ void DtDigiToStubsConverter::loadDigis(const edm::Event& event) {
   event.getByToken(inputTokenDtTh, dtThDigis);
 }
 
-void DtDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+void DtDigiToStubsConverter::makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                                       unsigned int iProcessor,
+                                       l1t::tftype procTyp,
+                                       int bxFrom,
+                                       int bxTo,
+                                       std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!dtPhDigis)
     return;
 
@@ -48,9 +51,12 @@ void DtDigiToStubsConverter::makeStubs(
 ///////////////////////////////////////
 ///////////////////////////////////////
 
-void CscDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+void CscDigiToStubsConverter::makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                                        unsigned int iProcessor,
+                                        l1t::tftype procTyp,
+                                        int bxFrom,
+                                        int bxTo,
+                                        std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!cscDigis)
     return;
 
@@ -75,9 +81,12 @@ void CscDigiToStubsConverter::makeStubs(
   }
 }
 
-void RpcDigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+void RpcDigiToStubsConverter::makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                                        unsigned int iProcessor,
+                                        l1t::tftype procTyp,
+                                        int bxFrom,
+                                        int bxTo,
+                                        std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!rpcDigis)
     return;
   //LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ <<" RPC HITS, processor : " << iProcessor<<" "<<std::endl;
@@ -159,9 +168,12 @@ void MuonStubMakerBase::loadAndFilterDigis(const edm::Event& event) {
     digiToStubsConverter->loadDigis(event);
 }
 
-void MuonStubMakerBase::buildInputForProcessor(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+void MuonStubMakerBase::buildInputForProcessor(MuonStubPtrs2D& muonStubsInLayers,
+                                               unsigned int iProcessor,
+                                               l1t::tftype procTyp,
+                                               int bxFrom,
+                                               int bxTo,
+                                               std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   //LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " iProcessor " << iProcessor << " preocType "
   //                              << procTyp << std::endl;
 

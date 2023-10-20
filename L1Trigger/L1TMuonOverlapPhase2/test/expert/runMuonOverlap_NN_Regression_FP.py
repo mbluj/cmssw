@@ -8,7 +8,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
 verbose = True
 
-version = "_p2DT_v3"
+version = "_p2DT_v4"
 
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",

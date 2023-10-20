@@ -49,7 +49,7 @@ void XMLEventWriter::observeProcesorBegin(unsigned int iProcessor, l1t::tftype m
   procTree.add("<xmlattr>.iProcessor", iProcessor);
 
   std::ostringstream stringStr;
-  stringStr << (board.position() == 1 ? "+" : "")<< board.position();
+  stringStr << (board.position() == 1 ? "+" : "") << board.position();
   procTree.add("<xmlattr>.position", stringStr.str());
 }
 
@@ -79,13 +79,12 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
       auto& hitTree = layerTree.add("Hit", "");
 
       hitTree.add("<xmlattr>.iInput", iHit);
-      hitTree.add("<xmlattr>.iEta", OMTFConfiguration::eta2Bits(abs(input->getHitEta(iLayer, iHit))));
+      hitTree.add("<xmlattr>.iEta", input->getHitEta(iLayer, iHit));
       hitTree.add("<xmlattr>.iPhi", hitPhi);
       hitTree.add("<xmlattr>.iQual", input->getHitQual(iLayer, iHit));
-
     }
 
-    if(layerTree.size()) {
+    if (!layerTree.empty()) {
       layerTree.add("<xmlattr>.iLayer", iLayer);
       procTree.add_child("Layer", layerTree);
     }
@@ -99,15 +98,15 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
       algoMuonTree.add("<xmlattr>.disc", algoCand->getDisc());
       algoMuonTree.add("<xmlattr>.pdfSumConstr", algoCand->getGpResultConstr().getPdfSum());
       algoMuonTree.add("<xmlattr>.pdfSumUnconstr", algoCand->getGpResultUnconstr().getPdfSumUnconstr());
-      algoMuonTree.add("<xmlattr>.etaCode", OMTFConfiguration::eta2Bits(abs(algoCand->getEtaHw())));
+      algoMuonTree.add("<xmlattr>.etaCode", algoCand->getEtaHw());
       algoMuonTree.add("<xmlattr>.iRefHit", algoCand->getRefHitNumber());
       algoMuonTree.add("<xmlattr>.iRefLayer", algoCand->getRefLayer());
 
       //algoMuonTree.add("<xmlattr>.layers", std::bitset<18>(algoCand->getFiredLayerBits()));
 
-
       algoMuonTree.add("<xmlattr>.layersConstr", std::bitset<18>(algoCand->getGpResultConstr().getFiredLayerBits()));
-      algoMuonTree.add("<xmlattr>.layersUnconstr", std::bitset<18>(algoCand->getGpResultUnconstr().getFiredLayerBits()));
+      algoMuonTree.add("<xmlattr>.layersUnconstr",
+                       std::bitset<18>(algoCand->getGpResultUnconstr().getFiredLayerBits()));
 
       algoMuonTree.add("<xmlattr>.nHits", algoCand->getQ());
 
@@ -124,10 +123,10 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
 
       algoMuonTree.add("<xmlattr>.phiRHit", algoCand->getPhiRHit());
 
+      //in the firmware, the algoMuon has no pt nor upt yet,
+      //only the pattern number, which is converted to the hwpt in the ghostbuster
       algoMuonTree.add("<xmlattr>.ptCodeConstr", algoCand->getPtConstr());
       algoMuonTree.add("<xmlattr>.ptCodeUnconstr", algoCand->getPtUnconstr());
-
-
 
       auto& gpResultTree = algoMuonTree.add("gpResultConstr", "");
       auto& gpResultConstr = algoCand->getGpResultConstr();
@@ -139,14 +138,14 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
         auto& layerTree = gpResultTree.add("layer", "");
         layerTree.add("<xmlattr>.num", iLogicLayer);
         auto pdfBin = gpResultConstr.getStubResults()[iLogicLayer].getPdfBin();
-        if(pdfBin == 5400)
+        if (pdfBin == 5400)
           pdfBin = 0;
         layerTree.add("<xmlattr>.pdfBin", pdfBin);
         layerTree.add("<xmlattr>.pdfVal", gpResultConstr.getStubResults()[iLogicLayer].getPdfVal());
         layerTree.add("<xmlattr>.fired", gpResultConstr.isLayerFired(iLogicLayer));
       }
 
-      if(algoCand->getGpResultUnconstr().isValid() ) {
+      if (algoCand->getGpResultUnconstr().isValid()) {
         auto& gpResultTree = algoMuonTree.add("gpResultUnconstr", "");
         auto& gpResult = algoCand->getGpResultUnconstr();
 
@@ -157,7 +156,7 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
           auto& layerTree = gpResultTree.add("layer", "");
           layerTree.add("<xmlattr>.num", iLogicLayer);
           auto pdfBin = gpResult.getStubResults()[iLogicLayer].getPdfBin();
-          if(pdfBin == 5400)
+          if (pdfBin == 5400)
             pdfBin = 0;
           layerTree.add("<xmlattr>.pdfBin", pdfBin);
           layerTree.add("<xmlattr>.pdfVal", gpResult.getStubResults()[iLogicLayer].getPdfVal());
@@ -190,7 +189,7 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
     candMuonTree.add("<xmlattr>.trackFinderType", stringStr.str());
   }
 
-  if(procTree.size())
+  if (!procTree.empty())
     eventTree->add_child("Processor", procTree);
 }
 
@@ -206,15 +205,15 @@ void XMLEventWriter::observeEventBegin(const edm::Event& iEvent) {
   eventTree->add("<xmlattr>.iEvent", eventId);
 
   eventTree = &(eventTree->add("bx", ""));
-  eventTree->add("<xmlattr>.iBx", 2*eventId);
+  eventTree->add("<xmlattr>.iBx", 2 * eventId);
 }
 
 void XMLEventWriter::observeEventEnd(const edm::Event& iEvent,
-                                     std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) {
-}
+                                     std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) {}
 
 void XMLEventWriter::endJob() {
-  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the data to the xml - starting";
-  boost::property_tree::write_xml(fName, tree, std::locale(), boost::property_tree::xml_parser::xml_writer_make_settings<std::string>(' ', 2));
-  edm::LogInfo("l1tOmtfEventPrint")<<"XMLEventWriter::endJob() - writing the data to the xml - done";
+  edm::LogInfo("l1tOmtfEventPrint") << "XMLEventWriter::endJob() - writing the data to the xml - starting";
+  boost::property_tree::write_xml(
+      fName, tree, std::locale(), boost::property_tree::xml_parser::xml_writer_make_settings<std::string>(' ', 2));
+  edm::LogInfo("l1tOmtfEventPrint") << "XMLEventWriter::endJob() - writing the data to the xml - done";
 }

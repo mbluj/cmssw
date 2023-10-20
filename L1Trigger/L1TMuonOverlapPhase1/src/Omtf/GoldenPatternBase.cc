@@ -64,7 +64,6 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
     phiRefHit = 0;  //phi ref hit for the bending layer set to 0, since it should not be included in the phiDist
   }
 
-
   for (unsigned int iStub = 0; iStub < layerStubs.size(); iStub++) {
     auto& stub = layerStubs[iStub];
     if (!stub)  //empty pointer

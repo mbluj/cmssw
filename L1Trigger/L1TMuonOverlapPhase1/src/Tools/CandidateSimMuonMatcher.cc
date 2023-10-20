@@ -79,7 +79,8 @@ void CandidateSimMuonMatcher::observeProcesorEmulation(unsigned int iProcessor,
   unsigned int procIndx = omtfConfig->getProcIndx(iProcessor, mtfType);
   for (auto& gbCandidate : gbCandidates) {
     if (gbCandidate->getPtConstr() > 0) {
-      LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::observeProcesorEmulation procIndx" << procIndx<<" "<< *gbCandidate << std::endl;
+      LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::observeProcesorEmulation procIndx" << procIndx << " "
+                                    << *gbCandidate << std::endl;
       this->gbCandidates.emplace_back(gbCandidate);
     }
   }
@@ -127,7 +128,8 @@ bool simTrackIsMuonInBx0(const SimTrack& simTrack) {
 }
 
 bool trackingParticleIsMuonInBx0(const TrackingParticle& trackingParticle) {
-  if (abs(trackingParticle.pdgId()) == 13 || abs(trackingParticle.pdgId()) == 1000015) {  //|| tpPtr->pt() > 20 //todo 1000015 is stau
+  if (abs(trackingParticle.pdgId()) == 13 ||
+      abs(trackingParticle.pdgId()) == 1000015) {  //|| tpPtr->pt() > 20 //todo 1000015 is stau
     //only muons
     if (trackingParticle.eventId().bunchCrossing() == 0)
       return true;
@@ -209,7 +211,7 @@ void CandidateSimMuonMatcher::observeEventEnd(const edm::Event& event,
     //TODO  use other simTrackFilter if needed  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //we dont want to check the eta of the generated muon, as it is on the vertex,
     //instead inside match, we check the eta of the propagated track to the second muons station
-    std::function<bool(const SimTrack&)> const& simTrackFilter = simTrackIsMuonInBx0; //simTrackIsMuonInOmtfBx0;
+    std::function<bool(const SimTrack&)> const& simTrackFilter = simTrackIsMuonInBx0;  //simTrackIsMuonInOmtfBx0;
 
     matchingResults = match(
         ghostBustedRegionalCands, ghostBustedProcMuons, simTraksHandle.product(), simVertices.product(), simTrackFilter);
@@ -217,11 +219,12 @@ void CandidateSimMuonMatcher::observeEventEnd(const edm::Event& event,
   } else if (edmCfg.exists("trackingParticleTag")) {
     edm::Handle<TrackingParticleCollection> trackingParticleHandle;
     event.getByLabel(edmCfg.getParameter<edm::InputTag>("trackingParticleTag"), trackingParticleHandle);
-    LogTrace("l1tOmtfEventPrint") << "\nCandidateSimMuonMatcher::observeEventEnd trackingParticleHandle size " << trackingParticleHandle.product()->size()
-                                  << std::endl;
+    LogTrace("l1tOmtfEventPrint") << "\nCandidateSimMuonMatcher::observeEventEnd trackingParticleHandle size "
+                                  << trackingParticleHandle.product()->size() << std::endl;
 
     //TODO use other trackParticleFilter if needed <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    std::function<bool(const TrackingParticle&)> trackParticleFilter = trackingParticleIsMuonInBx0; //trackingParticleIsMuonInOmtfBx0;
+    std::function<bool(const TrackingParticle&)> trackParticleFilter =
+        trackingParticleIsMuonInBx0;  //trackingParticleIsMuonInOmtfBx0;
     matchingResults =
         match(ghostBustedRegionalCands, ghostBustedProcMuons, trackingParticleHandle.product(), trackParticleFilter);
   }
@@ -240,10 +243,10 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
   boost::dynamic_bitset<> isKilled(mtfCands->size(0), false);
 
   for (unsigned int i1 = 0; i1 < mtfCands->size(0); ++i1) {
-    LogTrace("l1tOmtfEventPrint")
-            << "\nCandidateSimMuonMatcher::ghostBust regionalCand pt " << std::setw(3) << mtfCands->at(0, i1).hwPt()
-            << " qual " << std::setw(2) << mtfCands->at(0, i1).hwQual() << " proc " << std::setw(2)
-            << mtfCands->at(0, i1).processor();
+    LogTrace("l1tOmtfEventPrint") << "\nCandidateSimMuonMatcher::ghostBust regionalCand pt " << std::setw(3)
+                                  << mtfCands->at(0, i1).hwPt() << " qual " << std::setw(2)
+                                  << mtfCands->at(0, i1).hwQual() << " proc " << std::setw(2)
+                                  << mtfCands->at(0, i1).processor();
     for (unsigned int i2 = i1 + 1; i2 < mtfCands->size(0); ++i2) {
       auto& mtfCand1 = mtfCands->at(0, i1);
       auto& mtfCand2 = mtfCands->at(0, i2);
@@ -261,7 +264,8 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
         //0.0872664626 = 5 deg, i.e. the same window as in the OMTF ghost buster
         if (abs(gloablHwPhi1 - gloablHwPhi2) < 8) {
           //if (mtfCand1.hwQual() > mtfCand2.hwQual()) //TODO this is used in the uGMT
-          if(gbCandidates[i1]->getFiredLayerCnt() > gbCandidates[i2]->getFiredLayerCnt()) //but this should be better - but probably the difference is not big
+          if (gbCandidates[i1]->getFiredLayerCnt() >
+              gbCandidates[i2]->getFiredLayerCnt())  //but this should be better - but probably the difference is not big
           {
             isKilled[i2] = true;
           } else
@@ -302,7 +306,7 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
 }
 
 TrajectoryStateOnSurface CandidateSimMuonMatcher::atStation2(FreeTrajectoryState ftsStart, float eta) const {
-  eta = 0; //fix me!!!!! in case of displaced muon the vertex eta has no sense
+  eta = 0;  //fix me!!!!! in case of displaced muon the vertex eta has no sense
   ReferenceCountingPointer<Surface> rpc;
   if (eta < -1.24)  //negative endcap, RE2
     rpc = ReferenceCountingPointer<Surface>(
@@ -483,16 +487,17 @@ MatchingResult CandidateSimMuonMatcher::match(const l1t::RegionalMuonCand* muonC
     if (fabs(result.deltaPhi - mean) < treshold && fabs(result.deltaEta) < 0.3)
       result.result = MatchingResult::ResultType::matched;
 
-    LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match: trackingParticle type " << trackingParticle.pdgId()
-                                  << " pt " << std::setw(8) << trackingParticle.pt() << " eta " << std::setw(8)
-                                  << trackingParticle.momentum().eta() << " phi " << std::setw(8)
-                                  << trackingParticle.momentum().phi() << " propagation eta " << std::setw(8)
-                                  << tsof.globalPosition().eta() << " phi " << tsof.globalPosition().phi()
-                                  << " muonCand pt " << std::setw(8) << muonCand->hwPt() << " candGloablEta "
-                                  << std::setw(8) << candGloablEta << " candGlobalPhi " << std::setw(8) << candGlobalPhi
-                                  << " hwQual " << muonCand->hwQual() << " deltaEta " << std::setw(8) << result.deltaEta
-                                  << " deltaPhi " << std::setw(8) << result.deltaPhi << " Likelihood " << std::setw(8)
-                                  << result.matchingLikelihood << " result " << (short)result.result << std::endl;
+    LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match: trackingParticle type "
+                                  << trackingParticle.pdgId() << " pt " << std::setw(8) << trackingParticle.pt()
+                                  << " eta " << std::setw(8) << trackingParticle.momentum().eta() << " phi "
+                                  << std::setw(8) << trackingParticle.momentum().phi() << " propagation eta "
+                                  << std::setw(8) << tsof.globalPosition().eta() << " phi "
+                                  << tsof.globalPosition().phi() << " muonCand pt " << std::setw(8) << muonCand->hwPt()
+                                  << " candGloablEta " << std::setw(8) << candGloablEta << " candGlobalPhi "
+                                  << std::setw(8) << candGlobalPhi << " hwQual " << muonCand->hwQual() << " deltaEta "
+                                  << std::setw(8) << result.deltaEta << " deltaPhi " << std::setw(8) << result.deltaPhi
+                                  << " Likelihood " << std::setw(8) << result.matchingLikelihood << " result "
+                                  << (short)result.result << std::endl;
   }
 
   return result;
@@ -612,10 +617,10 @@ std::vector<MatchingResult> CandidateSimMuonMatcher::match(std::vector<const l1t
     //eta 0.7 is the beginning of the MB2,
     //the eta range wider than the nominal OMTF region is needed, as in any case muons outside this region are seen by the OMTF
     //so it better to train the nn suich that is able to measure its pt, as it may affect the rate
-    if( (fabs( tsof.globalPosition().eta()) >= 0.7 ) && (fabs( tsof.globalPosition().eta()) <= 1.3) ) {
-      LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match trackingParticle IS in OMTF region, matching to the omtfCands";
-    }
-    else {
+    if ((fabs(tsof.globalPosition().eta()) >= 0.7) && (fabs(tsof.globalPosition().eta()) <= 1.3)) {
+      LogTrace("l1tOmtfEventPrint")
+          << "CandidateSimMuonMatcher::match trackingParticle IS in OMTF region, matching to the omtfCands";
+    } else {
       LogTrace("l1tOmtfEventPrint") << "trackingParticle NOT in OMTF region ";
       continue;
     }
@@ -638,7 +643,8 @@ std::vector<MatchingResult> CandidateSimMuonMatcher::match(std::vector<const l1t
         }
         int vtxInd = simTrack.vertIndex();
         if (vtxInd >= 0) {
-          result.simVertex = &(simVertices->at(vtxInd)); //TODO ?????? something strange is here, was commented in the previous version
+          result.simVertex = &(
+              simVertices->at(vtxInd));  //TODO ?????? something strange is here, was commented in the previous version
         }
         if (result.result == MatchingResult::ResultType::matched) {
           matchingResults.push_back(result);
@@ -689,14 +695,15 @@ std::vector<MatchingResult> CandidateSimMuonMatcher::match(
       continue;  //no sense to do matching
     }
 
-    LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match, tsof.globalPosition().eta() "<<tsof.globalPosition().eta();
+    LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match, tsof.globalPosition().eta() "
+                                  << tsof.globalPosition().eta();
 
     //checking if the propagated track is inside the OMTF range, TODO - tune the range!!!!!!!!!!!!!!!!!
     //eta 0.7 is the beginning of the MB2,
-    if( (fabs( tsof.globalPosition().eta()) >= 0.7 ) && (fabs( tsof.globalPosition().eta()) <= 1.3) ) {
-      LogTrace("l1tOmtfEventPrint") << "CandidateSimMuonMatcher::match trackingParticle IS in OMTF region, matching to the omtfCands";
-    }
-    else {
+    if ((fabs(tsof.globalPosition().eta()) >= 0.7) && (fabs(tsof.globalPosition().eta()) <= 1.3)) {
+      LogTrace("l1tOmtfEventPrint")
+          << "CandidateSimMuonMatcher::match trackingParticle IS in OMTF region, matching to the omtfCands";
+    } else {
       LogTrace("l1tOmtfEventPrint") << "trackingParticle NOT in OMTF region ";
       continue;
     }

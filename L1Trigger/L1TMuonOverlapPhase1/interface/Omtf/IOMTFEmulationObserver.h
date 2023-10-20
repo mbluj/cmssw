@@ -31,9 +31,9 @@ public:
 
   virtual void beginRun(edm::EventSetup const& eventSetup) {}
 
-  virtual void observeProcesorBegin(unsigned int iProcessor, l1t::tftype mtfType) {};
+  virtual void observeProcesorBegin(unsigned int iProcessor, l1t::tftype mtfType){};
 
-  virtual void addProcesorData(std::string key, boost::property_tree::ptree& procDataTree) {};
+  virtual void addProcesorData(std::string key, boost::property_tree::ptree& procDataTree){};
 
   virtual void observeProcesorEmulation(unsigned int iProcessor,
                                         l1t::tftype mtfType,

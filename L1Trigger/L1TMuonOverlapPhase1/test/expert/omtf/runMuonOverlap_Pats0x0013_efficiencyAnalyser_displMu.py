@@ -13,10 +13,13 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v9_test'
+#version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_valueP1Scale'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_bits'
+#version = 'Patterns_0x00012_t17_v11_extr_off_test_bits'
 
 runDebug = "DEBUG" # or "INFO" DEBUG
-useExtraploationAlgo = True;
+useExtraploationAlgo = True
+#useExtraploationAlgo = False
 
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",
@@ -184,7 +187,10 @@ print("analysisType=" + analysisType)
 process.TFileService = cms.Service("TFileService", fileName = cms.string('omtfAnalysis2_eff_SingleMu_t' + version + '.root'), closeFileFast = cms.untracked.bool(True) )
                                    
 ####OMTF Emulator
-process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi')
+if useExtraploationAlgo :
+    process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_extrapolSimple_cfi')
+else :
+    process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi')    
 
 if(runDebug == "DEBUG") :
     process.simOmtfDigis.dumpResultToXML = cms.bool(True)
@@ -250,6 +256,9 @@ if useExtraploationAlgo :
 
     process.simOmtfDigis.usePhiBExtrapolationFromMB1 = cms.bool(True)
     process.simOmtfDigis.usePhiBExtrapolationFromMB2 = cms.bool(True)
+    
+#process.simOmtfDigis.stubEtaEncoding = cms.string("valueP1Scale")  
+process.simOmtfDigis.stubEtaEncoding = cms.string("bits")   
 
 #nn_pThresholds = [0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.50, 0.52, 0.54 ]
 #nn_pThresholds = [0.40, 0.50] 

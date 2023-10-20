@@ -30,7 +30,7 @@ public:
 private:
   edm::EDGetTokenT<L1Phase2MuDTPhContainer> inputTokenDTPhPhase2;
 
-  unique_ptr<PtAssignmentBase>  ptAssignment;
+  unique_ptr<PtAssignmentBase> ptAssignment;
 };
 
 #endif /* L1TMUONOVERLAPPHASE2_OMTFEMULATION_H_ */

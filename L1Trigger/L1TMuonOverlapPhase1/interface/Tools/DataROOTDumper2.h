@@ -52,7 +52,7 @@ public:
   bool killed = false;
 
   float deltaPhi = 0, deltaEta = 0;
-  
+
   //float omtfPtCont = 0;
 
   struct Hit {
@@ -89,7 +89,6 @@ public:
                                 const AlgoMuons& algoCandidates,
                                 const AlgoMuons& gbCandidates,
                                 const std::vector<l1t::RegionalMuonCand>& candMuons) override;
-
 
   void observeEventEnd(const edm::Event& iEvent,
                        std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) override;

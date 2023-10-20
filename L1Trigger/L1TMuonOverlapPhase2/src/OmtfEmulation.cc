@@ -20,8 +20,11 @@ OmtfEmulation::~OmtfEmulation() {}
 
 void OmtfEmulation::beginJob() {
   if (edmParameterSet.exists("usePhase2DTPrimitives") && edmParameterSet.getParameter<bool>("usePhase2DTPrimitives")) {
-    inputMaker.reset(new InputMakerPhase2(
-        edmParameterSet, muStubsInputTokens, inputTokenDTPhPhase2, omtfConfig.get(), std::make_unique<OmtfPhase2AngleConverter>()));
+    inputMaker.reset(new InputMakerPhase2(edmParameterSet,
+                                          muStubsInputTokens,
+                                          inputTokenDTPhPhase2,
+                                          omtfConfig.get(),
+                                          std::make_unique<OmtfPhase2AngleConverter>()));
   } else {
     inputMaker = std::make_unique<OMTFinputMaker>(
         edmParameterSet, muStubsInputTokens, omtfConfig.get(), std::make_unique<OmtfAngleConverter>());
@@ -29,9 +32,9 @@ void OmtfEmulation::beginJob() {
 }
 
 void OmtfEmulation::addObservers(const MuonGeometryTokens& muonGeometryTokens,
-    const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord>& magneticFieldEsToken,
-    const edm::ESGetToken<Propagator, TrackingComponentsRecord>& propagatorEsToken) {
-  if (observers.empty()) { //assuring it is done only at the first run
+                                 const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord>& magneticFieldEsToken,
+                                 const edm::ESGetToken<Propagator, TrackingComponentsRecord>& propagatorEsToken) {
+  if (observers.empty()) {  //assuring it is done only at the first run
     OMTFReconstruction::addObservers(muonGeometryTokens, magneticFieldEsToken, propagatorEsToken);
     /*    if(edmParameterSet.exists("patternsPtAssignment") && edmParameterSet.getParameter<bool>("patternsPtAssignment")) {
       //std::string rootFileName = edmParameterSet.getParameter<std::string>("dumpHitsFileName");
@@ -42,7 +45,7 @@ void OmtfEmulation::addObservers(const MuonGeometryTokens& muonGeometryTokens,
   if (edmParameterSet.exists("neuralNetworkFile") && !ptAssignment) {
     edm::LogImportant("OMTFReconstruction") << "constructing PtAssignmentNNRegression" << std::endl;
     std::string neuralNetworkFile = edmParameterSet.getParameter<edm::FileInPath>("neuralNetworkFile").fullPath();
-    ptAssignment.reset(new PtAssignmentNNRegression( edmParameterSet, omtfConfig.get(), neuralNetworkFile));
+    ptAssignment.reset(new PtAssignmentNNRegression(edmParameterSet, omtfConfig.get(), neuralNetworkFile));
   }
 
   auto omtfProcGoldenPat = dynamic_cast<OMTFProcessor<GoldenPattern>*>(omtfProc.get());

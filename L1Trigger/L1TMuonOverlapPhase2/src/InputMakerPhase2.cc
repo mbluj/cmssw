@@ -18,9 +18,12 @@ void DtPhase2DigiToStubsConverter::loadDigis(const edm::Event& event) {
   event.getByToken(inputTokenDtTh, dtThDigis);
 }
 
-void DtPhase2DigiToStubsConverter::makeStubs(
-    MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+void DtPhase2DigiToStubsConverter::makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                                             unsigned int iProcessor,
+                                             l1t::tftype procTyp,
+                                             int bxFrom,
+                                             int bxTo,
+                                             std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
   if (!dtPhDigis)
     return;
 
@@ -28,7 +31,6 @@ void DtPhase2DigiToStubsConverter::makeStubs(
 
   for (const auto& digiIt : *dtPhDigis->getContainer()) {
     DTChamberId detid(digiIt.whNum(), digiIt.stNum(), digiIt.scNum() + 1);
-
 
     ///Check it the data fits into given processor input range
     if (!acceptDigi(detid, iProcessor, procTyp))
@@ -94,10 +96,11 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
       OMTFinputMaker::getProcessorPhiZero(config, iProcessor), procTyp, digi.scNum(), digi.phi());
   //stub.etaHw  =  angleConverter->getGlobalEta(digi, dtThDigis);
   stub.etaHw = angleConverter->getGlobalEta(detid, dtThDigis, digi.bxNum() - 20);
-  //phiB in Ph2 has 2018==1.4rad ... need to convert them to 512==1rad (so we can use OLD patterns)
-
+  //4096. / 2.;   // 13 bits, [-2, 2], need to convert them to 512==1rad (to use OLD PATTERNS...)
+  //phiB in Ph2 has 2048==1.4rad ... need to convert them to 512==1rad (so we can use OLD patterns)
+  float PHIB_CONV = 2. * 512. / 4096.;
   if (stub.qualityHw >= config->getMinDtPhiBQuality())
-    stub.phiBHw = round(digi.phiBend() * 1.4 * 512 / 2048.);
+    stub.phiBHw = round(digi.phiBend() * PHIB_CONV);
   else
     stub.phiBHw = config->nPhiBins();
 
@@ -109,16 +112,11 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
   stub.detId = detid;
 
   OmtfName board(iProcessor);
-  edm::LogVerbatim("l1tOmtfEventPrint")<<board.name()<<" L1Phase2MuDTPhDigi: detid "<<detid<<" digi "
-      <<" whNum "<<digi.whNum()
-      <<" scNum "<<digi.scNum()
-      <<" stNum "<<digi.stNum()
-      <<" slNum "<<digi.slNum()
-      <<" quality "<<digi.quality()
-      <<" rpcFlag "<<digi.rpcFlag()
-      <<" phi "<<digi.phi()
-      <<" phiBend "<<digi.phiBend()
-      <<std::endl;
+  edm::LogVerbatim("l1tOmtfEventPrint") << board.name() << " L1Phase2MuDTPhDigi: detid " << detid << " digi "
+                                        << " whNum " << digi.whNum() << " scNum " << digi.scNum() << " stNum "
+                                        << digi.stNum() << " slNum " << digi.slNum() << " quality " << digi.quality()
+                                        << " rpcFlag " << digi.rpcFlag() << " phi " << digi.phi() << " phiBend "
+                                        << digi.phiBend() << std::endl;
   OMTFinputMaker::addStub(config, muonStubsInLayers, iLayer, iInput, stub);
 }
 
@@ -141,7 +139,7 @@ InputMakerPhase2::InputMakerPhase2(const edm::ParameterSet& edmParameterSet,
                                    edm::EDGetTokenT<L1Phase2MuDTPhContainer> inputTokenDTPhPhase2,
                                    const OMTFConfiguration* config,
                                    std::unique_ptr<OmtfAngleConverter> angleConverter)
-    : OMTFinputMaker(edmParameterSet, muStubsInputTokens, config, std::move(angleConverter) ) {
+    : OMTFinputMaker(edmParameterSet, muStubsInputTokens, config, std::move(angleConverter)) {
   edm::LogImportant("OMTFReconstruction") << "constructing InputMakerPhase2" << std::endl;
 
   /*  if(!edmParameterSet.getParameter<bool>("dropDTPrimitives"))

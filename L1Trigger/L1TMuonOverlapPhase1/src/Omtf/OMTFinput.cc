@@ -75,7 +75,8 @@ std::bitset<128> OMTFinput::getRefHits(unsigned int iProcessor) const {
     int iPhi = getPhiHw(refHitLogicLayer, iRefHitDef.iInput);
     if (iPhi < (int)myOmtfConfig->nPhiBins()) {
       //TODO use a constant defined somewhere instead of 6
-      if(refHitLogicLayer >= 6 || getMuonStub(refHitLogicLayer, iRefHitDef.iInput)->qualityHw >= myOmtfConfig->getDtRefHitMinQuality())
+      if (refHitLogicLayer >= 6 ||
+          getMuonStub(refHitLogicLayer, iRefHitDef.iInput)->qualityHw >= myOmtfConfig->getDtRefHitMinQuality())
         refHits.set(iRefHit, iRefHitDef.fitsRange(iPhi));
     }
     iRefHit++;

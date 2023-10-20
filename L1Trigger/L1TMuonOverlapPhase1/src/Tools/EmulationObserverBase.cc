@@ -93,10 +93,10 @@ const SimTrack* EmulationObserverBase::findSimMuon(const edm::Event& event, cons
   return result;
 }
 
-const std::vector<const reco::GenParticle*> EmulationObserverBase::findGenMuon(const edm::Event &event) {
+const std::vector<const reco::GenParticle*> EmulationObserverBase::findGenMuon(const edm::Event& event) {
   std::vector<const reco::GenParticle*> muons;
 
-  if(edmCfg.exists("genParticleTag") == false)
+  if (edmCfg.exists("genParticleTag") == false)
     return muons;
 
   edm::Handle<reco::GenParticleCollection> genParticles;
@@ -107,21 +107,23 @@ const std::vector<const reco::GenParticle*> EmulationObserverBase::findGenMuon(c
   float etaCutFrom = 0.8;
   float etaCutTo = 1.24;
 
-  for(size_t i = 0; i < genParticles->size() ; ++ i) {
+  for (size_t i = 0; i < genParticles->size(); ++i) {
     const reco::GenParticle& genPart = (*genParticles)[i];
 
-    if( abs(genPart.pdgId() )== 13 ) {
-      if( fabs (genPart.momentum().eta() ) >= etaCutFrom && fabs (genPart.momentum().eta() ) <= etaCutTo) {
+    if (abs(genPart.pdgId()) == 13) {
+      if (fabs(genPart.momentum().eta()) >= etaCutFrom && fabs(genPart.momentum().eta()) <= etaCutTo) {
         genPart.momentum().eta();
 
-        muons.push_back( &genPart);
+        muons.push_back(&genPart);
         //int id = p.pdgId();
-        LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<":"<<__LINE__<<" genParticle: pdgId "<<genPart.pdgId()
-                  <<" px "<<genPart.px()<<" py "<<genPart.py()<<" pz "<<genPart.pz()<<" pt "<<genPart.pt()
-                  <<" vx "<<genPart.vx()<<" vy "<<genPart.vy()<<" vz "<<genPart.vz()<<" eta "<<genPart.momentum().eta()<<endl;
+        LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " genParticle: pdgId " << genPart.pdgId()
+                                      << " px " << genPart.px() << " py " << genPart.py() << " pz " << genPart.pz()
+                                      << " pt " << genPart.pt() << " vx " << genPart.vx() << " vy " << genPart.vy()
+                                      << " vz " << genPart.vz() << " eta " << genPart.momentum().eta() << endl;
 
-        LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<":"<<__LINE__<<" genParticle: pdgId "<<genPart.pdgId()
-                  <<" px "<<genPart.px()/genPart.p()<<" py "<<genPart.py()/genPart.p()<<" pz "<<genPart.pz()/genPart.p()<<" pt "<<genPart.pt()<<endl;
+        LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " genParticle: pdgId " << genPart.pdgId()
+                                      << " px " << genPart.px() / genPart.p() << " py " << genPart.py() / genPart.p()
+                                      << " pz " << genPart.pz() / genPart.p() << " pt " << genPart.pt() << endl;
         //<<" vx "<<genPart.vx()<<" vy "<<genPart.vy()<<" vz "<<genPart.vz()<<endl;
       }
     }

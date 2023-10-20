@@ -102,9 +102,9 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
     //candidateSimMuonMatcher should use the  trackingParticles, because the simTracks are not stored for the pile-up events
     for (auto& matchingResult : matchingResults) {
       //TODO choose a condition, to print the desired candidates
-      if (matchingResult.muonCand )
-          //&& matchingResult.muonCand->hwQual() >= 12 &&
-          //matchingResult.muonCand->hwPt() > 38)
+      if (matchingResult.muonCand)
+      //&& matchingResult.muonCand->hwQual() >= 12 &&
+      //matchingResult.muonCand->hwPt() > 38)
       {  //&& matchingResult.genPt < 20
         dump = true;
 
@@ -116,25 +116,23 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                << std::setw(9) << trackingParticle->pt()  //<<" Beta "<<simMuon->momentum().Beta()
                << " eta " << std::setw(9) << trackingParticle->momentum().eta() << " phi " << std::setw(9)
                << trackingParticle->momentum().phi() << std::endl;
-        }
-        else if (matchingResult.simTrack) {
+        } else if (matchingResult.simTrack) {
           runStubsSimHitsMatcher = true;
-          ostr << "SimMuon: eventId " << matchingResult.simTrack->eventId().event() << " pdgId " << std::setw(3) << matchingResult.simTrack->type()
-               << " pt " << std::setw(9) << matchingResult.simTrack->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
+          ostr << "SimMuon: eventId " << matchingResult.simTrack->eventId().event() << " pdgId " << std::setw(3)
+               << matchingResult.simTrack->type() << " pt " << std::setw(9)
+               << matchingResult.simTrack->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
                << " eta " << std::setw(9) << matchingResult.simTrack->momentum().eta() << " phi " << std::setw(9)
                << matchingResult.simTrack->momentum().phi() << std::endl;
-        }
-        else {
+        } else {
           ostr << "no simMuon ";
           runStubsSimHitsMatcher = true;
         }
         ostr << "matched to: " << std::endl;
         auto finalCandidate = matchingResult.muonCand;
-        ostr << " hwPt " << finalCandidate->hwPt() << " hwUPt " << finalCandidate->hwPtUnconstrained()
-             << " hwSign " << finalCandidate->hwSign() << " hwQual "
-             << finalCandidate->hwQual() << " hwEta " << std::setw(4) << finalCandidate->hwEta() << std::setw(4)
-             << " hwPhi " << finalCandidate->hwPhi() << "    eta " << std::setw(9)
-             << (finalCandidate->hwEta() * 0.010875) << " phi " << std::endl;
+        ostr << " hwPt " << finalCandidate->hwPt() << " hwUPt " << finalCandidate->hwPtUnconstrained() << " hwSign "
+             << finalCandidate->hwSign() << " hwQual " << finalCandidate->hwQual() << " hwEta " << std::setw(4)
+             << finalCandidate->hwEta() << std::setw(4) << " hwPhi " << finalCandidate->hwPhi() << "    eta "
+             << std::setw(9) << (finalCandidate->hwEta() * 0.010875) << " phi " << std::endl;
 
         if (stubsSimHitsMatcher && runStubsSimHitsMatcher)
           stubsSimHitsMatcher->match(iEvent, matchingResult.muonCand, matchingResult.procMuon, ostr);
@@ -220,13 +218,11 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
       std::bitset<18> layerHitBits(layerHits);
 
       edm::LogVerbatim("l1tOmtfEventPrint")
-          << " bx " << bx << " hwPt " << finalCandidate.hwPt()
-          << " hwUPt " << finalCandidate.hwPtUnconstrained()
-          << " hwSign " << finalCandidate.hwSign() << " hwQual "
-          << finalCandidate.hwQual() << " hwEta " << std::setw(4) << finalCandidate.hwEta() << std::setw(4) << " hwPhi "
-          << finalCandidate.hwPhi() << "    eta " << std::setw(9) << (finalCandidate.hwEta() * 0.010875) << " phi "
-          << std::setw(9) << globalPhi << " " << layerHitBits << " processor "
-          << OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType()) << std::endl;
+          << " bx " << bx << " hwPt " << finalCandidate.hwPt() << " hwUPt " << finalCandidate.hwPtUnconstrained()
+          << " hwSign " << finalCandidate.hwSign() << " hwQual " << finalCandidate.hwQual() << " hwEta " << std::setw(4)
+          << finalCandidate.hwEta() << std::setw(4) << " hwPhi " << finalCandidate.hwPhi() << "    eta " << std::setw(9)
+          << (finalCandidate.hwEta() * 0.010875) << " phi " << std::setw(9) << globalPhi << " " << layerHitBits
+          << " processor " << OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType()) << std::endl;
 
       for (auto& trackAddr : finalCandidate.trackAddress()) {
         if (trackAddr.first >= 10)
@@ -278,8 +274,10 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
           edm::LogVerbatim("l1tOmtfEventPrint")
               << board.name() << " " << *algoMuon << " RefHitNum " << algoMuon->getRefHitNumber() << std::endl;
           edm::LogVerbatim("l1tOmtfEventPrint") << algoMuon->getGpResultConstr();
-          if(algoMuon->getGpResultUnconstr().isValid() )
-            edm::LogVerbatim("l1tOmtfEventPrint") <<"GpResultUnconstr "<< algoMuon->getGoldenPaternUnconstr()->key()<<"\n"<< algoMuon->getGpResultUnconstr()<< std::endl;
+          if (algoMuon->getGpResultUnconstr().isValid())
+            edm::LogVerbatim("l1tOmtfEventPrint")
+                << "GpResultUnconstr " << algoMuon->getGoldenPaternUnconstr()->key() << "\n"
+                << algoMuon->getGpResultUnconstr() << std::endl;
 
           if (goldenPatterns)  //watch out with the golden patterns
             for (auto& gp : *goldenPatterns) {
@@ -303,101 +301,107 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
         if (gbCandidate->isValid())
           edm::LogVerbatim("l1tOmtfEventPrint") << board.name() << " " << *gbCandidate << std::endl;
 
-
       {
-          edm::LogVerbatim("l1tOmtfEventPrint")<< std::endl << std::endl <<"\ngb_test "<< board.name()<< std::endl;
-          for (auto& algoMuon : algoMuonsInProcs[iProc]) {
-            edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
-                           <<std::setw(5)<<algoMuon->getHwPatternNumConstr()<<","
-                           <<std::setw(5)<<algoMuon->getHwPatternNumUnconstr()<<","
+        edm::LogVerbatim("l1tOmtfEventPrint") << std::endl << std::endl << "\ngb_test " << board.name() << std::endl;
+        for (auto& algoMuon : algoMuonsInProcs[iProc]) {
+          edm::LogVerbatim("l1tOmtfEventPrint")
+              << "     (" << std::setw(5) << algoMuon->getHwPatternNumConstr() << "," << std::setw(5)
+              << algoMuon->getHwPatternNumUnconstr() << ","
 
-                           <<std::setw(5)<<algoMuon->getGpResultConstr().getFiredLayerCnt()<<","
-                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getFiredLayerCnt()<<","
+              << std::setw(5) << algoMuon->getGpResultConstr().getFiredLayerCnt() << "," << std::setw(5)
+              << algoMuon->getGpResultUnconstr().getFiredLayerCnt()
+              << ","
 
-                           //in the FW there is LSB added for some reason, therefore we multiply by 2 here
-                           <<std::setw(6)<<algoMuon->getGpResultConstr().getFiredLayerBits()*2<<","
-                           <<std::setw(6)<<algoMuon->getGpResultUnconstr().getFiredLayerBits()*2<<","
+              //in the FW there is LSB added for some reason, therefore we multiply by 2 here
+              << std::setw(6) << algoMuon->getGpResultConstr().getFiredLayerBits() * 2 << "," << std::setw(6)
+              << algoMuon->getGpResultUnconstr().getFiredLayerBits() * 2 << ","
 
-                           <<std::setw(5)<<algoMuon->getGpResultConstr().getPdfSum()<<","
-                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPdfSumUnconstr()<<","
+              << std::setw(5) << algoMuon->getGpResultConstr().getPdfSum() << "," << std::setw(5)
+              << algoMuon->getGpResultUnconstr().getPdfSumUnconstr() << ","
 
-                           <<std::setw(5)<<algoMuon->getGpResultConstr().getPhi()<<","
-                           <<std::setw(5)<<algoMuon->getGpResultUnconstr().getPhi()<<","
+              << std::setw(5) << algoMuon->getGpResultConstr().getPhi() << "," << std::setw(5)
+              << algoMuon->getGpResultUnconstr().getPhi()
+              << ","
 
-                           <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<", "
+              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<", "
+              << std::setw(5) << algoMuon->getEtaHw()
+              << ", "
 
-                           //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[algoMuon->getRefLayer()]<<""
-                           <<std::setw(5)<<algoMuon->getRefLayer()<<""
+              //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[algoMuon->getRefLayer()]<<""
+              << std::setw(5) << algoMuon->getRefLayer() << ""
 
-                           <<"), "<< std::endl;
-          }
-          edm::LogVerbatim("l1tOmtfEventPrint")<<"\ngbCandidates"<<std::endl;
-          for (auto& gbCandidate : gbCandidatesInProcs[iProc])
-            edm::LogVerbatim("l1tOmtfEventPrint")<<"     ("
-            <<std::setw(5)<< gbCandidate->getPtConstr()<<","
-            <<std::setw(5)<< gbCandidate->getPtUnconstr()<<","
+              << "), " << std::endl;
+        }
+        edm::LogVerbatim("l1tOmtfEventPrint") << "\ngbCandidates" << std::endl;
+        for (auto& gbCandidate : gbCandidatesInProcs[iProc])
+          edm::LogVerbatim("l1tOmtfEventPrint")
+              << "     (" << std::setw(5) << gbCandidate->getPtConstr() << "," << std::setw(5)
+              << gbCandidate->getPtUnconstr() << ","
 
-            <<std::setw(5)<<gbCandidate->getGpResultConstr().getFiredLayerCnt()<<","
-            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getFiredLayerCnt()<<","
+              << std::setw(5) << gbCandidate->getGpResultConstr().getFiredLayerCnt() << "," << std::setw(5)
+              << gbCandidate->getGpResultUnconstr().getFiredLayerCnt()
+              << ","
 
-            //in the FW there is LSB added for some reason, therefore we multiply by 2 here
-            <<std::setw(6)<<gbCandidate->getGpResultConstr().getFiredLayerBits()*2<<","
-            <<std::setw(6)<<gbCandidate->getGpResultUnconstr().getFiredLayerBits()*2<<","
+              //in the FW there is LSB added for some reason, therefore we multiply by 2 here
+              << std::setw(6) << gbCandidate->getGpResultConstr().getFiredLayerBits() * 2 << "," << std::setw(6)
+              << gbCandidate->getGpResultUnconstr().getFiredLayerBits() * 2 << ","
 
-            <<std::setw(5)<<gbCandidate->getGpResultConstr().getPdfSum()<<","
-            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPdfSumUnconstr()<<","
+              << std::setw(5) << gbCandidate->getGpResultConstr().getPdfSum() << "," << std::setw(5)
+              << gbCandidate->getGpResultUnconstr().getPdfSumUnconstr() << ","
 
-            <<std::setw(5)<<gbCandidate->getGpResultConstr().getPhi()<<","
-            <<std::setw(5)<<gbCandidate->getGpResultUnconstr().getPhi()<<","
+              << std::setw(5) << gbCandidate->getGpResultConstr().getPhi() << "," << std::setw(5)
+              << gbCandidate->getGpResultUnconstr().getPhi()
+              << ","
 
-            <<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<", "
+              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<", "
+              << std::setw(5) << gbCandidate->getEtaHw()
+              << ", "
 
-            //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[gbCandidate->getRefLayer()]<<""
-            <<std::setw(5)<<gbCandidate->getRefLayer()<<""
+              //<<std::setw(5)<<omtfConfig->getRefToLogicNumber()[gbCandidate->getRefLayer()]<<""
+              << std::setw(5) << gbCandidate->getRefLayer() << ""
 
-            <<"), "<< std::endl;
+              << "), "
+              << " -- getFiredLayerBits " << std::setw(5) << gbCandidate->getGpResultConstr().getFiredLayerBits()
+              << std::endl;
 
-          edm::LogVerbatim("l1tOmtfEventPrint") << "finalCandidates " << std::endl;
+        edm::LogVerbatim("l1tOmtfEventPrint") << "finalCandidates " << std::endl;
 
-          if(finalCandidates->size(0) > 0) {
-            int iMu = 1;
-            for (auto finalCandidateIt = finalCandidates->begin(0); finalCandidateIt != finalCandidates->end(0);
-                finalCandidateIt++) {
-              auto& finalCandidate = *finalCandidateIt;
+        if (finalCandidates->size(0) > 0) {
+          int iMu = 1;
+          for (auto finalCandidateIt = finalCandidates->begin(0); finalCandidateIt != finalCandidates->end(0);
+               finalCandidateIt++) {
+            auto& finalCandidate = *finalCandidateIt;
 
-              auto omtfName = OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType());
+            auto omtfName = OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType());
 
-              if(omtfName == board.name()) {
-                int layerHits = (int)finalCandidate.trackAddress().at(0);
-                std::bitset<18> layerHitBits(layerHits);
+            if (omtfName == board.name()) {
+              int layerHits = (int)finalCandidate.trackAddress().at(0);
+              std::bitset<18> layerHitBits(layerHits);
 
-                unsigned int trackAddr = finalCandidate.trackAddress().at(0);
-                unsigned int uPt = finalCandidate.hwPtUnconstrained();
-                if(uPt == 0)
-                  uPt = 9; //TODO remove when fixed in the FW
-                trackAddr = (uPt << 18) + trackAddr;
+              unsigned int trackAddr = finalCandidate.trackAddress().at(0);
+              unsigned int uPt = finalCandidate.hwPtUnconstrained();
+              //if(uPt == 0) uPt = 5; //TODO remove when fixed in the FW
+              trackAddr = (uPt << 18) + trackAddr;
 
-                edm::LogVerbatim("l1tOmtfEventPrint")<<"M"<<iMu<<":"
-                    <<std::setw(4)<< finalCandidate.hwPt()<<","
-                    <<std::setw(4)<< finalCandidate.hwQual()<<","
-                    <<std::setw(4)<< finalCandidate.hwPhi()<<","
-                    <<std::setw(4)<< abs(finalCandidate.hwEta() )<<","
-                    //<<std::setw(10)<< finalCandidate.trackAddress().at(0)<<""
-                    <<std::setw(10)<< trackAddr<<""
-                    <<std::setw(4)<< 0<<"," //Halo
-                    <<std::setw(4)<< finalCandidate.hwSign()<<","
-                    <<std::setw(4)<< 1<<"; "; //ChValid
-                    //<<std::setw(5)<< finalCandidate.hwPtUnconstrained()<<","
+              edm::LogVerbatim("l1tOmtfEventPrint")
+                  << "M" << iMu << ":" << std::setw(4) << finalCandidate.hwPt() << "," << std::setw(4)
+                  << finalCandidate.hwQual() << "," << std::setw(4) << finalCandidate.hwPhi() << "," << std::setw(4)
+                  << abs(finalCandidate.hwEta())
+                  << ","
+                  //<<std::setw(10)<< finalCandidate.trackAddress().at(0)<<""
+                  << std::setw(10) << trackAddr << "" << std::setw(4) << 0 << ","                 //Halo
+                  << std::setw(4) << finalCandidate.hwSign() << "," << std::setw(4) << 1 << "; "  //ChValid
+                  << " -- uPt " << std::setw(10) << uPt << " firedLayers " << finalCandidate.trackAddress().at(0);
 
-                    //<<std::setw(9)<< layerHitBits<<","
-                    //<<std::setw(6)<< layerHits<<","
+              //<<std::setw(5)<< finalCandidate.hwPtUnconstrained()<<","
 
-                iMu++;
-              }
+              //<<std::setw(9)<< layerHitBits<<","
+              //<<std::setw(6)<< layerHits<<","
+              iMu++;
             }
-            edm::LogVerbatim("l1tOmtfEventPrint")<<std::endl;
           }
-
+          edm::LogVerbatim("l1tOmtfEventPrint") << std::endl;
+        }
       }
 
       edm::LogVerbatim("l1tOmtfEventPrint") << std::endl;

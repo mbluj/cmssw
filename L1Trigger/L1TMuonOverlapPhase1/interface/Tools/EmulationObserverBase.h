@@ -38,7 +38,8 @@ public:
 
   const SimTrack* findSimMuon(const edm::Event& event, const SimTrack* previous = nullptr);
 
-  const std::vector<const reco::GenParticle*> findGenMuon(const edm::Event &event);
+  const std::vector<const reco::GenParticle*> findGenMuon(const edm::Event& event);
+
 protected:
   edm::ParameterSet edmCfg;
   const OMTFConfiguration* omtfConfig;

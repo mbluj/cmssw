@@ -31,18 +31,19 @@
 */
 
 DataROOTDumper2::DataROOTDumper2(const edm::ParameterSet& edmCfg,
-    const OMTFConfiguration* omtfConfig,
-    CandidateSimMuonMatcher* candidateSimMuonMatcher)
-: EmulationObserverBase(edmCfg, omtfConfig), candidateSimMuonMatcher(candidateSimMuonMatcher) {
+                                 const OMTFConfiguration* omtfConfig,
+                                 CandidateSimMuonMatcher* candidateSimMuonMatcher)
+    : EmulationObserverBase(edmCfg, omtfConfig), candidateSimMuonMatcher(candidateSimMuonMatcher) {
   edm::LogVerbatim("l1tOmtfEventPrint") << " omtfConfig->nTestRefHits() " << omtfConfig->nTestRefHits()
-                                            << " event.omtfGpResultsPdfSum.num_elements() " << endl;
-  initializeTTree("dump.root"); //TODO
+                                        << " event.omtfGpResultsPdfSum.num_elements() " << endl;
+  initializeTTree("dump.root");  //TODO
 
   if (edmCfg.exists("dumpKilledOmtfCands"))
     if (edmCfg.getParameter<bool>("dumpKilledOmtfCands"))
       dumpKilledOmtfCands = true;
 
-  edm::LogVerbatim("l1tOmtfEventPrint") << " DataROOTDumper2 created. dumpKilledOmtfCands " <<dumpKilledOmtfCands<< std::endl;
+  edm::LogVerbatim("l1tOmtfEventPrint") << " DataROOTDumper2 created. dumpKilledOmtfCands " << dumpKilledOmtfCands
+                                        << std::endl;
 }
 
 DataROOTDumper2::~DataROOTDumper2() { saveTTree(); }
@@ -84,31 +85,27 @@ void DataROOTDumper2::initializeTTree(std::string rootFileName) {
   rootTree->Branch("omtfFiredLayers", &omtfEvent.omtfFiredLayers);  //<<<<<<<<<<<<<<<<<<<<<<!!!!TODOO
 
   rootTree->Branch("killed", &omtfEvent.killed);
-  
+
   rootTree->Branch("hits", &omtfEvent.hits);
 
   rootTree->Branch("deltaEta", &omtfEvent.deltaEta);
   rootTree->Branch("deltaPhi", &omtfEvent.deltaPhi);
 
-  ptGenPos = fs->make<TH1I>("ptGenPos", "ptGenPos, eta at vertex 0.8 - 1.24", 400, 0, 200); //TODO
+  ptGenPos = fs->make<TH1I>("ptGenPos", "ptGenPos, eta at vertex 0.8 - 1.24", 400, 0, 200);  //TODO
   ptGenNeg = fs->make<TH1I>("ptGenNeg", "ptGenNeg, eta at vertex 0.8 - 1.24", 400, 0, 200);
 }
 
-void DataROOTDumper2::saveTTree() {
-
-}
+void DataROOTDumper2::saveTTree() {}
 
 void DataROOTDumper2::observeProcesorEmulation(unsigned int iProcessor,
-    l1t::tftype mtfType,
-    const std::shared_ptr<OMTFinput>&,
-    const AlgoMuons& algoCandidates,
-    const AlgoMuons& gbCandidates,
-    const std::vector<l1t::RegionalMuonCand>& candMuons) {
-
-}
+                                               l1t::tftype mtfType,
+                                               const std::shared_ptr<OMTFinput>&,
+                                               const AlgoMuons& algoCandidates,
+                                               const AlgoMuons& gbCandidates,
+                                               const std::vector<l1t::RegionalMuonCand>& candMuons) {}
 
 void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
-    std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) {
+                                      std::unique_ptr<l1t::RegionalMuonCandBxCollection>& finalCandidates) {
   /*
   int muonCharge = 0;
   if (simMuon) {
@@ -137,7 +134,8 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
    */
 
   std::vector<MatchingResult> matchingResults = candidateSimMuonMatcher->getMatchingResults();
-  LogTrace("l1tOmtfEventPrint") << "\nDataROOTDumper2::observeEventEnd matchingResults.size() " << matchingResults.size() << std::endl;
+  LogTrace("l1tOmtfEventPrint") << "\nDataROOTDumper2::observeEventEnd matchingResults.size() "
+                                << matchingResults.size() << std::endl;
 
   //candidateSimMuonMatcher should use the  trackingParticles, because the simTracks are not stored for the pile-up events
   for (auto& matchingResult : matchingResults) {
@@ -153,9 +151,9 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       omtfEvent.muonPhi = trackingParticle->momentum().phi();
       omtfEvent.muonPropEta = matchingResult.propagatedEta;
       omtfEvent.muonPropPhi = matchingResult.propagatedPhi;
-      omtfEvent.muonCharge = (abs(trackingParticle->pdgId()) == 13) ? trackingParticle->pdgId() / -13 : 0;;  //TODO
+      omtfEvent.muonCharge = (abs(trackingParticle->pdgId()) == 13) ? trackingParticle->pdgId() / -13 : 0;
 
-      if(trackingParticle->parentVertex().isNonnull()) {
+      if (trackingParticle->parentVertex().isNonnull()) {
         omtfEvent.muonDxy = trackingParticle->dxy();
         omtfEvent.muonRho = trackingParticle->parentVertex()->position().Rho();
       }
@@ -163,20 +161,21 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       omtfEvent.deltaEta = matchingResult.deltaEta;
       omtfEvent.deltaPhi = matchingResult.deltaPhi;
 
-      LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId " << trackingParticle->eventId().event() << " pdgId " << std::setw(3)
-                 << trackingParticle->pdgId() << " trackId " << trackingParticle->g4Tracks().at(0).trackId() << " pt "
-                 << std::setw(9) << trackingParticle->pt()  //<<" Beta "<<simMuon->momentum().Beta()
-                 << " eta " << std::setw(9) << trackingParticle->momentum().eta() << " phi " << std::setw(9)
-                 << trackingParticle->momentum().phi() << std::endl;
+      LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId "
+                                    << trackingParticle->eventId().event() << " pdgId " << std::setw(3)
+                                    << trackingParticle->pdgId() << " trackId "
+                                    << trackingParticle->g4Tracks().at(0).trackId() << " pt " << std::setw(9)
+                                    << trackingParticle->pt()  //<<" Beta "<<simMuon->momentum().Beta()
+                                    << " eta " << std::setw(9) << trackingParticle->momentum().eta() << " phi "
+                                    << std::setw(9) << trackingParticle->momentum().phi() << std::endl;
 
-      if(fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) < 1.24) {
+      if (fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) < 1.24) {
         if (omtfEvent.muonCharge > 0)
           ptGenPos->Fill(omtfEvent.muonPt);
         else
           ptGenNeg->Fill(omtfEvent.muonPt);
       }
-    }
-    else if (matchingResult.simTrack) {
+    } else if (matchingResult.simTrack) {
       auto simTrack = matchingResult.simTrack;
 
       omtfEvent.muonEvent = simTrack->eventId().event();
@@ -190,27 +189,29 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       if (!simTrack->noVertex() && matchingResult.simVertex) {
         const math::XYZTLorentzVectorD& vtxPos = matchingResult.simVertex->position();
-        omtfEvent.muonDxy = (-vtxPos.X() * simTrack->momentum().py() + vtxPos.Y() * simTrack->momentum().px()) / simTrack->momentum().pt();
+        omtfEvent.muonDxy = (-vtxPos.X() * simTrack->momentum().py() + vtxPos.Y() * simTrack->momentum().px()) /
+                            simTrack->momentum().pt();
         omtfEvent.muonRho = vtxPos.Rho();
       }
 
       omtfEvent.deltaEta = matchingResult.deltaEta;
       omtfEvent.deltaPhi = matchingResult.deltaPhi;
 
-      LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId " << simTrack->eventId().event() << " pdgId " << std::setw(3)
-                 << simTrack->type() //<< " trackId " << simTrack->g4Tracks().at(0).trackId()
-                 << " pt "<< std::setw(9) << simTrack->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
-                 << " eta " << std::setw(9) << simTrack->momentum().eta() << " phi " << std::setw(9)
-                 << simTrack->momentum().phi() << std::endl;
+      LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd trackingParticle: eventId "
+                                    << simTrack->eventId().event() << " pdgId " << std::setw(3)
+                                    << simTrack->type()  //<< " trackId " << simTrack->g4Tracks().at(0).trackId()
+                                    << " pt " << std::setw(9)
+                                    << simTrack->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
+                                    << " eta " << std::setw(9) << simTrack->momentum().eta() << " phi " << std::setw(9)
+                                    << simTrack->momentum().phi() << std::endl;
 
-      if(fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) <1.24) {
+      if (fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) < 1.24) {
         if (omtfEvent.muonCharge > 0)
           ptGenPos->Fill(omtfEvent.muonPt);
         else
           ptGenNeg->Fill(omtfEvent.muonPt);
       }
-    }
-    else {
+    } else {
       omtfEvent.muonEvent = -1;
 
       omtfEvent.muonPt = 0;
@@ -227,10 +228,9 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       omtfEvent.muonRho = 0;
     }
 
-
     auto addOmtfCand = [&](AlgoMuonPtr& procMuon) {
       omtfEvent.omtfPt = omtfConfig->hwPtToGev(procMuon->getPtConstr());
-      omtfEvent.omtfUPt = omtfConfig->hwPtToGev(procMuon->getPtUnconstr());
+      omtfEvent.omtfUPt = omtfConfig->hwUPtToGev(procMuon->getPtUnconstr());
       omtfEvent.omtfEta = omtfConfig->hwEtaToEta(procMuon->getEtaHw());
       omtfEvent.omtfPhi = procMuon->getPhi();
       omtfEvent.omtfCharge = procMuon->getChargeConstr();
@@ -244,11 +244,11 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       omtfEvent.hits.clear();
 
-
       //TODO choose, which gpResult should be dumped
       //auto& gpResult = procMuon->getGpResultConstr();
-      auto& gpResult = (procMuon->getGpResultUnconstr().getPdfSumUnconstr() > procMuon->getGpResultConstr().getPdfSum() ) ?
-                        procMuon->getGpResultUnconstr() : procMuon->getGpResultConstr();
+      auto& gpResult = (procMuon->getGpResultUnconstr().getPdfSumUnconstr() > procMuon->getGpResultConstr().getPdfSum())
+                           ? procMuon->getGpResultUnconstr()
+                           : procMuon->getGpResultConstr();
 
       /*
         edm::LogVerbatim("l1tOmtfEventPrint")<<"DataROOTDumper2:;observeEventEnd muonPt "<<event.muonPt<<" muonCharge "<<event.muonCharge
@@ -284,9 +284,9 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
           if (hit.phiDist > 504 || hit.phiDist < -512) {
             edm::LogVerbatim("l1tOmtfEventPrint")
-                      << " muonPt "<< omtfEvent.muonPt<< " omtfPt " << omtfEvent.omtfPt << " RefLayer "
-                      <<(int)omtfEvent.omtfRefLayer << " layer " << int(hit.layer) << " hit.phiDist " << hit.phiDist << " valid "
-                      << stubResult.getValid() << " !!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+                << " muonPt " << omtfEvent.muonPt << " omtfPt " << omtfEvent.omtfPt << " RefLayer "
+                << (int)omtfEvent.omtfRefLayer << " layer " << int(hit.layer) << " hit.phiDist " << hit.phiDist
+                << " valid " << stubResult.getValid() << " !!!!!!!!!!!!!!!!!!!!!!!!" << endl;
           }
 
           DetId detId(stubResult.getMuonStub()->detId);
@@ -301,42 +301,41 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
 
       LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd adding omtfCand : " << std::endl;
       auto finalCandidate = matchingResult.muonCand;
-      LogTrace("l1tOmtfEventPrint") << " hwPt " << finalCandidate->hwPt() << " hwSign " << finalCandidate->hwSign() << " hwQual "
-          << finalCandidate->hwQual() << " hwEta " << std::setw(4) << finalCandidate->hwEta() << std::setw(4)
-          << " hwPhi " << finalCandidate->hwPhi() << "    eta " << std::setw(9)
-          << (finalCandidate->hwEta() * 0.010875) << " isKilled " << procMuon->isKilled()
-          <<" tRefLayer "<<procMuon->getRefLayer()<<" RefHitNumber "<<procMuon->getRefHitNumber()<<std::endl;
-
-
+      LogTrace("l1tOmtfEventPrint") << " hwPt " << finalCandidate->hwPt() << " hwSign " << finalCandidate->hwSign()
+                                    << " hwQual " << finalCandidate->hwQual() << " hwEta " << std::setw(4)
+                                    << finalCandidate->hwEta() << std::setw(4) << " hwPhi " << finalCandidate->hwPhi()
+                                    << "    eta " << std::setw(9) << (finalCandidate->hwEta() * 0.010875)
+                                    << " isKilled " << procMuon->isKilled() << " tRefLayer " << procMuon->getRefLayer()
+                                    << " RefHitNumber " << procMuon->getRefHitNumber() << std::endl;
     };
 
-    if (matchingResult.muonCand && matchingResult.procMuon->getPtConstr() >= 0 && matchingResult.muonCand->hwQual() >= 1) //TODO set the quality
-    {  //&& matchingResult.genPt < 20
+    if (matchingResult.muonCand && matchingResult.procMuon->getPtConstr() >= 0 &&
+        matchingResult.muonCand->hwQual() >= 1)  //TODO set the quality
+    {                                            //&& matchingResult.genPt < 20
 
       omtfEvent.omtfQuality = matchingResult.muonCand->hwQual();  //procMuon->getQ();
       omtfEvent.killed = false;
       omtfEvent.omtfProcessor = matchingResult.muonCand->processor();
 
-      if( matchingResult.muonCand->trackFinderType() == l1t::omtf_neg) {
+      if (matchingResult.muonCand->trackFinderType() == l1t::omtf_neg) {
         omtfEvent.omtfProcessor *= -1;
       }
 
       addOmtfCand(matchingResult.procMuon);
       rootTree->Fill();
 
-      if(dumpKilledOmtfCands) {
-        for(auto& killedCand : matchingResult.procMuon->getKilledMuons()) {
+      if (dumpKilledOmtfCands) {
+        for (auto& killedCand : matchingResult.procMuon->getKilledMuons()) {
           omtfEvent.omtfQuality = 0;
-          omtfEvent.killed =  true;
-          if(killedCand->isKilled() == false) {
-            edm::LogVerbatim("l1tOmtfEventPrint")<<" killedCand->isKilled() == false !!!!!!!!";
+          omtfEvent.killed = true;
+          if (killedCand->isKilled() == false) {
+            edm::LogVerbatim("l1tOmtfEventPrint") << " killedCand->isKilled() == false !!!!!!!!";
           }
           addOmtfCand(killedCand);
           rootTree->Fill();
         }
       }
-    }
-    else {
+    } else {
       LogTrace("l1tOmtfEventPrint") << "DataROOTDumper2::observeEventEnd no matching omtfCand" << std::endl;
 
       omtfEvent.omtfPt = 0;

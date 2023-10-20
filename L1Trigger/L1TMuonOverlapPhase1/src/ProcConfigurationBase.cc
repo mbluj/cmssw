@@ -61,4 +61,18 @@ void ProcConfigurationBase::configureFromEdmParameterSet(const edm::ParameterSet
     edm::LogVerbatim("OMTFReconstruction")
         << "minDtPhiBQuality: " << edmParameterSet.getParameter<int>("minDtPhiBQuality") << std::endl;
   }
+
+  if (edmParameterSet.exists("stubEtaEncoding")) {
+    auto stubEtaEncodingStr = edmParameterSet.getParameter<std::string>("stubEtaEncoding");
+    if (stubEtaEncodingStr == "bits")
+      stubEtaEncoding = StubEtaEncoding::bits;
+    else if (stubEtaEncodingStr == "valueP1Scale")
+      stubEtaEncoding = StubEtaEncoding::valueP1Scale;
+    else
+      throw cms::Exception(std::string("ProcConfigurationBase::configureFromEdmParameterSet: stubEtaEncoding ") +
+                           stubEtaEncodingStr + "is not correct");
+
+    edm::LogVerbatim("OMTFReconstruction")
+        << "stubEtaEncoding: " << static_cast<int>(stubEtaEncoding) << " = " << stubEtaEncodingStr << std::endl;
+  }
 }

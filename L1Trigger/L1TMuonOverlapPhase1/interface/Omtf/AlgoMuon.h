@@ -39,24 +39,25 @@ public:
 
   int getBx() const { return m_bx; }
 
+  //hardware pt
   int getPtConstr() const {
     //TODO maybe it should return 0 and not -1?
     return goldenPaternConstr == nullptr ? -1 : goldenPaternConstr->key().thePt;
   }
 
+  //hardware upt, in the phase1 the upt scale unit is 1 GeV, while for the pt the unit is 0.5GeV
   int getPtUnconstr() const {
     //TODO maybe it should return 0 and not -1?
-    return goldenPaternUnconstr == nullptr ? -1 : goldenPaternUnconstr->key().thePt;
+    return goldenPaternUnconstr == nullptr ? -1 : (goldenPaternUnconstr->key().thePt - 1) / 2 + 1;
   }
 
-  int getChargeConstr() const {
-    return goldenPaternConstr == nullptr ? -1 : goldenPaternConstr->key().theCharge;
-  }
+  int getChargeConstr() const { return goldenPaternConstr == nullptr ? -1 : goldenPaternConstr->key().theCharge; }
 
   int getPhiRHit() const { return gpResultConstr.getRefHitPhi(); }
 
   unsigned int getPatternNum() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? goldenPaternUnconstr->key().theNumber : goldenPaternConstr->key().theNumber );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? goldenPaternUnconstr->key().theNumber
+                                                                              : goldenPaternConstr->key().theNumber);
   }
 
   unsigned int getPatternNumConstr() const {
@@ -79,36 +80,38 @@ public:
     return (getPtConstr() > 0) || (getPtUnconstr() > 0);  //should this really be pt or quality ?? FIXME
   }
 
-  double getPdfSumConstr()  const {
-    return gpResultConstr.getPdfSum();
-  }
+  double getPdfSumConstr() const { return gpResultConstr.getPdfSum(); }
 
-  double getPdfSum()  const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr() : gpResultConstr.getPdfSum() );
+  double getPdfSum() const {
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr()
+                                                                              : gpResultConstr.getPdfSum());
   }
 
   PdfValueType getDisc() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr() : gpResultConstr.getPdfSum() );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPdfSumUnconstr()
+                                                                              : gpResultConstr.getPdfSum());
   }
 
   int getPhi() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPhi() : gpResultConstr.getPhi() );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getPhi()
+                                                                              : gpResultConstr.getPhi());
   }
 
   unsigned int getFiredLayerCnt() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt() : gpResultConstr.getFiredLayerCnt() );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt()
+                                                                              : gpResultConstr.getFiredLayerCnt());
   }
 
-  unsigned int getFiredLayerCntConstr() const {
-    return gpResultConstr.getFiredLayerCnt();
-  }
+  unsigned int getFiredLayerCntConstr() const { return gpResultConstr.getFiredLayerCnt(); }
 
   unsigned int getFiredLayerBits() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerBits() : gpResultConstr.getFiredLayerBits() );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerBits()
+                                                                              : gpResultConstr.getFiredLayerBits());
   }
 
   int getQ() const {
-    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt() : gpResultConstr.getFiredLayerCnt() );
+    return (gpResultUnconstr.getPdfSumUnconstr() > gpResultConstr.getPdfSum() ? gpResultUnconstr.getFiredLayerCnt()
+                                                                              : gpResultConstr.getFiredLayerCnt());
   }
 
   const StubResult& getStubResult(unsigned int iLayer) const { return gpResultConstr.getStubResults().at(iLayer); }
@@ -121,49 +124,29 @@ public:
 
   friend std::ostream& operator<<(std::ostream& out, const AlgoMuon& o);
 
-  std::vector<std::shared_ptr<AlgoMuon> >& getKilledMuons() {
-    return killedMuons;
-  }
-  
-  GoldenPatternBase* getGoldenPaternUnconstr() const {
-    return goldenPaternUnconstr;
-  }
+  std::vector<std::shared_ptr<AlgoMuon>>& getKilledMuons() { return killedMuons; }
+
+  GoldenPatternBase* getGoldenPaternUnconstr() const { return goldenPaternUnconstr; }
 
   void setGoldenPaternUnconstr(GoldenPatternBase* goldenPaternUnconstr) {
     this->goldenPaternUnconstr = goldenPaternUnconstr;
   }
 
-  int getChargeNNConstr() const {
-    return chargeNNConstr;
-  }
+  int getChargeNNConstr() const { return chargeNNConstr; }
 
-  void setChargeNNConstr(int chargeNn = 0) {
-    chargeNNConstr = chargeNn;
-  }
+  void setChargeNNConstr(int chargeNn = 0) { chargeNNConstr = chargeNn; }
 
-  int getPtNNConstr() const {
-    return ptNNConstr;
-  }
+  int getPtNNConstr() const { return ptNNConstr; }
 
-  void setPtNNConstr(int ptNn = 0) {
-    ptNNConstr = ptNn;
-  }
+  void setPtNNConstr(int ptNn = 0) { ptNNConstr = ptNn; }
 
-  int getChargeNNUnconstr() const {
-    return chargeNNUnconstr;
-  }
+  int getChargeNNUnconstr() const { return chargeNNUnconstr; }
 
-  void setChargeNNUnconstr(int chargeNnUnconstr = 0) {
-    chargeNNUnconstr = chargeNnUnconstr;
-  }
+  void setChargeNNUnconstr(int chargeNnUnconstr = 0) { chargeNNUnconstr = chargeNnUnconstr; }
 
-  int getPtNNUnconstr() const {
-    return ptNNUnconstr;
-  }
+  int getPtNNUnconstr() const { return ptNNUnconstr; }
 
-  void setPtNNUnconstr(int ptNnUnconstr = 0) {
-    ptNNUnconstr = ptNnUnconstr;
-  }
+  void setPtNNUnconstr(int ptNnUnconstr = 0) { ptNNUnconstr = ptNnUnconstr; }
 
 private:
   ///FIXME maybe the gpResult cannot be a reference or pointer, ad not a copy

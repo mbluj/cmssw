@@ -226,28 +226,37 @@ void OMTFConfiguration::configureFromEdmParameterSet(const edm::ParameterSet &ed
   setFixCscGeometryOffset(true);  //for the OMTF by default is true, read from python if needed
 
   if (edmParameterSet.exists("usePhiBExtrapolationFromMB1")) {
-    usePhiBExtrapolationFromMB1 = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB1");
+    usePhiBExtrapolationFromMB1_ = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB1");
     edm::LogVerbatim("OMTFReconstruction")
-        << "usePhiBExtrapolationFromMB1: " << usePhiBExtrapolationFromMB1 << std::endl;
+        << "usePhiBExtrapolationFromMB1: " << usePhiBExtrapolationFromMB1_ << std::endl;
   }
 
   if (edmParameterSet.exists("usePhiBExtrapolationFromMB2")) {
-    usePhiBExtrapolationFromMB2 = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB2");
+    usePhiBExtrapolationFromMB2_ = edmParameterSet.getParameter<bool>("usePhiBExtrapolationFromMB2");
     edm::LogVerbatim("OMTFReconstruction")
-        << "usePhiBExtrapolationFromMB2: " << usePhiBExtrapolationFromMB2 << std::endl;
+        << "usePhiBExtrapolationFromMB2: " << usePhiBExtrapolationFromMB2_ << std::endl;
+  }
+
+  if (edmParameterSet.exists("useStubQualInExtr")) {
+    useStubQualInExtr_ = edmParameterSet.getParameter<bool>("useStubQualInExtr");
+    edm::LogVerbatim("OMTFReconstruction") << "useStubQualInExtr: " << useStubQualInExtr_ << std::endl;
+  }
+
+  if (edmParameterSet.exists("useEndcapStubsRInExtr")) {
+    useEndcapStubsRInExtr_ = edmParameterSet.getParameter<bool>("useEndcapStubsRInExtr");
+    edm::LogVerbatim("OMTFReconstruction") << "useEndcapStubsRInExtr: " << useEndcapStubsRInExtr_ << std::endl;
   }
 
   if (edmParameterSet.exists("dtRefHitMinQuality")) {
     dtRefHitMinQuality = edmParameterSet.getParameter<int>("dtRefHitMinQuality");
-    edm::LogVerbatim("OMTFReconstruction")
-        << "dtRefHitMinQuality: " << dtRefHitMinQuality << std::endl;
+    edm::LogVerbatim("OMTFReconstruction") << "dtRefHitMinQuality: " << dtRefHitMinQuality << std::endl;
   }
 
   if (edmParameterSet.exists("dumpResultToXML")) {
-      if (edmParameterSet.getParameter<bool>("dumpResultToXML"))
-        dumpResultToXML = true;
-      else
-        dumpResultToXML = false;
+    if (edmParameterSet.getParameter<bool>("dumpResultToXML"))
+      dumpResultToXML = true;
+    else
+      dumpResultToXML = false;
   }
 }
 
@@ -381,6 +390,85 @@ unsigned int OMTFConfiguration::eta2Bits(unsigned int eta) {
   ;
 }
 
+unsigned int OMTFConfiguration::etaBits2HwEta(unsigned int bits) {
+  if (bits == 0b100000000)
+    return 73;
+  else if (bits == 0b010000000)
+    return 78;
+  else if (bits == 0b001000000)
+    return 85;
+  else if (bits == 0b000100000)
+    return 90;
+  else if (bits == 0b000010000)
+    return 94;
+  else if (bits == 0b000001000)
+    return 99;
+  else if (bits == 0b000000100)
+    return 103;
+  else if (bits == 0b000000010)
+    return 110;
+  else if (bits == 0b110000000)
+    return 75;
+  else if (bits == 0b011000000)
+    return 79;
+  else if (bits == 0b000110000)
+    return 92;
+  else if (bits == 0b000000001)
+    return 115;
+  else if (bits == 0b000000000)
+    return 121;
+  else
+    return 0b111111111;
+  ;
+}
+
+int OMTFConfiguration::etaBit2Code(unsigned int bit) {
+  int code = 73;
+  switch (bit) {
+    case 0: {
+      code = 115;
+      break;
+    }
+    case 1: {
+      code = 110;
+      break;
+    }
+    case 2: {
+      code = 103;
+      break;
+    }
+    case 3: {
+      code = 99;
+      break;
+    }
+    case 4: {
+      code = 94;
+      break;
+    }
+    case 5: {
+      code = 90;
+      break;
+    }
+    case 6: {
+      code = 85;
+      break;
+    }
+    case 7: {
+      code = 78;
+      break;
+    }
+    case 8: {
+      code = 73;
+      break;
+    }
+    default: {
+      code = 95;
+      break;
+    }
+  }
+  return code;
+}
+
 ///////////////////////////////////////////////
 // phiRad should be in the range [-pi,pi]
 int OMTFConfiguration::getProcScalePhi(unsigned int iProcessor, double phiRad) const {
@@ -459,4 +547,10 @@ void OMTFConfiguration::printConfig() const {
   edm::LogVerbatim("OMTFReconstruction") << "noHitValueInPdf " << noHitValueInPdf << std::endl;
   edm::LogVerbatim("OMTFReconstruction") << "sorterType " << sorterType << std::endl;
   edm::LogVerbatim("OMTFReconstruction") << "ghostBusterType " << ghostBusterType << std::endl;
+
+  edm::LogVerbatim("OMTFReconstruction") << "usePhiBExtrapolationFromMB1 " << usePhiBExtrapolationFromMB1_ << std::endl;
+  edm::LogVerbatim("OMTFReconstruction") << "usePhiBExtrapolationFromMB2 " << usePhiBExtrapolationFromMB2_ << std::endl;
+  edm::LogVerbatim("OMTFReconstruction") << "useStubQualInExtr " << useStubQualInExtr_ << std::endl;
+  edm::LogVerbatim("OMTFReconstruction") << "useEndcapStubsRInExtr " << useEndcapStubsRInExtr_ << std::endl;
+  edm::LogVerbatim("OMTFReconstruction") << "dtRefHitMinQuality " << dtRefHitMinQuality << std::endl;
 }

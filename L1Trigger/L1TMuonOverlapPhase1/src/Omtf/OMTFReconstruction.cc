@@ -211,15 +211,16 @@ void OMTFReconstruction::addObservers(
 
     if (edmParameterSet.exists("dumpHitsToROOT") && edmParameterSet.getParameter<bool>("dumpHitsToROOT")) {
       //std::string rootFileName = edmParameterSet.getParameter<std::string>("dumpHitsFileName");
-      if(candidateSimMuonMatcher == nullptr) {
+      if (candidateSimMuonMatcher == nullptr) {
         throw cms::Exception("dumpHitsToROOT needs candidateSimMuonMatcher, but it is null");
       }
-      observers.emplace_back(std::make_unique<DataROOTDumper2>(edmParameterSet, omtfConfig.get(), candidateSimMuonMatcher));
+      observers.emplace_back(
+          std::make_unique<DataROOTDumper2>(edmParameterSet, omtfConfig.get(), candidateSimMuonMatcher));
     }
   }
 
   auto omtfProcGoldenPatWithStat = dynamic_cast<OMTFProcessor<GoldenPatternWithStat>*>(omtfProc.get());
-  if(omtfProcGoldenPatWithStat) {
+  if (omtfProcGoldenPatWithStat) {
     if (edmParameterSet.exists("eventCaptureDebug"))
       if (edmParameterSet.getParameter<bool>("eventCaptureDebug")) {
         observers.emplace_back(std::make_unique<EventCapture>(
@@ -230,9 +231,8 @@ void OMTFReconstruction::addObservers(
       }
 
     if (edmParameterSet.exists("generatePatterns") && edmParameterSet.getParameter<bool>("generatePatterns")) {
-      observers.emplace_back(
-          std::make_unique<PatternGenerator>(edmParameterSet, omtfConfig.get(),
-              omtfProcGoldenPatWithStat->getPatterns(), candidateSimMuonMatcher));
+      observers.emplace_back(std::make_unique<PatternGenerator>(
+          edmParameterSet, omtfConfig.get(), omtfProcGoldenPatWithStat->getPatterns(), candidateSimMuonMatcher));
       edm::LogVerbatim("OMTFReconstruction") << "generatePatterns: true " << std::endl;
     }
   }

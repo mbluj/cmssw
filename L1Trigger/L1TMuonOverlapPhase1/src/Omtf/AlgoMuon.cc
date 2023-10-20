@@ -7,11 +7,10 @@
 
 std::ostream &operator<<(std::ostream &out, const AlgoMuon &o) {
   out << "AlgoMuon: ";
-  out << " pt: " << o.getPtConstr() << " upt: " << o.getPtUnconstr()
-      << ", phi: " << o.getPhi() << ", eta: " << o.getEtaHw()
-      << ", hits: " << std::bitset<18>(o.getFiredLayerBits()).to_string() << ", q: " << o.getQ()
-      << ", bx: " << o.getBx() << ", charge: " << o.getChargeConstr() << ", disc: " << o.getDisc()
-      << " refLayer: " << o.getRefLayer() << " m_patNumb: " << o.getPatternNumConstr();
+  out << " pt: " << o.getPtConstr() << " upt: " << o.getPtUnconstr() << ", phi: " << o.getPhi()
+      << ", eta: " << o.getEtaHw() << ", hits: " << std::bitset<18>(o.getFiredLayerBits()).to_string()
+      << ", q: " << o.getQ() << ", bx: " << o.getBx() << ", charge: " << o.getChargeConstr()
+      << ", disc: " << o.getDisc() << " refLayer: " << o.getRefLayer() << " m_patNumb: " << o.getPatternNumConstr();
 
   return out;
 }

@@ -44,7 +44,7 @@ L1TMuonOverlapPhase1TrackProducer::L1TMuonOverlapPhase1TrackProducer(const edm::
     mayConsume<TrackingParticleCollection>(edmParameterSet.getParameter<edm::InputTag>("trackingParticleTag"));
 
   if (edmParameterSet.exists("genParticleTag"))
-	  mayConsume<reco::GenParticleCollection>(edmParameterSet.getParameter<edm::InputTag>("genParticleTag"));
+    mayConsume<reco::GenParticleCollection>(edmParameterSet.getParameter<edm::InputTag>("genParticleTag"));
 
   if (edmParameterSet.exists("rpcSimHitsInputTag"))
     mayConsume<edm::PSimHitContainer>(edmParameterSet.getParameter<edm::InputTag>("rpcSimHitsInputTag"));

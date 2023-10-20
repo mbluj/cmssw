@@ -38,9 +38,12 @@ public:
 
   virtual void loadDigis(const edm::Event& event) = 0;
 
-  virtual void makeStubs(
-      MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) = 0;
+  virtual void makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                         unsigned int iProcessor,
+                         l1t::tftype procTyp,
+                         int bxFrom,
+                         int bxTo,
+                         std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) = 0;
 };
 
 class DtDigiToStubsConverter : public DigiToStubsConverterBase {
@@ -55,9 +58,12 @@ public:
 
   void loadDigis(const edm::Event& event) override;
 
-  void makeStubs(
-      MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
+  void makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                 unsigned int iProcessor,
+                 l1t::tftype procTyp,
+                 int bxFrom,
+                 int bxTo,
+                 std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
 
   //dtThDigis is provided as argument, because in the OMTF implementation the phi and eta digis are merged (even thought it is artificial)
   virtual void addDTphiDigi(MuonStubPtrs2D& muonStubsInLayers,
@@ -97,9 +103,12 @@ public:
 
   void loadDigis(const edm::Event& event) override { event.getByToken(inputTokenCsc, cscDigis); }
 
-  void makeStubs(
-      MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
+  void makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                 unsigned int iProcessor,
+                 l1t::tftype procTyp,
+                 int bxFrom,
+                 int bxTo,
+                 std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
 
   //can add both phi and eta stubs
   virtual void addCSCstubs(MuonStubPtrs2D& muonStubsInLayers,
@@ -132,9 +141,12 @@ public:
 
   void loadDigis(const edm::Event& event) override { event.getByToken(inputTokenRpc, rpcDigis); }
 
-  void makeStubs(
-      MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
+  void makeStubs(MuonStubPtrs2D& muonStubsInLayers,
+                 unsigned int iProcessor,
+                 l1t::tftype procTyp,
+                 int bxFrom,
+                 int bxTo,
+                 std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) override;
 
   virtual void addRPCstub(MuonStubPtrs2D& muonStubsInLayers,
                           const RPCDetId& roll,
@@ -171,9 +183,12 @@ public:
   void loadAndFilterDigis(const edm::Event& event);
 
   ///Method translating trigger digis into input matrix with global phi coordinates, fills the muonStubsInLayers
-  void buildInputForProcessor(
-      MuonStubPtrs2D& muonStubsInLayers, unsigned int iProcessor, l1t::tftype procTyp, int bxFrom, int bxTo,
-      std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers);
+  void buildInputForProcessor(MuonStubPtrs2D& muonStubsInLayers,
+                              unsigned int iProcessor,
+                              l1t::tftype procTyp,
+                              int bxFrom,
+                              int bxTo,
+                              std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers);
 
 protected:
   const ProcConfigurationBase* config = nullptr;

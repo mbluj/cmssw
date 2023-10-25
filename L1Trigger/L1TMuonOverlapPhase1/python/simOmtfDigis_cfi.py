@@ -18,8 +18,8 @@ simOmtfDigis = cms.EDProducer("L1TMuonOverlapPhase1TrackProducer",
   dropRPCPrimitives = cms.bool(False),                                    
   dropDTPrimitives = cms.bool(False),                                    
   dropCSCPrimitives = cms.bool(False),
-  processorType = cms.string("OMTFProcessor"),
-  
+  processorType = cms.string("OMTFProcessor"),  
+
   #ghostBusterType = cms.string("GhostBusterPreferRefDt"),
   
   #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x00020007.xml")
@@ -28,6 +28,6 @@ simOmtfDigis = cms.EDProducer("L1TMuonOverlapPhase1TrackProducer",
   #if commented the default values are 0-0
   #-3 to 4 is the range of the OMTF DAQ readout, so should be used e.g. in the DQM data to emulator comparison
   bxMin = cms.int32(0),
-  bxMax = cms.int32(0)
-)
+  bxMax = cms.int32(0),
 
+)

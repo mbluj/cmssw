@@ -78,20 +78,21 @@ void OMTFProcessor<GoldenPatternType>::init(const edm::ParameterSet& edmCfg, edm
   if (edmCfg.exists("useFloatingPointExtrapolation"))
     useFloatingPointExtrapolation = edmCfg.getParameter<bool>("useFloatingPointExtrapolation");
 
-  std::string extrapolFactorsFilename;
-  if (edmCfg.exists("extrapolFactorsFilename"))
-    extrapolFactorsFilename = edmCfg.getParameter<std::string>("extrapolFactorsFilename");
-
+  std::string extrapolFactorsFileName;
+  if (edmCfg.exists("extrapolFactorsFileName"))
+    extrapolFactorsFileName = edmCfg.getParameter<edm::FileInPath>("extrapolFactorsFileName").fullPath();
+ 
+    
   if (this->myOmtfConfig->usePhiBExtrapolationMB1() || this->myOmtfConfig->usePhiBExtrapolationMB2()) {
     extrapolFactors.resize(2, std::vector<std::map<int, double> >(this->myOmtfConfig->nLayers()));
     extrapolFactorsNorm.resize(2, std::vector<std::map<int, int> >(this->myOmtfConfig->nLayers()));
 
-    if (!extrapolFactorsFilename.empty())
-      loadExtrapolFactors(extrapolFactorsFilename);
+    if (!extrapolFactorsFileName.empty())
+      loadExtrapolFactors(extrapolFactorsFileName);
   }
 
   edm::LogVerbatim("OMTFReconstruction") << "useFloatingPointExtrapolation " << useFloatingPointExtrapolation << std::endl;
-  edm::LogVerbatim("OMTFReconstruction") << "extrapolFactorsFilename " << extrapolFactorsFilename << std::endl;
+  edm::LogVerbatim("OMTFReconstruction") << "extrapolFactorsFileName " << extrapolFactorsFileName << std::endl;
 }
 
 template <class GoldenPatternType>

@@ -36,6 +36,8 @@ simOmtfDigis = cms.EDProducer("L1TMuonOverlapPhase1TrackProducer",
   useEndcapStubsRInExtr  = cms.bool(False),
   useFloatingPointExtrapolation  = cms.bool(False),
   dtRefHitMinQuality =  cms.int32(4),  
-  extrapolFactorsFilename = cms.string("ExtrapolationFactors_simple.xml"),
+  extrapolFactorsFileName= cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/ExtrapolationFactors_simple.xml"),
+
 )
+
 

@@ -14,6 +14,8 @@ verbose = True
 
 filesNameLike = sys.argv[2]
 
+version = "ExtraplMB1nadMB2DTQualAndEtaFloatP_atan_ValueP1Scale_t18"
+
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",
        #suppressInfo       = cms.untracked.vstring('AfterSource', 'PostModule'),
@@ -26,7 +28,7 @@ if verbose:
                     ),
        categories        = cms.untracked.vstring('l1tOmtfEventPrint', 'OMTFReconstruction'),
        omtfEventPrint = cms.untracked.PSet(    
-                         filename  = cms.untracked.string("log_Patterns_dispalced_test_" + filesNameLike + "_t14"),
+                         filename  = cms.untracked.string("Patterns_dispalced_test_" + version + "_" + filesNameLike),
                          extension = cms.untracked.string('.txt'),                
                          threshold = cms.untracked.string('INFO'),
                          default = cms.untracked.PSet( limit = cms.untracked.int32(0) ), 
@@ -154,7 +156,7 @@ else :
     path = '/eos/user/k/kbunkow/cms_data/SingleMuFullEta/721_FullEta_v4/' #old sample, but very big
     onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
     
-    for i in range(1, 2, 1):
+    for i in range(1, 10, 1):
         for f in onlyfiles:
             if (( filesNameLike + '_' + str(i) + '_') in f):  #TODO for 721_FullEta_v4/
             #if (( filesNameLike + '_' + str(i) + '.') in f): #TODO for 9_3_14_FullEta_v2
@@ -250,7 +252,7 @@ process.simOmtfDigis.patternGenerator = cms.string("2DHists")
 
 process.simOmtfDigis.patternType = cms.string("GoldenPatternWithStat")
 process.simOmtfDigis.generatePatterns = cms.bool(True)
-process.simOmtfDigis.optimisedPatsXmlFile = cms.string("Patterns_dispalced_test_" + filesNameLike + "_t14_displSampl.xml")
+process.simOmtfDigis.optimisedPatsXmlFile = cms.string("Patterns_dispalced_test_" + version + "_" + filesNameLike + ".xml")
 
 process.simOmtfDigis.rpcMaxClusterSize = cms.int32(3)
 process.simOmtfDigis.rpcMaxClusterCnt = cms.int32(2)
@@ -263,6 +265,16 @@ process.simOmtfDigis.dtRefHitMinQuality =  cms.int32(4)
 
 process.simOmtfDigis.usePhiBExtrapolationFromMB1 = cms.bool(True)
 process.simOmtfDigis.usePhiBExtrapolationFromMB2 = cms.bool(True)
+
+process.simOmtfDigis.useStubQualInExtr  = cms.bool(True)
+process.simOmtfDigis.useEndcapStubsRInExtr  = cms.bool(True)
+process.simOmtfDigis.useFloatingPointExtrapolation  = cms.bool(True)
+#process.simOmtfDigis.extrapolFactorsFilename = cms.string("ExtrapolationFactors_DTQualAndEtaValueP1Scale.xml")
+#process.simOmtfDigis.extrapolFactorsFilename = cms.string("ExtrapolationFactors_simple.xml")
+process.simOmtfDigis.extrapolFactorsFilename = cms.string("")
+
+process.simOmtfDigis.stubEtaEncoding = cms.string("valueP1Scale")  
+#process.simOmtfDigis.stubEtaEncoding = cms.string("bits")   
 
 process.simOmtfDigis.goldenPatternResultFinalizeFunction = cms.int32(3) ## is needed here , becasue it just counts the number of layers with a stub
 process.simOmtfDigis.lctCentralBx = cms.int32(cscBx);#<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!TODO this was changed in CMSSW 10(?) to 8. if the data were generated with the previous CMSSW then you have to use 6

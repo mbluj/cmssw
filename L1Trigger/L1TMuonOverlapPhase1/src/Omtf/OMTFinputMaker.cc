@@ -436,7 +436,7 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
 int OMTFinputMaker::getProcessorPhiZero(const OMTFConfiguration* config, unsigned int iProcessor) {
   unsigned int nPhiBins = config->nPhiBins();
 
-  int phiZero = nPhiBins / 6. * (iProcessor) + nPhiBins / 24;
+  int phiZero = nPhiBins / config->nProcessors() * (iProcessor) + nPhiBins / 24;
   // "0" is 15degree moved cyclically to each processor, note [0,2pi]
 
   return config->foldPhi(phiZero);

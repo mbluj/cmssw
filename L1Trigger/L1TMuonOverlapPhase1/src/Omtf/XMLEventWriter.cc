@@ -44,7 +44,7 @@ void XMLEventWriter::observeProcesorBegin(unsigned int iProcessor, l1t::tftype m
   procTree.clear();
 
   int endcap = (mtfType == l1t::omtf_neg) ? -1 : ((mtfType == l1t::omtf_pos) ? +1 : 0);
-  OmtfName board(iProcessor, endcap);
+  OmtfName board(iProcessor, endcap, omtfConfig);
   procTree.add("<xmlattr>.board", board.name());
   procTree.add("<xmlattr>.iProcessor", iProcessor);
 
@@ -63,7 +63,7 @@ void XMLEventWriter::observeProcesorEmulation(unsigned int iProcessor,
     return;
 
   int endcap = (mtfType == l1t::omtf_neg) ? -1 : ((mtfType == l1t::omtf_pos) ? +1 : 0);
-  OmtfName board(iProcessor, endcap);
+  OmtfName board(iProcessor, endcap, omtfConfig);
 
   if (candMuons.empty())
     return;

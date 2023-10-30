@@ -561,7 +561,7 @@ void XMLConfigWriter::writeConnectionsData(
     const std::vector<std::vector<OMTFConfiguration::vector2D> >& measurements4D) {
   std::ostringstream stringStr;
 
-  for (unsigned int iProcessor = 0; iProcessor < 6; ++iProcessor) {
+  for (unsigned int iProcessor = 0; iProcessor < myOMTFConfig->nProcessors(); ++iProcessor) {
     xercesc::DOMElement* aProcessorElement = theDoc->createElement(_toDOMS("Processor"));
     stringStr.str("");
     stringStr << iProcessor;

@@ -125,7 +125,7 @@ void StubsSimHitsMatcher::match(const edm::Event& iEvent,
   iEvent.getByLabel(trackingParticleTag, trackingParticleHandle);
 
   if (procMuon->isValid() && omtfCand) {
-    OmtfName board(omtfCand->processor(), omtfCand->trackFinderType());
+    OmtfName board(omtfCand->processor(), omtfCand->trackFinderType(), omtfConfig);
     auto processorPhiZero = OMTFinputMaker::getProcessorPhiZero(omtfConfig, omtfCand->processor());
 
     std::set<MatchedTrackInfo> matchedTrackInfos;

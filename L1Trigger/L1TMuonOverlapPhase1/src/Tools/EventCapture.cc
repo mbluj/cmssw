@@ -222,7 +222,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
           << " hwSign " << finalCandidate.hwSign() << " hwQual " << finalCandidate.hwQual() << " hwEta " << std::setw(4)
           << finalCandidate.hwEta() << std::setw(4) << " hwPhi " << finalCandidate.hwPhi() << "    eta " << std::setw(9)
           << (finalCandidate.hwEta() * 0.010875) << " phi " << std::setw(9) << globalPhi << " " << layerHitBits
-          << " processor " << OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType()) << std::endl;
+          << " processor " << OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType(), omtfConfig) << std::endl;
 
       for (auto& trackAddr : finalCandidate.trackAddress()) {
         if (trackAddr.first >= 10)
@@ -235,7 +235,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
   edm::LogVerbatim("l1tOmtfEventPrint") << std::endl;
 
   for (unsigned int iProc = 0; iProc < inputInProcs.size(); iProc++) {
-    OmtfName board(iProc);
+    OmtfName board(iProc, omtfConfig);
 
     std::ostringstream ostrInput;
     if (inputInProcs[iProc]) {
@@ -248,7 +248,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
             layerFired = true;
 
             auto globalPhiRad = omtfConfig->procHwPhiToGlobalPhi(
-                stub->phiHw, OMTFinputMaker::getProcessorPhiZero(omtfConfig, iProc % 6));
+                stub->phiHw, OMTFinputMaker::getProcessorPhiZero(omtfConfig, iProc % omtfConfig->nProcessors()));
             ostrInput << (*stub) << " globalPhiRad " << globalPhiRad << std::endl;
           }
           if (layerFired)
@@ -373,7 +373,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
                finalCandidateIt++) {
             auto& finalCandidate = *finalCandidateIt;
 
-            auto omtfName = OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType());
+            auto omtfName = OmtfName(finalCandidate.processor(), finalCandidate.trackFinderType(), omtfConfig);
 
             if (omtfName == board.name()) {
               int layerHits = (int)finalCandidate.trackAddress().at(0);

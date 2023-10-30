@@ -66,6 +66,7 @@ void OMTFConfiguration::configure(const L1TMuonOverlapParams *omtfParams) {
   const std::vector<int> *connectedSectorsStartVec = omtfParams->connectedSectorsStart();
   const std::vector<int> *connectedSectorsEndVec = omtfParams->connectedSectorsEnd();
 
+  //TODO is this 6 here the number of processors per side?
   std::copy(connectedSectorsStartVec->begin(), connectedSectorsStartVec->begin() + 6, barrelMin.begin());
   std::copy(connectedSectorsStartVec->begin() + 6, connectedSectorsStartVec->begin() + 12, endcap10DegMin.begin());
   std::copy(connectedSectorsStartVec->begin() + 12, connectedSectorsStartVec->end(), endcap20DegMin.begin());

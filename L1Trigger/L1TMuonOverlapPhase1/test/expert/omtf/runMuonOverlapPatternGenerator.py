@@ -11,7 +11,8 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
 verbose = True
 #version = "ExtraplMB1nadMB2FullAlgo_t16"
-version = "ExtraplMB1nadMB2Simplified_t17"
+#version = "ExtraplMB1nadMB2Simplified_t17"
+version = "ExtraplMB1nadMB2DTQualAndEtaValueP1Scale_t18"
 
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",
@@ -211,6 +212,14 @@ process.simOmtfDigis.dtRefHitMinQuality =  cms.int32(4)
 
 process.simOmtfDigis.usePhiBExtrapolationFromMB1 = cms.bool(True)
 process.simOmtfDigis.usePhiBExtrapolationFromMB2 = cms.bool(True)
+
+process.simOmtfDigis.useStubQualInExtr  = cms.bool(True)
+process.simOmtfDigis.useEndcapStubsRInExtr  = cms.bool(True)
+process.simOmtfDigis.useFloatingPointExtrapolation  = cms.bool(False)
+process.simOmtfDigis.extrapolFactorsFilename = cms.string("ExtrapolationFactors_DTQualAndEtaValueP1Scale.xml")
+process.simOmtfDigis.dtRefHitMinQuality =  cms.int32(4)   
+
+process.simOmtfDigis.stubEtaEncoding = cms.string("valueP1Scale")  
 
 process.simOmtfDigis.goldenPatternResultFinalizeFunction = cms.int32(3) ## is needed here , becasue it just counts the number of layers with a stub
 process.simOmtfDigis.lctCentralBx = cms.int32(6);#<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!TODO this was changed in CMSSW 10(?) to 8. if the data were generated with the previous CMSSW then you have to use 6

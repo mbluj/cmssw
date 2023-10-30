@@ -222,7 +222,7 @@ void PatternGenerator::updateStatUsingMatcher2() {
       double muDxy = (-1 * matchingResult.simVertex->position().x() * matchingResult.simTrack->momentum().py() +
                       matchingResult.simVertex->position().y() * matchingResult.simTrack->momentum().px()) /
                      matchingResult.simTrack->momentum().pt();
-      ;
+      
 
       simMuPtVsDispl->Fill(matchingResult.simTrack->momentum().pt(), muDxy);
       simMuPtVsRho->Fill(matchingResult.simTrack->momentum().pt(), matchingResult.simVertex->position().rho());
@@ -247,10 +247,15 @@ void PatternGenerator::updateStatUsingMatcher2() {
       for (unsigned int iRefHit = 0; iRefHit < exptCandGp->getResults()[candProcIndx].size(); ++iRefHit) {
         auto& gpResult = exptCandGp->getResults()[candProcIndx][iRefHit];
 
-        unsigned int refLayer = gpResult.getRefLayer();
-        unsigned int refLayerLogicNumber = omtfConfig->getRefToLogicNumber()[refLayer];
-
         if (gpResult.getFiredLayerCnt() >= 3) {
+          int refLayer = gpResult.getRefLayer();
+          
+          if(refLayer < 0 || !gpResult.isValid())
+            LogTrace("l1tOmtfEventPrint") << "updateStatUsingMatcher2 " << __LINE__ <<" refLayer "<<refLayer
+            <<" gpResult.isValid() "<<gpResult.isValid()<< std::endl;
+
+          int refLayerLogicNumber = omtfConfig->getRefToLogicNumber()[refLayer];
+
           LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " updating statistic: candProcIndx "
                                         << candProcIndx << " iRefHit " << iRefHit << " refLayer " << refLayer
                                         << " exptPatNum " << exptPatNum << " ptSim " << ptSim << " chargeSim "
@@ -282,8 +287,8 @@ void PatternGenerator::updateStatUsingMatcher2() {
             }
 
             if (fired) {                                                                  //the result is not empty
-              int meanDistPhi = exptCandGp->meanDistPhiValue(iLayer, refLayer, refPhiB);  //should be 0 here
-
+              int meanDistPhi = 0; //exptCandGp->meanDistPhiValue(iLayer, refLayer, refPhiB);  //should be 0 here
+              
               int phiDist = gpResult.getStubResults()[iLayer].getPdfBin() + meanDistPhi - pdfMiddle;
               //removing the shift applied in the GoldenPatternBase::process1Layer1RefLayer
 
@@ -306,8 +311,9 @@ void PatternGenerator::updateStatUsingMatcher2() {
               int phiDistCorr = phiDist + lutMiddle;
 
               if (phiDistCorr > 0 && phiDistCorr < (int)(exptCandGp->getStatistics()[iLayer][refLayer].size())) {
-                LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " phiDistCorr + lutMiddle "
-                                              << phiDistCorr + lutMiddle << std::endl;
+                LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ <<" phiDistCorr "<<phiDistCorr
+                                              //<< " phiDistCorr + lutMiddle "<< phiDistCorr + lutMiddle
+                                              <<" refPhiBShifted "<<refPhiBShifted<< std::endl;
                 exptCandGp->updateStat(iLayer, refLayer, phiDistCorr, refPhiBShifted, 1);
               }
             } else {  //if there is no hit at all in a given layer, the bin = 0 is filled

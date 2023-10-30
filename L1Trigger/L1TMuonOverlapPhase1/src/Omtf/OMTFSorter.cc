@@ -18,7 +18,6 @@ template <class GoldenPatternType>
 AlgoMuons::value_type OMTFSorter<GoldenPatternType>::sortRefHitResults(
     unsigned int procIndx, unsigned int iRefHit, const GoldenPatternVec<GoldenPatternType>& gPatterns, int charge) {
   GoldenPatternType* bestGP = nullptr;  //the GoldenPattern with the best result for this iRefHit
-  //std::cout <<" ====== sortRefHitResults: " << std::endl;
 
   GoldenPatternType* bestGpUnconstr = nullptr;
 
@@ -73,7 +72,6 @@ AlgoMuons::value_type OMTFSorter<GoldenPatternType>::sortRefHitResults(
       candidate->setGoldenPaternUnconstr(bestGpUnconstr);
     }
 
-    //std::cout<<__FUNCTION__<<" line "<<__LINE__ <<" return: " << *candidate << std::endl;
     return candidate;
   } else {
     AlgoMuons::value_type candidate(new AlgoMuon());

@@ -370,7 +370,10 @@ void GoldenPatternResult::finalise10() {
     //but this cut has sometimes side effect: there can be a muon which has has pdfSum = 0 for every pattern,
     //then in the OMTFSorter<GoldenPatternType>::sortRefHitResults the first pattern that has FiredLayerCnt >= 3 is chosen
     //and not the one with highest pdfSum as it should be
-    //TODO what should be done is to set the pt of such a muons to 0, but after the sorter
+    //TODO what should be done is to set the pt of such a muons to 0, but after the sorter.
+    //Or maybe not - if the pt is 0, then the muon is not valid. So the displaced muon will be lost.
+    //So the way it is done now actually is good. Such a muon will have some low constrained pt probably.
+    //what can be done is to assign to it the hwPt = 1 , but not 0
     if (stubResults[refLayerLogicNumber + 1].getPdfVal() == 0)
       pdfSum = 0;
   } else

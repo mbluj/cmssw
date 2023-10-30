@@ -158,6 +158,12 @@ AlgoMuons GhostBusterPreferRefDt::select(AlgoMuons muonsIN, int charge) {
   }
 
   // fill outgoing collection
+  /* there is nowhere a cut on the pdfSum > 0 for a muon to be valid
+   * muon is valid if getPtConstr() > 0 || getPtUnconstr() > 0,
+   * i.e. when there was a fitting pattern
+   * this mean there can be a muon with pdfSumConstrained = 0 but with not 0 PtConstr
+   * which is OK. See also comment in the GoldenPatternResult::finalise10()
+   */
   AlgoMuons refHitCleanCands;
   for (const auto& mu : refHitCleanCandsFixedEta) {
     if (mu->isValid() && !(mu->isKilled()))

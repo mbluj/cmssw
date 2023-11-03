@@ -99,12 +99,10 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
   }
 
   if (!selectedStub) {
-    if (this->myOmtfConfig->isNoHitValueInPdf()) {
-      PdfValueType pdfVal = this->pdfValue(iLayer, iRefLayer, 0);
+    PdfValueType pdfVal = 0;
+    if (this->myOmtfConfig->isNoHitValueInPdf()) pdfVal = this->pdfValue(iLayer, iRefLayer, 0);
       return StubResult(pdfVal, false, myOmtfConfig->nPhiBins(), iLayer, selectedStub);
-    } else {
-      return StubResult(0, false, myOmtfConfig->nPhiBins(), iLayer, selectedStub);  //2018 version
-    }
+
   }
 
   int pdfMiddle = 1 << (myOmtfConfig->nPdfAddrBits() - 1);

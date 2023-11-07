@@ -101,6 +101,7 @@ public:
   unsigned int nPdfValBits() const { return rawParams.nPdfValBits(); };
   int pdfMaxValue() const { return pdfMaxVal; };
   unsigned int nPhiBins() const override { return rawParams.nPhiBins(); };
+  double omtfPhiUnit() const { return 2 * M_PI / nPhiBins(); }
   unsigned int nRefHits() const { return rawParams.nRefHits(); };
   unsigned int nTestRefHits() const { return rawParams.nTestRefHits(); };
   //processors number per detector side

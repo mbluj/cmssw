@@ -14,7 +14,7 @@ verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
 #version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_valueP1Scale'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_bits'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v12_test_bits'
 #version = 'Patterns_0x00012_t17_v11_extr_off_test_bits'
 
 runDebug = "DEBUG" # or "INFO" DEBUG
@@ -35,7 +35,7 @@ if verbose:
        omtfEventPrint = cms.untracked.PSet(    
                          filename  = cms.untracked.string('log_MuonOverlap_newPats_t' + version),
                          extension = cms.untracked.string('.txt'),                
-                         threshold = cms.untracked.string(runDebug), #DEBUG
+                         threshold = cms.untracked.string("INFO"), #DEBUG
                          default = cms.untracked.PSet( limit = cms.untracked.int32(0) ), 
                          #INFO   =  cms.untracked.int32(0),
                          #DEBUG   = cms.untracked.int32(0),
@@ -158,7 +158,7 @@ fileNames = cms.untracked.vstring(
 )
 	                    
 if(runDebug == "DEBUG") :
-    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500))
+    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000))
 else :
     process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 

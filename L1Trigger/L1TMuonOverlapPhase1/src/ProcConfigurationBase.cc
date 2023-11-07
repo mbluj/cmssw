@@ -75,4 +75,10 @@ void ProcConfigurationBase::configureFromEdmParameterSet(const edm::ParameterSet
     edm::LogVerbatim("OMTFReconstruction")
         << "stubEtaEncoding: " << static_cast<int>(stubEtaEncoding) << " = " << stubEtaEncodingStr << std::endl;
   }
+
+  if (edmParameterSet.exists("dtPhiBUnitsRad")) {
+    dtPhiBUnitsRad_ = edmParameterSet.getParameter<double>("dtPhiBUnitsRad");
+    edm::LogVerbatim("OMTFReconstruction")
+        << "dtPhiBUnitsRad: " << dtPhiBUnitsRad_ << std::endl;
+  }
 }

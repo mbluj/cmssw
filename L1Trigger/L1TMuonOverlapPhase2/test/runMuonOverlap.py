@@ -6,8 +6,39 @@ import sys
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
-process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
-process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(False))
+verbose = True
+
+if verbose: 
+    process.MessageLogger = cms.Service("MessageLogger",
+       #suppressInfo       = cms.untracked.vstring('AfterSource', 'PostModule'),
+       destinations   = cms.untracked.vstring(
+                                               #'detailedInfo',
+                                               #'critical',
+                                               #'cout',
+                                               #'cerr',
+                                               'omtfEventPrint'
+                    ),
+       categories        = cms.untracked.vstring('l1tOmtfEventPrint', 'OMTFReconstruction'),
+       omtfEventPrint = cms.untracked.PSet(    
+                         filename  = cms.untracked.string('log_MuonOverlap_v2'),
+                         extension = cms.untracked.string('.txt'),                
+                         threshold = cms.untracked.string('DEBUG'),
+                         default = cms.untracked.PSet( limit = cms.untracked.int32(0) ), 
+                         #INFO   =  cms.untracked.int32(0),
+                         #DEBUG   = cms.untracked.int32(0),
+                         l1tOmtfEventPrint = cms.untracked.PSet( limit = cms.untracked.int32(1000000000) ),
+                         OMTFReconstruction = cms.untracked.PSet( limit = cms.untracked.int32(1000000000) )
+                       ),
+       debugModules = cms.untracked.vstring('L1MuonAnalyzerOmtf', 'simOmtfPhase2Digis') 
+       #debugModules = cms.untracked.vstring('*')
+    )
+
+    #process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
+if not verbose:
+    process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(1000)
+    process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(False), 
+										 #SkipEvent = cms.untracked.vstring('ProductNotFound') 
+									 )                                         #SkipEvent = cms.untracked.vstring('ProductNotFound') 
 
 process.source = cms.Source('PoolSource',
  #fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/g/gflouris/public/SingleMuPt6180_noanti_10k_eta1.root')
@@ -72,6 +103,8 @@ process.dtTriggerPhase2PrimitiveDigis.dump = True
 process.load('L1Trigger.L1TMuonOverlapPhase2.simOmtfPhase2Digis_cfi')
 
 process.simOmtfPhase2Digis.dumpResultToXML = cms.bool(True)
+process.simOmtfPhase2Digis.eventCaptureDebug = cms.bool(True)
+
 process.simOmtfPhase2Digis.rpcMaxClusterSize = cms.int32(3)
 process.simOmtfPhase2Digis.rpcMaxClusterCnt = cms.int32(2)
 process.simOmtfPhase2Digis.rpcDropAllClustersIfMoreThanMax = cms.bool(False)

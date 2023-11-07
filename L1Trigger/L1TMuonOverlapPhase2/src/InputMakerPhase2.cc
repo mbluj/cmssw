@@ -96,9 +96,9 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
       OMTFinputMaker::getProcessorPhiZero(config, iProcessor), procTyp, digi.scNum(), digi.phi());
   //stub.etaHw  =  angleConverter->getGlobalEta(digi, dtThDigis);
   stub.etaHw = angleConverter->getGlobalEta(detid, dtThDigis, digi.bxNum() - 20);
-  //4096. / 2.;   // 13 bits, [-2, 2], need to convert them to 512==1rad (to use OLD PATTERNS...)
-  //phiB in Ph2 has 2048==1.4rad ... need to convert them to 512==1rad (so we can use OLD patterns)
-  float PHIB_CONV = 2. * 512. / 4096.;
+  //in phase2, the phiB is 13 bits, and range is [-2, 2 rad] so 4 rad, 2^13 units/(4 rad) =  1^11/rad.
+  //need to convert them to 512units==1rad (to use OLD PATTERNS...)
+  float PHIB_CONV = 1. / 2048. * config->dtPhiBUnitsRad();
   if (stub.qualityHw >= config->getMinDtPhiBQuality())
     stub.phiBHw = round(digi.phiBend() * PHIB_CONV);
   else
@@ -111,7 +111,7 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
   stub.logicLayer = iLayer;
   stub.detId = detid;
 
-  OmtfName board(iProcessor);
+  OmtfName board(iProcessor, config);
   edm::LogVerbatim("l1tOmtfEventPrint") << board.name() << " L1Phase2MuDTPhDigi: detid " << detid << " digi "
                                         << " whNum " << digi.whNum() << " scNum " << digi.scNum() << " stNum "
                                         << digi.stNum() << " slNum " << digi.slNum() << " quality " << digi.quality()

@@ -352,45 +352,43 @@ bool OMTFProcessor<GoldenPatternType>::checkHitPatternValidity(unsigned int hits
     if (useFloatingPointExtrapolation)
       saveExtrapolFactors();
   }
-  
-  template <class GoldenPatternType>
-  void OMTFProcessor<GoldenPatternType>::init(const edm::ParameterSet& edmCfg, edm::EventSetup const& evSetup) {
-    setSorter(new OMTFSorter<GoldenPatternType>(this->myOmtfConfig->getSorterType()));
-    //initialize with the default sorter
-  
-    if (this->myOmtfConfig->getGhostBusterType() == "GhostBusterPreferRefDt" ||
-        this->myOmtfConfig->getGhostBusterType() == "byLLH" || this->myOmtfConfig->getGhostBusterType() == "byFPLLH" ||
-        this->myOmtfConfig->getGhostBusterType() == "byRefLayer") {
-      setGhostBuster(new GhostBusterPreferRefDt(this->myOmtfConfig));
-      edm::LogVerbatim("OMTFReconstruction") << "setting " << this->myOmtfConfig->getGhostBusterType() << std::endl;
-    } else {
-      setGhostBuster(new GhostBuster(this->myOmtfConfig));  //initialize with the default sorter
-      edm::LogVerbatim("OMTFReconstruction") << "setting GhostBuster" << std::endl;
-    }
-  
-    edm::LogVerbatim("OMTFReconstruction") << "fwVersion 0x" << hex << this->myOmtfConfig->fwVersion() << std::endl;
-  
-    useStubQualInExtr = this->myOmtfConfig->useStubQualInExtr();
-    useEndcapStubsRInExtr = this->myOmtfConfig->useEndcapStubsRInExtr();
-  
-    if (edmCfg.exists("useFloatingPointExtrapolation"))
-      useFloatingPointExtrapolation = edmCfg.getParameter<bool>("useFloatingPointExtrapolation");
-  
-    std::string extrapolFactorsFileName;
-    if (edmCfg.exists("extrapolFactorsFileName"))
-      extrapolFactorsFileName = edmCfg.getParameter<edm::FileInPath>("extrapolFactorsFileName").fullPath();
-   
-      
-    if (this->myOmtfConfig->usePhiBExtrapolationMB1() || this->myOmtfConfig->usePhiBExtrapolationMB2()) {
-      extrapolFactors.resize(2, std::vector<std::map<int, double> >(this->myOmtfConfig->nLayers()));
-      extrapolFactorsNorm.resize(2, std::vector<std::map<int, int> >(this->myOmtfConfig->nLayers()));
-  
-      if (!extrapolFactorsFileName.empty())
-        loadExtrapolFactors(extrapolFactorsFileName);
-    }
-  
-    edm::LogVerbatim("OMTFReconstruction") << "useFloatingPointExtrapolation " << useFloatingPointExtrapolation << std::endl;
-    edm::LogVerbatim("OMTFReconstruction") << "extrapolFactorsFileName " << extrapolFactorsFileName << std::endl;
+
+  return true;
+}
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+template <class GoldenPatternType>
+AlgoMuons OMTFProcessor<GoldenPatternType>::sortResults(unsigned int iProcessor, l1t::tftype mtfType, int charge) {
+  unsigned int procIndx = this->myOmtfConfig->getProcIndx(iProcessor, mtfType);
+  return sorter->sortResults(procIndx, this->getPatterns(), charge);
+}
+
+template <class GoldenPatternType>
+int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFloatPoint(const int& refLogicLayer,
+                                                                  const int& refPhi,
+                                                                  const int& refPhiB,
+                                                                  unsigned int targetLayer,
+                                                                  const int& targetStubPhi,
+                                                                  const int& targetStubQuality,
+                                                                  const int& targetStubEta,
+                                                                  const int& targetStubR,
+                                                                  const OMTFConfiguration* omtfConfig) {
+  LogTrace("l1tOmtfEventPrint") << "\n"
+                                << __FUNCTION__ << ":" << __LINE__ << " refLogicLayer " << refLogicLayer
+                                << " targetLayer " << targetLayer << std::endl;
+  LogTrace("l1tOmtfEventPrint") << "refPhi " << refPhi << " refPhiB " << refPhiB << " targetStubPhi " << targetStubPhi
+                                << " targetStubQuality " << targetStubQuality << std::endl;
+
+  //double hsPhiPitch = 2 * M_PI / omtfConfig->nPhiBins();  //rad/halfStrip
+
+  int phiExtr = 0;  //delta phi extrapolated
+
+  float rRefLayer = 431.133;  //MB1 i.e. refLogicLayer = 0
+  if (refLogicLayer == 2)
+    rRefLayer = 512.401;  //MB2
+  else if (refLogicLayer != 0) {
+    return 0;
+    //throw cms::Exception("OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB: wrong refStubLogicLayer " + std::to_string(refLogicLayer) );
   }
   
   template <class GoldenPatternType>
@@ -582,11 +580,14 @@ bool OMTFProcessor<GoldenPatternType>::checkHitPatternValidity(unsigned int hits
     }
 
     float d = rTargetLayer - rRefLayer;
-    //float deltaPhiExtr = d/rTargetLayer * refPhiB / 512.; //[rad]
-    //phiExtr = round(deltaPhiExtr / hsPhiPitch); //[halfStrip]
+    //float deltaPhiExtr = d/rTargetLayer * refPhiB / omtfConfig->dtPhiBUnitsRad(); //[rad]
+    //phiExtr = round(deltaPhiExtr / omtfConfig->omtfPhiUnit()); //[halfStrip]
 
-    float extrFactor = d / rTargetLayer / 512. / hsPhiPitch;
+    float extrFactor = d / rTargetLayer / omtfConfig->dtPhiBUnitsRad() / omtfConfig->omtfPhiUnit();
     phiExtr = extrFactor * (float)refPhiB;  //[halfStrip]
+
+    float deltaPhiExtr = atan( d / rTargetLayer * tan(refPhiB / omtfConfig->dtPhiBUnitsRad()) );  //[rad]
+    phiExtr = round(deltaPhiExtr / omtfConfig->omtfPhiUnit()); //[halfStrip]
 
     if (useStubQualInExtr & (targetLayer == 0 || targetLayer == 2 || targetLayer == 4)) {
       extrapolFactors[reflLayerIndex][targetLayer][targetStubQuality] = extrFactor;
@@ -618,90 +619,28 @@ bool OMTFProcessor<GoldenPatternType>::checkHitPatternValidity(unsigned int hits
                                                                     const OMTFConfiguration* omtfConfig) {
     LogTrace("l1tOmtfEventPrint") << "\n"
                                   << __FUNCTION__ << ":" << __LINE__ << " refLogicLayer " << refLogicLayer
-                                  << " targetLayer " << targetLayer << std::endl;
-    LogTrace("l1tOmtfEventPrint") << "refPhi " << refPhi << " refPhiB " << refPhiB << " targetStubPhi " << targetStubPhi
-                                  << " targetStubQuality " << targetStubQuality << std::endl;
-  
-    double hsPhiPitch = 2 * M_PI / omtfConfig->nPhiBins();  //rad/halfStrip
-  
-    int phiExtr = 0;  //delta phi extrapolated
-  
-    float rRefLayer = 431.133;  //MB1 i.e. refLogicLayer = 0
-    if (refLogicLayer == 2)
-      rRefLayer = 512.401;  //MB2
-    else if (refLogicLayer != 0) {
-      return 0;
-      //throw cms::Exception("OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB: wrong refStubLogicLayer " + std::to_string(refLogicLayer) );
-    }
-  
-    int reflLayerIndex = refLogicLayer == 0 ? 0 : 1;
-  
-    if (targetLayer == 0 || targetLayer == 2 || targetLayer == 4 || (targetLayer >= 10 && targetLayer <= 14)) {
-      float rTargetLayer = 512.401;  //MB2
-  
-      if (targetLayer == 0)
-        rTargetLayer = 431.133;  //MB1
-      else if (targetLayer == 4)
-        rTargetLayer = 617.946;  //MB3
-  
-      else if (targetLayer == 10)
-        rTargetLayer = 413.675;  //RB1in
-      else if (targetLayer == 11)
-        rTargetLayer = 448.675;  //RB1out
-      else if (targetLayer == 12)
-        rTargetLayer = 494.975;  //RB2in
-      else if (targetLayer == 13)
-        rTargetLayer = 529.975;  //RB2out
-      else if (targetLayer == 14)
-        rTargetLayer = 602.150;  //RB3
-  
-      if (useStubQualInExtr) {
-        if (targetLayer == 0 || targetLayer == 2 || targetLayer == 4) {
-          if (targetStubQuality == 2)
-            rTargetLayer = rTargetLayer - 23.5 / 2;  //inner superlayer
-          else if (targetStubQuality == 3)
-            rTargetLayer = rTargetLayer + 23.5 / 2;  //outer superlayer
-        }
-      }
-  
-      float d = rTargetLayer - rRefLayer;
-      //float deltaPhiExtr = d/rTargetLayer * refPhiB / 512.; //[rad]
-      //phiExtr = round(deltaPhiExtr / hsPhiPitch); //[halfStrip] //TODO do math as in firmware
-  
-      float extrFactor = d / rTargetLayer / 512. / hsPhiPitch;
-      phiExtr = extrFactor * (float)refPhiB;  //[halfStrip] //TODO do math as in firmware
-  
-      if (useStubQualInExtr & (targetLayer == 0 || targetLayer == 2 || targetLayer == 4)) {
-        extrapolFactors[reflLayerIndex][targetLayer][targetStubQuality] = extrFactor;
-        extrapolFactorsNorm[reflLayerIndex][targetLayer][targetStubQuality] = 1;
-      } else {
-        extrapolFactors[reflLayerIndex][targetLayer][0] = extrFactor;
-        extrapolFactorsNorm[reflLayerIndex][targetLayer][0] = 1;
-      }
-  
-      //LogTrace("l1tOmtfEventPrint") <<__FUNCTION__<<":"<<__LINE__<<" deltaPhiExtr "<<deltaPhiExtr<<" phiExtr "<<phiExtr<<std::endl;
-  
-      LogTrace("l1tOmtfEventPrint") << "\n"
-                                    << __FUNCTION__ << ":" << __LINE__ << " refLogicLayer " << refLogicLayer
-                                    << " targetLayer " << std::setw(2) << targetLayer << " targetStubQuality "
-                                    << targetStubQuality << " extrFactor " << extrFactor << std::endl;
-  
-      LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " refPhiB " << refPhiB << " phiExtr " << phiExtr
-                                    << std::endl;
-  
-    } else if (targetLayer == 1 || targetLayer == 3 || targetLayer == 5) {
-      int deltaPhi = targetStubPhi - refPhi;  //[halfStrip]
-  
-      deltaPhi = round(deltaPhi * hsPhiPitch * 512.);  //deltaPhi is in phi_b hw scale
-      phiExtr = refPhiB - deltaPhi;                    //phiExtr is also in phi_b hw scale
-      LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " deltaPhi " << deltaPhi << " phiExtr "
-                                    << phiExtr << std::endl;
-    } else if ((targetLayer >= 6 && targetLayer <= 9) || (targetLayer >= 15 && targetLayer <= 17)) {
-      //if true, for the CSC and endcap RPC the R is taken from the hit coordinates
-  
-      float rME = targetStubR;
-      if (!useEndcapStubsRInExtr) {
-        if (targetLayer == 6 || targetLayer == 15)  //ME1/3, RE1/3,
+                                  << " targetLayer " << std::setw(2) << targetLayer << " targetStubQuality "
+                                  << targetStubQuality << " extrFactor " << extrFactor << std::endl;
+
+    LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " refPhiB " << refPhiB << " phiExtr " << phiExtr
+                                  << std::endl;
+
+  } else if (targetLayer == 1 || targetLayer == 3 || targetLayer == 5) {
+    int deltaPhi = targetStubPhi - refPhi;  //[halfStrip]
+
+    deltaPhi = round(deltaPhi * omtfConfig->omtfPhiUnit() * omtfConfig->dtPhiBUnitsRad());  //deltaPhi is here in phi_b hw scale
+    phiExtr = refPhiB - deltaPhi;                    //phiExtr is also in phi_b hw scale
+    LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << ":" << __LINE__ << " deltaPhi " << deltaPhi << " phiExtr "
+                                  << phiExtr << std::endl;
+  } else if ((targetLayer >= 6 && targetLayer <= 9) || (targetLayer >= 15 && targetLayer <= 17)) {
+    //if true, for the CSC and endcap RPC the R is taken from the hit coordinates
+
+    float rME = targetStubR;
+    if (!useEndcapStubsRInExtr) {
+      if (targetLayer == 6 || targetLayer == 15)  //ME1/3, RE1/3,
+        rME = 600.;
+      else if (targetLayer == 7 || targetLayer == 15) {  //ME2/2, RE2/3,
+        if (refLogicLayer == 0)
           rME = 600.;
         else if (targetLayer == 7 || targetLayer == 15) {  //ME2/2, RE2/3,
           if (refLogicLayer == 0)
@@ -785,9 +724,25 @@ bool OMTFProcessor<GoldenPatternType>::checkHitPatternValidity(unsigned int hits
         extrFactor = extrapolFactors[reflLayerIndex][targetLayer][0];
       }
     }
-  
-    if (this->myOmtfConfig->isBendingLayer(targetLayer) == false) {
-      phiExtr = extrFactor * refPhiB / extrapolMultiplier;
+
+    float d = rME - rRefLayer;
+    //float deltaPhiExtr = d / rME * refPhiB / omtfConfig->dtPhiBUnitsRad();  //[rad]
+    //phiExtr = round(deltaPhiExtr / omtfConfig->omtfPhiUnit()); //[halfStrip]
+
+    float extrFactor = d / rME / omtfConfig->dtPhiBUnitsRad() / omtfConfig->omtfPhiUnit();
+    phiExtr = extrFactor * refPhiB;  //[halfStrip]
+
+    float deltaPhiExtr = atan( d / rME * tan(refPhiB / omtfConfig->dtPhiBUnitsRad() ) );  //[rad]
+    phiExtr = round(deltaPhiExtr / omtfConfig->omtfPhiUnit()); //[halfStrip]
+
+    if (useEndcapStubsRInExtr) {
+      extrapolFactors[reflLayerIndex][targetLayer][abs(targetStubEta)] += extrFactor;
+      extrapolFactorsNorm[reflLayerIndex][targetLayer][abs(targetStubEta)]++;
+      //extrapolFactors[reflLayerIndex][targetLayer][0] += extrFactor;
+      //extrapolFactorsNorm[reflLayerIndex][targetLayer][0]++;
+    } else {
+      extrapolFactors[reflLayerIndex][targetLayer][0] = extrFactor;
+      extrapolFactorsNorm[reflLayerIndex][targetLayer][0] = 1;
     }
   
     LogTrace("l1tOmtfEventPrint") << "\n"
@@ -799,24 +754,74 @@ bool OMTFProcessor<GoldenPatternType>::checkHitPatternValidity(unsigned int hits
   
     return phiExtr;
   }
-  
-  template <class GoldenPatternType>
-  int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB(const MuonStubPtr& refStub,
-                                                          const MuonStubPtr& targetStub,
-                                                          unsigned int targetLayer,
-                                                          const OMTFConfiguration* omtfConfig) {
-    if (useFloatingPointExtrapolation)
-      return OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFloatPoint(
-          refStub->logicLayer,
-          refStub->phiHw,
-          refStub->phiBHw,
-          targetLayer,
-          targetStub->phiHw,
-          targetStub->qualityHw,
-          targetStub->etaHw,
-          targetStub->etaSigmaHw,
-          omtfConfig);  //TODO do not use etaSigmaHw for R!!!!!!
-    return OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFixedPoint(
+  //TODO restrict the range of the phiExtr and refPhiB !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  return phiExtr;
+}
+
+template <class GoldenPatternType>
+int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFixedPoint(const int& refLogicLayer,
+                                                                  const int& refPhi,
+                                                                  const int& refPhiB,
+                                                                  unsigned int targetLayer,
+                                                                  const int& targetStubPhi,
+                                                                  const int& targetStubQuality,
+                                                                  const int& targetStubEta,
+                                                                  const int& targetStubR,
+                                                                  const OMTFConfiguration* omtfConfig) {
+  int phiExtr = 0;  //delta phi extrapolated
+
+  //omtfConfig->omtfPhiUnit() * 512 * 512 - first 512 is the is the phiB scale (512 units / rad)
+  //the second 512 is just multiplier to have integer value, it is then removed by diving by 512 in the deltaPhi
+  int omtfPhiUnitInt = 305;
+
+  int reflLayerIndex = refLogicLayer == 0 ? 0 : 1;
+  int extrFactor = 0;
+
+  if (targetLayer == 0 || targetLayer == 2 || targetLayer == 4) {
+    if (useStubQualInExtr)
+      extrFactor = extrapolFactors[reflLayerIndex][targetLayer][targetStubQuality];
+    else
+      extrFactor = extrapolFactors[reflLayerIndex][targetLayer][0];
+  } else if (targetLayer == 1 || targetLayer == 3 || targetLayer == 5) {
+    int deltaPhi = targetStubPhi - refPhi;  //[halfStrip]
+
+    //deltaPhi = round(deltaPhi * omtfConfig->omtfPhiUnit() * 512.); //deltaPhi is in phi_b hw scale
+    deltaPhi = (deltaPhi * omtfPhiUnitInt) / 512;
+    phiExtr = refPhiB - deltaPhi;  //phiExtr is also in phi_b hw scale
+    //LogTrace("l1tOmtfEventPrint") <<__FUNCTION__<<":"<<__LINE__<<" deltaPhi "<<deltaPhi<<" phiExtr "<<phiExtr<<std::endl;
+
+  } else if (targetLayer >= 10 && targetLayer <= 14) {
+    extrFactor = extrapolFactors[reflLayerIndex][targetLayer][0];
+  } else if ((targetLayer >= 6 && targetLayer <= 9) || (targetLayer >= 15 && targetLayer <= 17)) {
+    if (useEndcapStubsRInExtr) {
+      extrFactor = extrapolFactors[reflLayerIndex][targetLayer][abs(targetStubEta)];
+    } else {
+      extrFactor = extrapolFactors[reflLayerIndex][targetLayer][0];
+    }
+  }
+
+  if (this->myOmtfConfig->isBendingLayer(targetLayer) == false) {
+    phiExtr = extrFactor * refPhiB / extrapolMultiplier;
+  }
+
+  LogTrace("l1tOmtfEventPrint") << "\n"
+                                << __FUNCTION__ << ":" << __LINE__ << " refLogicLayer " << refLogicLayer
+                                << " targetLayer " << targetLayer << std::endl;
+  LogTrace("l1tOmtfEventPrint") << "refPhi " << refPhi << " refPhiB " << refPhiB << " targetStubPhi " << targetStubPhi
+                                << " targetStubQuality " << targetStubQuality << " targetStubEta " << targetStubEta
+                                << " extrFactor " << extrFactor << " phiExtr " << phiExtr << std::endl;
+
+  return phiExtr;
+}
+
+template <class GoldenPatternType>
+int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB(const MuonStubPtr& refStub,
+                                                        const MuonStubPtr& targetStub,
+                                                        unsigned int targetLayer,
+                                                        const OMTFConfiguration* omtfConfig) {
+  if (useFloatingPointExtrapolation)
+    return OMTFProcessor<GoldenPatternType>::extrapolateDtPhiBFloatPoint(
         refStub->logicLayer,
         refStub->phiHw,
         refStub->phiBHw,

@@ -14,7 +14,7 @@ verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
 #version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_valueP1Scale'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v12_test_bits'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v14_test_bits'
 #version = 'Patterns_0x00012_t17_v11_extr_off_test_bits'
 
 runDebug = "DEBUG" # or "INFO" DEBUG
@@ -43,7 +43,7 @@ if verbose:
                          OMTFReconstruction = cms.untracked.PSet( limit = cms.untracked.int32(1000000000) ),
                          l1MuonAnalyzerOmtf = cms.untracked.PSet( limit = cms.untracked.int32(1000000000) ),
                        ),
-       debugModules = cms.untracked.vstring('L1MuonAnalyzerOmtf', 'simOmtfDigis') #'L1MuonAnalyzerOmtf',
+       debugModules = cms.untracked.vstring('L1MuonAnalyzerOmtf', 'simOmtfDigis', 'omtfParamsSource', 'omtfParams', "esProd", 'L1TMuonOverlapPhase1ParamsESProducer') #'L1MuonAnalyzerOmtf',
        #debugModules = cms.untracked.vstring('*')
     )
 

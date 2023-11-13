@@ -67,13 +67,13 @@ void OMTFConfiguration::configure(const L1TMuonOverlapParams *omtfParams) {
   const std::vector<int> *connectedSectorsEndVec = omtfParams->connectedSectorsEnd();
 
   //TODO is this 6 here the number of processors per side?
-  std::copy(connectedSectorsStartVec->begin(), connectedSectorsStartVec->begin() + 6, barrelMin.begin());
-  std::copy(connectedSectorsStartVec->begin() + 6, connectedSectorsStartVec->begin() + 12, endcap10DegMin.begin());
-  std::copy(connectedSectorsStartVec->begin() + 12, connectedSectorsStartVec->end(), endcap20DegMin.begin());
+  std::copy(connectedSectorsStartVec->begin(), connectedSectorsStartVec->begin() + nProcessors(), barrelMin.begin());
+  std::copy(connectedSectorsStartVec->begin() + nProcessors(), connectedSectorsStartVec->begin() + 2*nProcessors(), endcap10DegMin.begin());
+  std::copy(connectedSectorsStartVec->begin() + 2*nProcessors(), connectedSectorsStartVec->end(), endcap20DegMin.begin());
 
-  std::copy(connectedSectorsEndVec->begin(), connectedSectorsEndVec->begin() + 6, barrelMax.begin());
-  std::copy(connectedSectorsEndVec->begin() + 6, connectedSectorsEndVec->begin() + 12, endcap10DegMax.begin());
-  std::copy(connectedSectorsEndVec->begin() + 12, connectedSectorsEndVec->end(), endcap20DegMax.begin());
+  std::copy(connectedSectorsEndVec->begin(), connectedSectorsEndVec->begin() + nProcessors(), barrelMax.begin());
+  std::copy(connectedSectorsEndVec->begin() + nProcessors(), connectedSectorsEndVec->begin() + 2*nProcessors(), endcap10DegMax.begin());
+  std::copy(connectedSectorsEndVec->begin() + 2*nProcessors(), connectedSectorsEndVec->end(), endcap20DegMax.begin());
 
   ///Set connections tables
   const std::vector<L1TMuonOverlapParams::LayerMapNode> *layerMap = omtfParams->layerMap();
@@ -163,15 +163,18 @@ void OMTFConfiguration::configure(const L1TMuonOverlapParams *omtfParams) {
   //the default values of the parameters are used, if not set here, so don't mess them!
   if (fwVersion() <= 4) {
     setMinDtPhiQuality(4);
+    setMinDtPhiBQuality(4);
   } else if (fwVersion() == 5) {
     setMinDtPhiQuality(2);
+    setMinDtPhiBQuality(2);
     setGhostBusterType("GhostBusterPreferRefDt");
   } else if (fwVersion() == 6) {
     setMinDtPhiQuality(2);
+    setMinDtPhiBQuality(2);
     setGhostBusterType("GhostBusterPreferRefDt");
   } else if (fwVersion() == 8) {
     setMinDtPhiQuality(2);
-    setMinDtPhiBQuality(2);  //should be 4, but in the fwVersion = 8 was not yet implemented
+    setMinDtPhiBQuality(2);
 
     setSorterType(1);  //"byLLH"
 
@@ -184,6 +187,28 @@ void OMTFConfiguration::configure(const L1TMuonOverlapParams *omtfParams) {
     setNoHitValueInPdf(true);
 
     setGhostBusterType("GhostBusterPreferRefDt");
+  } else if (fwVersion() == 9) {
+    setMinDtPhiQuality(2);
+    setMinDtPhiBQuality(4);
+
+    setSorterType(1);  //"byLLH"
+
+    setRpcMaxClusterSize(3);
+    setRpcMaxClusterCnt(2);
+    setRpcDropAllClustersIfMoreThanMax(true);
+
+    setGoldenPatternResultFinalizeFunction(10);
+
+    setNoHitValueInPdf(true);
+
+    usePhiBExtrapolationFromMB1_ = true;
+    usePhiBExtrapolationFromMB2_ = true;
+    useStubQualInExtr_ = false;
+    useEndcapStubsRInExtr_ = false;
+
+    dtRefHitMinQuality = 4;
+
+    setGhostBusterType("byRefLayer");
   }
 }
 

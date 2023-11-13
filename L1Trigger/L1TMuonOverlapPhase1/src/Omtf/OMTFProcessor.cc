@@ -905,23 +905,80 @@ int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB(const MuonStubPtr& refSt
               if (targetStub) {
                 extrapolatedPhi[iStub] = extrapolateDtPhiB(refStub, targetStub, iLayer, this->myOmtfConfig);
 
-                LogTrace("l1tOmtfEventPrint") << "\n"
-                                              << __FUNCTION__ << ":" << __LINE__ << " extrapolating from layer "
-                                              << refLayerLogicNum << " - iRefLayer " << aRefHitDef.iRefLayer << " to layer "
-                                              << iLayer << " stub " << targetStub
-                                              << " value "<<extrapolatedPhi[iStub]
-                                              << std::endl;
-  
-                if (this->myOmtfConfig->getDumpResultToXML()) {
-                  auto& extrapolatedPhiTree = procDataTree.add_child("extrapolatedPhi", boost::property_tree::ptree());
-                  extrapolatedPhiTree.add("<xmlattr>.refLayer", refLayerLogicNum);
-                  extrapolatedPhiTree.add("<xmlattr>.layer", iLayer);
-                  extrapolatedPhiTree.add("<xmlattr>.refPhiBHw", refStub->phiBHw);
-                  extrapolatedPhiTree.add("<xmlattr>.iStub", iStub);
-                  extrapolatedPhiTree.add("<xmlattr>.qualityHw", targetStub->qualityHw);
-                  extrapolatedPhiTree.add("<xmlattr>.etaHw", targetStub->etaHw);
-                  extrapolatedPhiTree.add("<xmlattr>.val", extrapolatedPhi[iStub]);
-                }
+  LogTrace("l1tOmtfEventPrint") << __FUNCTION__ << "\n"
+                                << __LINE__ << " iProcessor " << iProcessor << " mtfType " << mtfType << " procIndx "
+                                << procIndx << " ----------------------" << std::endl;
+
+  //////////////////////////////////////
+  //////////////////////////////////////
+  auto refHitsBits = aInput.getRefHits(iProcessor);
+  if (refHitsBits.none())
+    return;  // myResults;
+
+  std::vector<const RefHitDef*> refHitDefs;
+
+  //loop over all possible refHits, e.g. 128
+  for (unsigned int iRefHit = 0; iRefHit < this->myOmtfConfig->nRefHits(); ++iRefHit) {
+    if (!refHitsBits[iRefHit])
+      continue;
+
+    refHitDefs.push_back(&(this->myOmtfConfig->getRefHitsDefs()[iProcessor][iRefHit]));
+
+    if (refHitDefs.size() == this->myOmtfConfig->nTestRefHits())
+      break;
+  }
+
+  boost::property_tree::ptree procDataTree;
+
+  for (unsigned int iLayer = 0; iLayer < this->myOmtfConfig->nLayers(); ++iLayer) {
+    //debug
+    /*for(auto& h : layerHits) {
+      if(h != 5400)
+        LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<" "<<__LINE__<<" iLayer "<<iLayer<<" layerHit "<<h<<std::endl;
+    }*/
+
+    for (unsigned int iRefHit = 0; iRefHit < refHitDefs.size(); iRefHit++) {
+      const RefHitDef& aRefHitDef = *(refHitDefs[iRefHit]);
+
+      unsigned int refLayerLogicNum = this->myOmtfConfig->getRefToLogicNumber()[aRefHitDef.iRefLayer];
+      const MuonStubPtr refStub = aInput.getMuonStub(refLayerLogicNum, aRefHitDef.iInput);
+      //int etaRef = refStub->etaHw;
+
+      unsigned int iRegion = aRefHitDef.iRegion;
+
+      MuonStubPtrs1D restrictedLayerStubs = this->restrictInput(iProcessor, iRegion, iLayer, aInput);
+
+      //LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<" "<<__LINE__<<" iLayer "<<iLayer<<" iRefLayer "<<aRefHitDef.iRefLayer<<std::endl;
+      //LogTrace("l1tOmtfEventPrint")<<"iLayer "<<iLayer<<" iRefHit "<<iRefHit;
+      //LogTrace("l1tOmtfEventPrint")<<" nTestedRefHits "<<nTestedRefHits<<" aRefHitDef "<<aRefHitDef<<std::endl;
+
+      std::vector<int> extrapolatedPhi(restrictedLayerStubs.size(), 0);
+
+      //TODO make sure the that the iRefLayer numbers used here corresponds to this in the hwToLogicLayer_0x000X.xml
+      if ((this->myOmtfConfig->usePhiBExtrapolationMB1() && aRefHitDef.iRefLayer == 0) ||
+          (this->myOmtfConfig->usePhiBExtrapolationMB2() && aRefHitDef.iRefLayer == 2)) {
+        if ((iLayer != refLayerLogicNum) && (iLayer != refLayerLogicNum + 1)) {
+          unsigned int iStub = 0;
+          for (auto& targetStub : restrictedLayerStubs) {
+            if (targetStub) {
+			  extrapolatedPhi[iStub] = extrapolateDtPhiB(refStub, targetStub, iLayer, this->myOmtfConfig);
+			  
+              LogTrace("l1tOmtfEventPrint") << "\n"
+                                            << __FUNCTION__ << ":" << __LINE__ << " extrapolating from layer "
+                                            << refLayerLogicNum << " - iRefLayer " << aRefHitDef.iRefLayer << " to layer "
+                                            << iLayer << " stub " << targetStub
+											<< " value "<<extrapolatedPhi[iStub]
+											<< std::endl;
+											            
+              if (this->myOmtfConfig->getDumpResultToXML()) {
+                auto& extrapolatedPhiTree = procDataTree.add_child("extrapolatedPhi", boost::property_tree::ptree());
+                extrapolatedPhiTree.add("<xmlattr>.refLayer", refLayerLogicNum);
+                extrapolatedPhiTree.add("<xmlattr>.layer", iLayer);
+                extrapolatedPhiTree.add("<xmlattr>.refPhiBHw", refStub->phiBHw);
+                extrapolatedPhiTree.add("<xmlattr>.iStub", iStub);
+                extrapolatedPhiTree.add("<xmlattr>.qualityHw", targetStub->qualityHw);
+                extrapolatedPhiTree.add("<xmlattr>.etaHw", targetStub->etaHw);
+                extrapolatedPhiTree.add("<xmlattr>.val", extrapolatedPhi[iStub]);
               }
               iStub++;
             }
@@ -975,9 +1032,16 @@ int OMTFProcessor<GoldenPatternType>::extrapolateDtPhiB(const MuonStubPtr& refSt
       for (auto& itGP : this->theGPs) {
         if (itGP->key().thePt == 0)  //empty pattern
           continue;
-  
-        int phiRefSt2 = itGP->propagateRefPhi(phiRef + phiExtrp, etaRef, aRefHitDef.iRefLayer);
-        itGP->getResults()[procIndx][iRefHit].set(aRefHitDef.iRefLayer, phiRefSt2, etaRef, phiRef);
+
+        StubResult stubResult =
+            itGP->process1Layer1RefLayer(aRefHitDef.iRefLayer, iLayer, restrictedLayerStubs, extrapolatedPhi, refStub);
+
+       /* LogTrace("l1tOmtfEventPrint")<<__FUNCTION__<<":"<<__LINE__
+                                     <<" layerResult: valid"<<stubResult.getValid()
+                                     <<" pdfVal "<<stubResult.getPdfVal()
+                                     <<std::endl;*/
+									 
+        itGP->getResults()[procIndx][iRefHit].setStubResult(iLayer, stubResult);
       }
     }
   

@@ -21,6 +21,8 @@ public:
 
   virtual unsigned int nPhiBins() const = 0;
 
+  virtual unsigned int nProcessors() const = 0;
+
   virtual double hwPtToGev(int hwPt) const = 0;
 
   virtual double hwUPtToGev(int hwPt) const = 0;

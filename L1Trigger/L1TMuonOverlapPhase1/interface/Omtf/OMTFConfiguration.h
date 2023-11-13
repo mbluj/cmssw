@@ -105,7 +105,7 @@ public:
   unsigned int nRefHits() const { return rawParams.nRefHits(); };
   unsigned int nTestRefHits() const { return rawParams.nTestRefHits(); };
   //processors number per detector side
-  unsigned int nProcessors() const { return rawParams.nProcessors(); };
+  unsigned int nProcessors() const override { return rawParams.nProcessors(); };
   //total number of processors in the system
   unsigned int processorCnt() const { return 2 * rawParams.nProcessors(); };
   unsigned int nLogicRegions() const { return rawParams.nLogicRegions(); };

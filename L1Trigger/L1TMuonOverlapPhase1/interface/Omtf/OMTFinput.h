@@ -8,6 +8,8 @@
 #include <ostream>
 #include <bitset>
 
+#include "boost/dynamic_bitset.hpp"
+
 class XMLConfigReader;
 class OMTFConfiguration;
 
@@ -41,7 +43,7 @@ public:
   //if the layer is bending layer, the eta from the iLayer -1 is returned
   const int getHitQual(unsigned int iLayer, unsigned int iInput) const;
 
-  std::bitset<128> getRefHits(unsigned int iProcessor) const;
+  boost::dynamic_bitset<> getRefHits(unsigned int iProcessor) const;
 
   friend std::ostream &operator<<(std::ostream &out, const OMTFinput &aInput);
 

@@ -30,16 +30,23 @@ simOmtfDigis = cms.EDProducer("L1TMuonOverlapPhase1TrackProducer",
   bxMin = cms.int32(0),
   bxMax = cms.int32(0),
   
+  noHitValueInPdf = cms.bool(True),
+  minDtPhiQuality = cms.int32(2),
+  minDtPhiBQuality = cms.int32(4),
+  
+  dtRefHitMinQuality =  cms.int32(4),
+    
+  stubEtaEncoding = cms.string("bits"),
+  
   usePhiBExtrapolationFromMB1 = cms.bool(True),
   usePhiBExtrapolationFromMB2 = cms.bool(True),
   useStubQualInExtr  = cms.bool(False),
   useEndcapStubsRInExtr  = cms.bool(False),
   useFloatingPointExtrapolation  = cms.bool(False),
-  dtRefHitMinQuality =  cms.int32(4),  
+
   extrapolFactorsFileName= cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/ExtrapolationFactors_simple.xml"),
   sorterType = cms.string("byLLH"),
   ghostBusterType = cms.string("byRefLayer"), # byLLH byRefLayer GhostBusterPreferRefDt
   goldenPatternResultFinalizeFunction = cms.int32(10)
 )
-
 

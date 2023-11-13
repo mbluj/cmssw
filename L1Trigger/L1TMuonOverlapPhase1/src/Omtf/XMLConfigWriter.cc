@@ -579,13 +579,13 @@ void XMLConfigWriter::writeConnectionsData(
     unsigned int iRefHit = 0;
     ///////
     for (unsigned int iRefLayer = 0; iRefLayer < myOMTFConfig->nRefLayers(); ++iRefLayer) {
-      for (unsigned int iRegion = 0; iRegion < 6; ++iRegion) {
+      for (unsigned int iRegion = 0; iRegion < myOMTFConfig->nLogicRegions(); ++iRegion) {
         unsigned int maxHitCount = 0;
-        for (unsigned int iInput = 0; iInput < 14; ++iInput) {
+        for (unsigned int iInput = 0; iInput < myOMTFConfig->nInputs(); ++iInput) {
           if ((int)maxHitCount < myOMTFConfig->getMeasurements4Dref()[iProcessor][iRegion][iRefLayer][iInput])
             maxHitCount = myOMTFConfig->getMeasurements4Dref()[iProcessor][iRegion][iRefLayer][iInput];
         }
-        for (unsigned int iInput = 0; iInput < 14; ++iInput) {
+        for (unsigned int iInput = 0; iInput < myOMTFConfig->nInputs(); ++iInput) {
           unsigned int hitCount = myOMTFConfig->getMeasurements4Dref()[iProcessor][iRegion][iRefLayer][iInput];
           if (hitCount < maxHitCount * 0.1)
             continue;
@@ -658,7 +658,7 @@ void XMLConfigWriter::writeConnectionsData(
       }
     }
     ////
-    for (unsigned int iRegion = 0; iRegion < 6; ++iRegion) {
+    for (unsigned int iRegion = 0; iRegion <  myOMTFConfig->nLogicRegions(); ++iRegion) {
       xercesc::DOMElement* aRegionElement = theDoc->createElement(_toDOMS("LogicRegion"));
       stringStr.str("");
       stringStr << iRegion;
@@ -697,7 +697,7 @@ void XMLConfigWriter::writeConnectionsData(
 unsigned int XMLConfigWriter::findMaxInput(const OMTFConfiguration::vector1D& myCounts) {
   unsigned int max = 0;
   unsigned int maxInput = 0;
-  for (unsigned int iInput = 0; iInput < 14; ++iInput) {
+  for (unsigned int iInput = 0; iInput < myOMTFConfig->nInputs(); ++iInput) {
     if (myCounts[iInput] > (int)max) {
       max = myCounts[iInput];
       maxInput = iInput;

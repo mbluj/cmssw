@@ -64,7 +64,8 @@ public:
   virtual int getProcessorPhi(int phiZero,
                               l1t::tftype part,
                               const CSCDetId& csc,
-                              const CSCCorrelatedLCTDigi& digi) const;
+                              const CSCCorrelatedLCTDigi& digi,
+                              unsigned int iInput) const;
 
   virtual int getProcessorPhi(unsigned int iProcessor,
                               l1t::tftype part,

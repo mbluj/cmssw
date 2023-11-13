@@ -21,8 +21,7 @@ simOmtfPhase2Digis = cms.EDProducer("L1TMuonOverlapPhase2TrackProducer",
   dropDTPrimitives = cms.bool(False),                                    
   dropCSCPrimitives = cms.bool(False),
   processorType = cms.string("OMTFProcessor"),
-  
-  #ghostBusterType = cms.string("GhostBusterPreferRefDt"),
+
   
   #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x00020007.xml")
   #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0003.xml")                               
@@ -32,19 +31,23 @@ simOmtfPhase2Digis = cms.EDProducer("L1TMuonOverlapPhase2TrackProducer",
   bxMin = cms.int32(0),
   bxMax = cms.int32(0),
   
+  noHitValueInPdf = cms.bool(True),
   minDtPhiQuality = cms.int32(2),
   minDtPhiBQuality = cms.int32(4),
   
-  dtRefHitMinQuality =  cms.int32(4),  
+  dtRefHitMinQuality =  cms.int32(4),
+    
+  stubEtaEncoding = cms.string("bits"), #/TODO change to valueP1Scale when InputMakerPhase2 is modifiwed
   
   usePhiBExtrapolationFromMB1 = cms.bool(True),
   usePhiBExtrapolationFromMB2 = cms.bool(True),
   useStubQualInExtr  = cms.bool(False),
   useEndcapStubsRInExtr  = cms.bool(False),
   useFloatingPointExtrapolation  = cms.bool(False),
-
-  extrapolFactorsFilename = cms.string("ExtrapolationFactors_simple.xml"),
+  extrapolFactorsFilename = cms.FileInPath("ExtrapolationFactors_simple.xml"),
+  
   sorterType = cms.string("byLLH"),
-  ghostBusterType = cms.string("byRefLayer") # byLLH byRefLayer GhostBusterPreferRefDt
+  ghostBusterType = cms.string("byRefLayer"), # byLLH byRefLayer GhostBusterPreferRefDt
+  goldenPatternResultFinalizeFunction = cms.int32(10)
 )
 

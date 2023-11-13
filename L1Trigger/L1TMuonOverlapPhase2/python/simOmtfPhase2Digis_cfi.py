@@ -25,12 +25,32 @@ simOmtfPhase2Digis = cms.EDProducer("L1TMuonOverlapPhase2TrackProducer",
   usePhase2DTPrimitives = cms.bool(True), #if usePhase2DTPrimitives is True,  dropDTPrimitives must be True as well
   
   processorType = cms.string("OMTFProcessor"),
-  ghostBusterType = cms.string("GhostBusterPreferRefDt"),
   
   #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x00020007.xml")
   #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0003.xml")                               
 
-#  bxMin = cms.int32(-3),
-#  bxMax = cms.int32(4)
+  #if commented the default values are 0-0
+  #-3 to 4 is the range of the OMTF DAQ readout, so should be used e.g. in the DQM data to emulator comparison
+  bxMin = cms.int32(0),
+  bxMax = cms.int32(0),
+  
+  noHitValueInPdf = cms.bool(True),
+  minDtPhiQuality = cms.int32(2),
+  minDtPhiBQuality = cms.int32(2), #/TODO change to 4
+  
+  dtRefHitMinQuality =  cms.int32(2), #/TODO change to 4
+    
+  stubEtaEncoding = cms.string("bits"), #/TODO change to valueP1Scale when InputMakerPhase2 is modifiwed
+  
+  usePhiBExtrapolationFromMB1 = cms.bool(False),
+  usePhiBExtrapolationFromMB2 = cms.bool(False),
+  useStubQualInExtr  = cms.bool(False),
+  useEndcapStubsRInExtr  = cms.bool(False),
+  useFloatingPointExtrapolation  = cms.bool(False),
+  #extrapolFactorsFilename = cms.FileInPath("ExtrapolationFactors_simple.xml"),
+  
+  sorterType = cms.string("byLLH"),
+  ghostBusterType = cms.string("GhostBusterPreferRefDt"), # byLLH byRefLayer GhostBusterPreferRefDt
+  goldenPatternResultFinalizeFunction = cms.int32(9)
 )
 

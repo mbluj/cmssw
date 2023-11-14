@@ -379,6 +379,32 @@ electronTable = simpleCandidateFlatTableProducer.clone(
 )
 
 #############electron Table END#####################
+
+########## electronTable extension defn ##########
+
+# Produce and add time-life info (e.g. for electrons from tau decays)
+from PhysicsTools.PatAlgos.patElectronTimeLifeInfoUpdater_cfi import patElectronTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import *
+from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
+electronsWithTimeLifeInfo = patElectronTimeLifeInfoUpdater.clone(
+    src = electronTable.src,
+    pvSource = "offlineSlimmedPrimaryVerticesWithBS",
+    pvChoice = 0 #0: PV[0], 1: smallest dz
+)
+
+electronTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
+    src = "electronsWithTimeLifeInfo",
+    name = electronTable.name,
+    doc = cms.string("Additional time-life info for non-prompt electrons"),
+    extension = True,
+    variables = cms.PSet(
+        ipVars,
+        trackVars
+    )
+)
+
+########## electronTable extension end ##########
+
 # Depends on particlelevel producer run in particlelevel_cff
 tautaggerForMatching = cms.EDProducer("GenJetTauTaggerProducer",
                                       src = cms.InputTag('particleLevel:leptons')
@@ -428,6 +454,8 @@ electronMCTable = cms.EDProducer("CandMCMatchTableProducer",
 electronTask = cms.Task(bitmapVIDForEle,bitmapVIDForEleFall17V2,bitmapVIDForEleHEEP,isoForEle,isoForEleFall17V2,ptRatioRelForEle,seedGainEle,calibratedPatElectronsNano,slimmedElectronsWithUserData,finalElectrons)
 electronTablesTask = cms.Task(electronMVATTH, electronTable)
 electronMCTask = cms.Task(tautaggerForMatching, matchingElecPhoton, electronsMCMatchForTable, electronsMCMatchForTableAlt, electronMCTable)
+electronTimeLifeInfoTask = cms.Task(electronsWithTimeLifeInfo,electronTimeLifeInfoTable)
+electronTablesTask.add(electronTimeLifeInfoTask)
 
 _electronTask_Run2 = electronTask.copy()
 _electronTask_Run2.remove(bitmapVIDForEle)

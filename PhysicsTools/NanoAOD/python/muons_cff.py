@@ -5,6 +5,8 @@ from PhysicsTools.NanoAOD.common_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 
 import PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi
+from PhysicsTools.PatAlgos.patMuonTimeLifeInfoUpdater_cfi import patMuonTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import *
 
 # this below is used only in some eras
 slimmedMuonsUpdated = cms.EDProducer("PATMuonUpdater",
@@ -178,6 +180,27 @@ muonTable = simpleCandidateFlatTableProducer.clone(
     ),
 )
 
+# Produce and add time-life info (e.g. for muons from tau decays)
+muonsWithTimeLifeInfo = patMuonTimeLifeInfoUpdater.clone(
+    src = muonTable.src,
+    pvSource = "offlineSlimmedPrimaryVerticesWithBS",
+    pvChoice = 0 #0: PV[0], 1: smallest dz
+)
+
+muonTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
+    src = "muonsWithTimeLifeInfo",
+    name = muonTable.name,
+    doc = cms.string("Additional time-life info for non-prompt muons"),
+    extension = True,
+    variables = cms.PSet(
+        ipVars,
+        trackVars
+    )
+)
+
+# Increase precision of eta and phi
+muonTable.variables.eta.precision = 16
+muonTable.variables.phi.precision = 16
 
 (run2_nanoAOD_106Xv2 | run3_nanoAOD_122).toModify(muonTable.variables,mvaMuID=None).toModify(
      muonTable.variables, mvaMuID = Var("userFloat('mvaIDMuon')", float, doc="MVA-based ID score",precision=6))
@@ -213,7 +236,7 @@ muonMCTable = cms.EDProducer("CandMCMatchTableProducer",
 muonTask = cms.Task(slimmedMuonsUpdated,isoForMu,ptRatioRelForMu,slimmedMuonsWithUserData,finalMuons,finalLooseMuons )
 muonMCTask = cms.Task(muonsMCMatchForTable,muonMCTable)
 muonTablesTask = cms.Task(muonMVATTH,muonMVALowPt,muonTable,muonMVAID)
-
-
+muonTimeLifeInfoTask = cms.Task(muonsWithTimeLifeInfo,muonTimeLifeInfoTable)
+muonTablesTask.add(muonTimeLifeInfoTask)
 
 

@@ -6,6 +6,10 @@ from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCand
 from PhysicsTools.JetMCAlgos.TauGenJets_cfi import tauGenJets
 from PhysicsTools.JetMCAlgos.TauGenJetsDecayModeSelectorAllHadrons_cfi import tauGenJetsSelectorAllHadrons
 
+from PhysicsTools.PatAlgos.patTauSignalCandidatesProducer_cfi import patTauSignalCandidatesProducer
+from PhysicsTools.PatAlgos.patTauTimeLifeInfoUpdater_cfi import patTauTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import *
+
 ##################### Updated tau collection with MVA-based tau-Ids rerun #######
 # Used only in some eras
 from PhysicsTools.NanoAOD.taus_updatedMVAIds_cff import *
@@ -152,9 +156,9 @@ run3_nanoAOD_124.toModify(
                  from_raw=True, wp_thrs=WORKING_POINTS_v2p5["jet"])
 )
 
-tauSignalCands = cms.EDProducer("PATTauSignalCandidatesProducer",
+tauSignalCands = patTauSignalCandidatesProducer.clone(
     src = tauTable.src,
-    storeLostTracks = cms.bool(True)
+    storeLostTracks = True
 )
 
 tauSignalCandsTable = simpleCandidateFlatTableProducer.clone(
@@ -167,6 +171,26 @@ tauSignalCandsTable = simpleCandidateFlatTableProducer.clone(
         pdgId = Var("pdgId", int, doc="PDG code assigned by the event reconstruction (not by MC truth)"),
         tauIdx = Var("status", "int16", doc="index of the mother tau"),
         #trkPt = Var("?daughter(0).hasTrackDetails()?daughter(0).bestTrack().pt():0", float, precision=-1, doc="pt of associated track"), #MB: better to store ratio over cand pt?
+    )
+)
+
+# Produce and add time-life info
+from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
+tausWithTimeLifeInfo = patTauTimeLifeInfoUpdater.clone(
+    src = tauTable.src,
+    pvSource = "offlineSlimmedPrimaryVerticesWithBS",
+    pvChoice = 0 #0: PV[0], 1: smallest dz
+)
+
+tauTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
+    src = "tausWithTimeLifeInfo",
+    name = tauTable.name,
+    doc = cms.string("Additional tau time-life info"),
+    extension = True,
+    variables = cms.PSet(
+        svVars,
+        ipVars,
+        trackVars
     )
 )
 
@@ -239,6 +263,9 @@ tauTask = cms.Task(finalTaus)
 tauTablesTask = cms.Task(tauTable)
 tauSignalCandsTask = cms.Task(tauSignalCands,tauSignalCandsTable)
 tauTablesTask.add(tauSignalCandsTask)
+tauTimeLifeInfoTask = cms.Task(tausWithTimeLifeInfo,tauTimeLifeInfoTable)
+tauTablesTask.add(tauTimeLifeInfoTask)
+
 
 genTauTask = cms.Task(tauGenJetsForNano,tauGenJetsSelectorAllHadronsForNano,genVisTaus,genVisTauTable)
 tauMCTask = cms.Task(genTauTask,tausMCMatchLepTauForTable,tausMCMatchHadTauForTable,tauMCTable)

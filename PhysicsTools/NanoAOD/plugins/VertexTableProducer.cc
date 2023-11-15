@@ -41,6 +41,8 @@
 #include "RecoVertex/VertexPrimitives/interface/VertexState.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
+#include "PhysicsTools/NanoAOD/interface/SimpleFlatTableProducer.h"
+
 //
 // class declaration
 //
@@ -74,6 +76,17 @@ private:
   const std::string svName_;
   const std::string svDoc_;
   const double dlenMin_, dlenSigMin_;
+
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int32_t> IntVar;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint32_t> UIntVar;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, float> FloatVar;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, double> DoubleVar;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int8_t> Int8Var;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint8_t> UInt8Var;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int16_t> Int16Var;
+  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint16_t> UInt16Var;
+  typedef FuncVariable<reco::Vertex, StringCutObjectSelector<reco::Vertex>, bool> BoolVar;
+  std::vector<std::unique_ptr<Variable<reco::Vertex>>> pvVars_;
 };
 
 //
@@ -93,6 +106,34 @@ VertexTableProducer::VertexTableProducer(const edm::ParameterSet& params)
       dlenSigMin_(params.getParameter<double>("dlenSigMin"))
 
 {
+  if (params.existsAs<edm::ParameterSet>("optionalPvVariables")) {
+    edm::ParameterSet const& varsPSet = params.getParameter<edm::ParameterSet>("optionalPvVariables");
+    for (const std::string& vname : varsPSet.getParameterNamesForType<edm::ParameterSet>()) {
+      const auto& varPSet = varsPSet.getParameter<edm::ParameterSet>(vname);
+      const std::string& type = varPSet.getParameter<std::string>("type");
+      if (type == "int")
+        pvVars_.push_back(std::make_unique<IntVar>(vname, varPSet));
+      else if (type == "uint")
+        pvVars_.push_back(std::make_unique<UIntVar>(vname, varPSet));
+      else if (type == "float")
+        pvVars_.push_back(std::make_unique<FloatVar>(vname, varPSet));
+      else if (type == "double")
+        pvVars_.push_back(std::make_unique<DoubleVar>(vname, varPSet));
+      else if (type == "int8")
+        pvVars_.push_back(std::make_unique<Int8Var>(vname, varPSet));
+      else if (type == "uint8")
+        pvVars_.push_back(std::make_unique<UInt8Var>(vname, varPSet));
+      else if (type == "int16")
+        pvVars_.push_back(std::make_unique<Int16Var>(vname, varPSet));
+      else if (type == "uint16")
+        pvVars_.push_back(std::make_unique<UInt16Var>(vname, varPSet));
+      else if (type == "bool")
+        pvVars_.push_back(std::make_unique<BoolVar>(vname, varPSet));
+      else
+        throw cms::Exception("Configuration", "unsupported type " + type + " for variable " + vname);
+    }
+  }
+
   produces<nanoaod::FlatTable>("pv");
   produces<nanoaod::FlatTable>("otherPVs");
   produces<nanoaod::FlatTable>("svs");
@@ -130,6 +171,9 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
       "npvsGood", goodPVs, "number of good reconstructed primary vertices. selection:" + goodPvCutString_);
   pvTable->addColumnValue<float>(
       "score", pvsScoreProd.get(pvsIn.id(), 0), "main primary vertex score, i.e. sum pt2 of clustered objects", 8);
+  std::vector<const reco::Vertex*> pvVec = {&(*pvsIn)[0]};
+  for (const auto& var : pvVars_)
+    var->fill(pvVec, *pvTable);
 
   auto otherPVsTable =
       std::make_unique<nanoaod::FlatTable>((*pvsIn).size() > 4 ? 3 : (*pvsIn).size() - 1, "Other" + pvName_, false);
@@ -218,6 +262,26 @@ void VertexTableProducer::fillDescriptions(edm::ConfigurationDescriptions& descr
   desc.add<std::string>("pvName")->setComment("name of the flat table ouput");
   desc.add<std::string>("svName")->setComment("name of the flat table ouput");
   desc.add<std::string>("svDoc")->setComment("a few words of documentation");
+
+  // additional main vertex variables
+  edm::ParameterSetDescription variable;
+  variable.add<std::string>("expr")->setComment("a function to define the content of the branch in the flat table");
+  variable.add<std::string>("doc")->setComment("few words description of the branch content");
+  variable.ifValue(
+      edm::ParameterDescription<std::string>(
+          "type", "int", true, edm::Comment("the c++ type of the branch in the flat table")),
+      edm::allowedValues<std::string>("int", "uint", "float", "double", "int8", "uint8", "int16", "uint16", "bool"));
+  variable.addOptionalNode(
+      edm::ParameterDescription<int>(
+          "precision", true, edm::Comment("the precision with which to store the value in the flat table")) xor
+          edm::ParameterDescription<std::string>(
+              "precision", true, edm::Comment("the precision with which to store the value in the flat table")),
+      false);
+  edm::ParameterSetDescription variables;
+  variables.setComment("a parameters set to define additional variables describing main vertex");
+  variables.addNode(edm::ParameterWildcard<edm::ParameterSetDescription>("*", edm::RequireZeroOrMore, true, variable));
+  desc.addOptional<edm::ParameterSetDescription>("optionalPvVariables", variables)
+      ->setComment("Optional variables of the main primary vertex");
 
   descriptions.addWithDefaultLabel(desc);
 }

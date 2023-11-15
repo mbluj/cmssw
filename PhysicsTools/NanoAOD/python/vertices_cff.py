@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
+from PhysicsTools.NanoAOD.simpleVertexFlatTableProducer_cfi import simpleVertexFlatTableProducer
 
 
 ##################### User floats producers, selectors ##########################
@@ -35,9 +36,37 @@ svCandidateTable =  simpleCandidateFlatTableProducer.clone(
 svCandidateTable.variables.pt.precision=10
 svCandidateTable.variables.phi.precision=12
 
+covarianceVars = cms.PSet(
+    cxx = Var("covariance(0,0)", float, doc="vertex covariance (0,0)", precision = 16),
+    cyx = Var("covariance(1,0)", float, doc="vertex covariance (1,0)", precision = 16),
+    czx = Var("covariance(2,0)", float, doc="vertex covariance (2,0)", precision = 16),
+    cyy = Var("covariance(1,1)", float, doc="vertex covariance (1,1)", precision = 16),
+    czy = Var("covariance(2,1)", float, doc="vertex covariance (2,1)", precision = 16),
+    czz = Var("covariance(2,2)", float, doc="vertex covariance (2,2)", precision = 16)
+)
+
+vertexTable.optionalPvVariables = covarianceVars
+
+verticesWithBS = "offlineSlimmedPrimaryVerticesWithBS"
+pvbsTable = simpleVertexFlatTableProducer.clone(
+    src = verticesWithBS,
+    name = "PVBS",
+    doc = "main primary vertex with beam-spot",
+    maxLen = 1,
+    variables = cms.PSet(
+        covarianceVars,
+        x = Var("position().x()", float, doc = "position x coordinate, in cm", precision = 10),
+        y = Var("position().y()", float, doc = "position y coordinate, in cm", precision = 10),
+        z = Var("position().z()", float, doc = "position z coordinate, in cm", precision = 16),
+        ndof = Var("ndof()", float, doc = "number of degrees of freedom", precision = 8),
+        chi2 = Var("normalizedChi2()", float, doc = "reduced chi2, i.e. chi2/ndof", precision = 8),
+    ),
+    externalVariables = cms.PSet(
+        score = ExtVar(cms.InputTag(verticesWithBS), float, doc="vertex score, i.e. sum pt2 of clustered objects", precision = 8)
+    )
+)
 
 #before cross linking
 vertexTask = cms.Task()
 #after cross linkining
-vertexTablesTask = cms.Task( vertexTable, svCandidateTable )
-
+vertexTablesTask = cms.Task( vertexTable, svCandidateTable, pvbsTable )

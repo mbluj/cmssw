@@ -452,7 +452,7 @@ public:
   ~FirstObjectSimpleFlatTableProducer() override {}
 
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
-    edm::ParameterSetDescription desc = desc = SimpleFlatTableProducerBase<T, edm::View<T>>::baseDescriptions();
+    edm::ParameterSetDescription desc = SimpleFlatTableProducerBase<T, edm::View<T>>::baseDescriptions();
     descriptions.addWithDefaultLabel(desc);
   }
 

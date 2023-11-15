@@ -95,7 +95,13 @@ void DtPhase2DigiToStubsConverterOmtf::addDTphiDigi(MuonStubPtrs2D& muonStubsInL
   stub.phiHw = angleConverter->getProcessorPhi(
       OMTFinputMaker::getProcessorPhiZero(config, iProcessor), procTyp, digi.scNum(), digi.phi());
   //stub.etaHw  =  angleConverter->getGlobalEta(digi, dtThDigis);
-  stub.etaHw = angleConverter->getGlobalEta(detid, dtThDigis, digi.bxNum() - 20);
+
+  //TODO the dtThDigis are not good yet,so passing an empty container to the angleConverter
+  //then it should return middle of chambers
+  //remove when the dtThDigis are fixed on the DT side
+  L1MuDTChambThContainer dtThDigisEmpty;
+  stub.etaHw = angleConverter->getGlobalEta(detid, &dtThDigisEmpty, digi.bxNum() - 20);
+  //stub.etaHw = angleConverter->getGlobalEta(detid, dtThDigis, digi.bxNum() - 20);
   //in phase2, the phiB is 13 bits, and range is [-2, 2 rad] so 4 rad, 2^13 units/(4 rad) =  1^11/rad.
   //need to convert them to 512units==1rad (to use OLD PATTERNS...)
   float PHIB_CONV = 1. / 2048. * config->dtPhiBUnitsRad();

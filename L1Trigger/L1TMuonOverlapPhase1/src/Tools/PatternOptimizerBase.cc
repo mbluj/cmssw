@@ -108,7 +108,7 @@ void PatternOptimizerBase::observeEventEnd(const edm::Event& iEvent,
     return;
 
   double ptSim = simMuon->momentum().pt();
-  int chargeSim = (abs(simMuon->type()) == 13) ? simMuon->type() / -13 : 0;
+  int chargeSim = (std::abs(simMuon->type()) == 13) ? simMuon->type() / -13 : 0;
 
   //double muDxy = (-1 * genMuon->vx() * genMuon->py() + genMuon->vy() * genMuon->px()) / genMuon->pt();;
 

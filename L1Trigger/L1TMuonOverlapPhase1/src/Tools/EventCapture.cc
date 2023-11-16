@@ -59,7 +59,7 @@ void EventCapture::observeEventBegin(const edm::Event& event) {
     event.getByLabel(simTracksTag, simTraksHandle);
 
     for (unsigned int iSimTrack = 0; iSimTrack != simTraksHandle->size(); iSimTrack++) {
-      if (abs((*simTraksHandle.product())[iSimTrack].type()) == 13)
+      if (std::abs((*simTraksHandle.product())[iSimTrack].type()) == 13)
         simMuons.emplace_back(simTraksHandle, iSimTrack);
     }
   }
@@ -144,8 +144,8 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
     bool wasSimMuInOmtfNeg = false;
     for (auto& simMuon : simMuons) {
       //TODO choose a condition, to print the desired events
-      if (simMuon->eventId().event() == 0 && fabs(simMuon->momentum().eta()) > 0.82 &&
-          fabs(simMuon->momentum().eta()) < 1.24 && simMuon->momentum().pt() >= 3.) {
+      if (simMuon->eventId().event() == 0 && std::abs(simMuon->momentum().eta()) > 0.82 &&
+          std::abs(simMuon->momentum().eta()) < 1.24 && simMuon->momentum().pt() >= 3.) {
         ostr << "SimMuon: eventId " << simMuon->eventId().event() << " pdgId " << std::setw(3) << simMuon->type()
              << " pt " << std::setw(9) << simMuon->momentum().pt()  //<<" Beta "<<simMuon->momentum().Beta()
              << " eta " << std::setw(9) << simMuon->momentum().eta() << " phi " << std::setw(9)
@@ -324,7 +324,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
               << algoMuon->getGpResultUnconstr().getPhi()
               << ","
 
-              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(algoMuon->getEtaHw()))<<", "
+              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(std::abs(algoMuon->getEtaHw()))<<", "
               << std::setw(5) << algoMuon->getEtaHw()
               << ", "
 
@@ -354,7 +354,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
               << gbCandidate->getGpResultUnconstr().getPhi()
               << ","
 
-              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(abs(gbCandidate->getEtaHw()))<<", "
+              //<<std::setw(5)<<OMTFConfiguration::eta2Bits(std::abs(gbCandidate->getEtaHw()))<<", "
               << std::setw(5) << gbCandidate->getEtaHw()
               << ", "
 
@@ -387,7 +387,7 @@ void EventCapture::observeEventEnd(const edm::Event& iEvent,
 
               ostr << "M" << iMu << ":" << std::setw(4) << finalCandidate.hwPt() << "," << std::setw(4)
                    << finalCandidate.hwQual() << "," << std::setw(4) << finalCandidate.hwPhi() << "," << std::setw(4)
-                   << abs(finalCandidate.hwEta())
+                   << std::abs(finalCandidate.hwEta())
                    << ","
                    //<<std::setw(10)<< finalCandidate.trackAddress().at(0)<<""
                    << std::setw(10) << trackAddr << "," << std::setw(4) << 0 << ","                 //Halo

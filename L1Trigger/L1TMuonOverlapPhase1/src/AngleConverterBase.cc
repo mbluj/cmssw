@@ -103,8 +103,8 @@ int AngleConverterBase::getProcessorPhi(
   const CSCLayer* layer = chamber->layer(3);
   int order = (layer->centerOfStrip(2).phi() - layer->centerOfStrip(1).phi() > 0) ? 1 : -1;
   double stripPhiPitch = cspec->stripPhiPitch();
-  double scale = fabs(stripPhiPitch / hsPhiPitch / 2.);
-  if (fabs(scale - 1.) < 0.0002)
+  double scale = std::abs(stripPhiPitch / hsPhiPitch / 2.);
+  if (std::abs(scale - 1.) < 0.0002)
     scale = 1.;
 
   double phiHalfStrip0 = layer->centerOfStrip(1).phi() - order * stripPhiPitch / 4.;
@@ -175,7 +175,7 @@ int AngleConverterBase::getProcessorPhi(
   double stripPhi2 = (roll->toGlobal(roll->centreOfStrip((int)digi2))).phi();  // note [-pi,pi]
 
   // the case when the two strips are on different sides of phi = pi
-  if (std::signbit(stripPhi1) != std::signbit(stripPhi2) && fabs(stripPhi1) > M_PI / 2.) {
+  if (std::signbit(stripPhi1) != std::signbit(stripPhi2) && std::abs(stripPhi1) > M_PI / 2.) {
     if (std::signbit(stripPhi1)) {  //stripPhi1 is negative
       stripPhi1 += 2 * M_PI;
     } else  //stripPhi2 is negative
@@ -241,7 +241,7 @@ EtaValue AngleConverterBase::getGlobalEtaDt(const DTChamberId& detId) const {
 
   EtaValue etaValue = {
       config->etaToHwEta(chamberMiddleGP.eta()),
-      config->etaToHwEta(fabs(chamberMiddleGP.eta() - chambNeighMiddleGP.eta())) / 2,
+      config->etaToHwEta(std::abs(chamberMiddleGP.eta() - chambNeighMiddleGP.eta())) / 2,
       0,  //quality
       0,  //bx
       0   //timin
@@ -393,8 +393,8 @@ EtaValue AngleConverterBase::getGlobalEta(unsigned int rawid, const unsigned int
   int neighbRoll = 1;  //neighbor roll in eta
   //roll->chamber()->nrolls() does not work
   if (id.region() == 0) {  //barel
-    if (id.station() == 2 &&
-        ((abs(id.ring()) == 2 && id.layer() == 2) || (abs(id.ring()) != 2 && id.layer() == 1))) {  //three-roll chamber
+    if (id.station() == 2 && ((std::abs(id.ring()) == 2 && id.layer() == 2) ||
+                              (std::abs(id.ring()) != 2 && id.layer() == 1))) {  //three-roll chamber
       if (id.roll() == 2)
         neighbRoll = 1;
       else {
@@ -416,7 +416,7 @@ EtaValue AngleConverterBase::getGlobalEta(unsigned int rawid, const unsigned int
   const GlobalPoint gpNeigh = rollNeigh->toGlobal(lpNeigh);
 
   EtaValue etaValue = {config->etaToHwEta(gp.eta()),
-                       config->etaToHwEta(fabs(gp.eta() - gpNeigh.eta())) /
+                       config->etaToHwEta(std::abs(gp.eta() - gpNeigh.eta())) /
                            2,  //half of the size of the strip in eta - not precise, but OK
                        0};
 

@@ -36,7 +36,7 @@ DataROOTDumper2::DataROOTDumper2(const edm::ParameterSet& edmCfg,
     : EmulationObserverBase(edmCfg, omtfConfig), candidateSimMuonMatcher(candidateSimMuonMatcher) {
   edm::LogVerbatim("l1tOmtfEventPrint") << " omtfConfig->nTestRefHits() " << omtfConfig->nTestRefHits()
                                         << " event.omtfGpResultsPdfSum.num_elements() " << endl;
-  initializeTTree("dump.root");  //TODO
+  initializeTTree();
 
   if (edmCfg.exists("dumpKilledOmtfCands"))
     if (edmCfg.getParameter<bool>("dumpKilledOmtfCands"))
@@ -46,12 +46,10 @@ DataROOTDumper2::DataROOTDumper2(const edm::ParameterSet& edmCfg,
                                         << std::endl;
 }
 
-DataROOTDumper2::~DataROOTDumper2() { saveTTree(); }
+DataROOTDumper2::~DataROOTDumper2() {}
 
-void DataROOTDumper2::initializeTTree(std::string rootFileName) {
+void DataROOTDumper2::initializeTTree() {
   edm::Service<TFileService> fs;
-
-  //TFileDirectory subDir = fs->mkdir("OmtfDataDumper");
 
   rootTree = fs->make<TTree>("OMTFHitsTree", "");
 
@@ -95,8 +93,6 @@ void DataROOTDumper2::initializeTTree(std::string rootFileName) {
   ptGenNeg = fs->make<TH1I>("ptGenNeg", "ptGenNeg, eta at vertex 0.8 - 1.24", 400, 0, 200);
 }
 
-void DataROOTDumper2::saveTTree() {}
-
 void DataROOTDumper2::observeProcesorEmulation(unsigned int iProcessor,
                                                l1t::tftype mtfType,
                                                const std::shared_ptr<OMTFinput>&,
@@ -109,10 +105,10 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
   /*
   int muonCharge = 0;
   if (simMuon) {
-    if (fabs(simMuon->momentum().eta()) < 0.8 || fabs(simMuon->momentum().eta()) > 1.24)
+    if (std::abs(simMuon->momentum().eta()) < 0.8 || std::abs(simMuon->momentum().eta()) > 1.24)
       return;
 
-    muonCharge = (abs(simMuon->type()) == 13) ? simMuon->type() / -13 : 0;
+    muonCharge = (std::abs(simMuon->type()) == 13) ? simMuon->type() / -13 : 0;
     if (muonCharge > 0)
       ptGenPos->Fill(simMuon->momentum().pt());
     else
@@ -126,7 +122,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
   omtfEvent.muonEta = simMuon->momentum().eta();
 
   //TODO add cut on ete if needed
-    if(fabs(event.muonEta) < 0.8 || fabs(event.muonEta) > 1.24)
+    if(std::abs(event.muonEta) < 0.8 || std::abs(event.muonEta) > 1.24)
     return;
 
   omtfEvent.muonPhi = simMuon->momentum().phi();
@@ -151,7 +147,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
       omtfEvent.muonPhi = trackingParticle->momentum().phi();
       omtfEvent.muonPropEta = matchingResult.propagatedEta;
       omtfEvent.muonPropPhi = matchingResult.propagatedPhi;
-      omtfEvent.muonCharge = (abs(trackingParticle->pdgId()) == 13) ? trackingParticle->pdgId() / -13 : 0;
+      omtfEvent.muonCharge = (std::abs(trackingParticle->pdgId()) == 13) ? trackingParticle->pdgId() / -13 : 0;
 
       if (trackingParticle->parentVertex().isNonnull()) {
         omtfEvent.muonDxy = trackingParticle->dxy();
@@ -169,7 +165,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
                                     << " eta " << std::setw(9) << trackingParticle->momentum().eta() << " phi "
                                     << std::setw(9) << trackingParticle->momentum().phi() << std::endl;
 
-      if (fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) < 1.24) {
+      if (std::abs(omtfEvent.muonEta) > 0.8 && std::abs(omtfEvent.muonEta) < 1.24) {
         if (omtfEvent.muonCharge > 0)
           ptGenPos->Fill(omtfEvent.muonPt);
         else
@@ -205,7 +201,7 @@ void DataROOTDumper2::observeEventEnd(const edm::Event& iEvent,
                                     << " eta " << std::setw(9) << simTrack->momentum().eta() << " phi " << std::setw(9)
                                     << simTrack->momentum().phi() << std::endl;
 
-      if (fabs(omtfEvent.muonEta) > 0.8 && fabs(omtfEvent.muonEta) < 1.24) {
+      if (std::abs(omtfEvent.muonEta) > 0.8 && std::abs(omtfEvent.muonEta) < 1.24) {
         if (omtfEvent.muonCharge > 0)
           ptGenPos->Fill(omtfEvent.muonPt);
         else

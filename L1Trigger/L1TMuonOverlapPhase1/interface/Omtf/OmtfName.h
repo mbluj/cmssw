@@ -8,7 +8,6 @@
 #include <string>
 #include <ostream>
 
-
 class OmtfName {
 public:
   enum Board {

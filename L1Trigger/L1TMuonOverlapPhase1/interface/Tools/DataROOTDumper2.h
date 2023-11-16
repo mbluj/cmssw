@@ -96,8 +96,7 @@ public:
   void endJob() override;
 
 private:
-  void initializeTTree(std::string rootFileName);
-  void saveTTree();
+  void initializeTTree();
 
   CandidateSimMuonMatcher* candidateSimMuonMatcher = nullptr;
 

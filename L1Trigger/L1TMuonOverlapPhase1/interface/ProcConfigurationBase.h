@@ -120,7 +120,7 @@ private:
   int minDtPhiBQuality = 2;  //used on the top of the minDtPhiQuality
 
   //double dtPhiUnit_ = 1./4096; //[rad], LSB of the DT segment phi
-  double dtPhiBUnitsRad_ = 512; //[unit/rad] for DT segment phiB, as it is at the level of the algorithm
+  double dtPhiBUnitsRad_ = 512;  //[unit/rad] for DT segment phiB, as it is at the level of the algorithm
 
   bool fixCscGeometryOffset = false;
 

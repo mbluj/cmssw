@@ -57,7 +57,7 @@ namespace lutNN {
       lutLayer3_1.setName("lutLayer3_1");
     };
 
-    virtual ~LutNetworkFixedPointRegression2Outputs(){};
+    ~LutNetworkFixedPointRegression2Outputs() override{};
 
     typedef LutNeuronLayerFixedPoint<input_I, input_F, inputSize, layer1_lut_I, layer1_lut_F, layer1_neurons, layer1_output_I>
         LutLayer1;
@@ -107,7 +107,6 @@ namespace lutNN {
           layer1OutWithBias;
       for (unsigned int i = 0; i < layer1Out.size(); i++) {
         layer1OutWithBias[i] = layer1Out[i] + layer1Bias;
-        //std::cout<<"i "<<i<<" layer1Out[i] "<<layer1Out[i]<<" layer1OutWithBias "<<i<<" "<<layer1OutWithBias[i]<<" layer1Bias "<<layer1Bias<<std::dec<<std::endl;
       }
 
       lutLayer2.runWithInterpolation(layer1OutWithBias);
@@ -132,12 +131,10 @@ namespace lutNN {
       }
 
       unsigned int bias = (noHitsCnt << noHitCntShift);
-      //std::cout<<" noHitsCnt "<<noHitsCnt<<" event->noHitVal "<<event->noHitVal<<" bias "<<std::hex<<"0x"<<bias<<std::dec<<std::endl;
 
       //layer1Bias switches the input of the layer2 (i.e. output of the layer1) do different regions in the LUTs
       //depending on the  number of layers without hits
       layer1Bias = bias;
-      //std::cout<<"layer1Bias "<<layer1Bias<<" W "<<layer1Bias.width <<std::endl;
 
       runWithInterpolation();
 
@@ -146,8 +143,6 @@ namespace lutNN {
       //auto layer3_1_out = ap_fixed <output1_I+output1_F, output1_I, AP_RND_CONV, AP_SAT>(lutLayer3_1.getLutOutSum()[0]); //here layer3_0_out has size 1
       auto layer3_0_out = lutLayer3_0.getLutOutSum()[0];  //here layer3_0_out has size 1
       auto layer3_1_out = lutLayer3_1.getLutOutSum()[0];  //here layer3_0_out has size 1
-
-      //std::cout<<"layer3_0_out[0] "<<layer3_0_out[0]<<" layer3_1_out[0] "<<layer3_1_out[0]<<std::endl;
 
       nnResult[0] = layer3_0_out.to_float();
       nnResult[1] = layer3_1_out.to_float();
@@ -183,7 +178,6 @@ namespace lutNN {
       PUT_VAR(tree, key, size)
       std::ostringstream ostr;
       for (auto& a : ptCalibrationArray) {
-        //ostr<<std::hex<<a.to_uint()<<", ";
         ostr << a.to_uint() << ", ";
       }
       tree.put(key + ".values", ostr.str());
@@ -221,8 +215,7 @@ namespace lutNN {
 
       for (auto& a : ptCalibrationArray) {
         if (std::getline(ss, item, ',')) {
-          //a = std::stoul(item, NULL, 16);
-          a = std::stoul(item, NULL, 10);
+          a = std::stoul(item, nullptr, 10);
         } else {
           throw std::runtime_error(
               "LutNetworkFixedPointRegression2Outputs::read: number of items get from file is smaller than lut size");

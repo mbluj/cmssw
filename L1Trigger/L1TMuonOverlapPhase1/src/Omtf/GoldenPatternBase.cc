@@ -64,8 +64,8 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
     phiRefHit = 0;  //phi ref hit for the bending layer set to 0, since it should not be included in the phiDist
   }
 
-  for (unsigned int iStub = 0; iStub < layerStubs.size(); iStub++) {
-    auto& stub = layerStubs[iStub];
+  for (size_t iStub = 0; iStub < layerStubs.size(); iStub++) {
+    const auto& stub = layerStubs[iStub];
     if (!stub)  //empty pointer
       continue;
 
@@ -86,13 +86,13 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
     		<<"  iRefLayer "<<iRefLayer<<" iLayer "<<iLayer
     		<<" hitPhi "<<hitPhi<<" phiMean "<<phiMean<<" phiRefHit "<<phiRefHit<<" phiDist "<<phiDist<<std::endl;*/
 
-    //firmware works on the sign-value, shift must be done on abs(phiDist)
+    //firmware works on the sign-value, shift must be done on std::abs(phiDist)
     int sign = phiDist < 0 ? -1 : 1;
-    phiDist = abs(phiDist) >> this->getDistPhiBitShift(iLayer, iRefLayer);
+    phiDist = std::abs(phiDist) >> this->getDistPhiBitShift(iLayer, iRefLayer);
     phiDist *= sign;
     //if the shift is done here, it means that the phiMean in the xml should be the same as without shift
     //if (this->getDistPhiBitShift(iLayer, iRefLayer) != 0) std::cout<<__FUNCTION__<<":"<<__LINE__<<" phiDist "<<phiDist<<std::endl;
-    if (abs(phiDist) < abs(phiDistMin)) {
+    if (std::abs(phiDist) < std::abs(phiDistMin)) {
       phiDistMin = phiDist;
       selectedStub = stub;
     }
@@ -114,7 +114,7 @@ StubResult GoldenPatternBase::process1Layer1RefLayer(unsigned int iRefLayer,
 
   ///Check if phiDistMin is within pdf range -63 +63
   ///in firmware here the arithmetic "value and sign" is used, therefore the range is -63 +63, and not -64 +63
-  if (abs(phiDistMin) > ((1 << (myOmtfConfig->nPdfAddrBits() - 1)) - 1)) {
+  if (std::abs(phiDistMin) > ((1 << (myOmtfConfig->nPdfAddrBits() - 1)) - 1)) {
     return StubResult(0, false, phiDistMin + pdfMiddle, iLayer, selectedStub);
 
     //return GoldenPatternResult::LayerResult(this->pdfValue(iLayer, iRefLayer, 0), false, phiDistMin + pdfMiddle, selHit);

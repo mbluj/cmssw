@@ -11,78 +11,83 @@
 
 #include "DataFormats/MuonDetId/interface/CSCDetId.h"
 
+#include "L1Trigger/L1TMuonOverlapPhase2/interface/PtAssignmentNNRegression.h"
+
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <L1Trigger/L1TMuonOverlapPhase2/interface/PtAssignmentNNRegression.h>
 
 #include <sstream>
 #include <fstream>
 
+namespace lutNN {
+  static const int input_I = 10;
+  static const int input_F = 4;
+  static const std::size_t networkInputSize = 18;
+
+  static const int layer1_neurons = 16;
+  static const int layer1_lut_I = 3;
+  static const int layer1_lut_F = 13;
+
+  static const int layer1_output_I = 4;
+  //4 bits are for the count of the noHit layers which goes to the input of the layer2
+  static const int layer2_input_I = 8;
+
+  static const int layer2_neurons = 9;
+  static const int layer2_lut_I = 5;
+  static const int layer2_lut_F = 11;
+
+  static const int layer3_input_I = 5;
+
+  static const int layer3_0_inputCnt = 8;
+  static const int layer3_0_lut_I = 5;
+  static const int layer3_0_lut_F = 11;
+  static const int output0_I = 8;
+  static const int output0_F = 2;
+
+  static const int layer3_1_inputCnt = 1;
+  static const int layer3_1_lut_I = 4;
+  static const int layer3_1_lut_F = 11;
+  static const int output1_I = 8;
+  static const int output1_F = 0;  //Does not matter in principle - it is not used
+
+  typedef LutNetworkFixedPointRegression2Outputs<input_I,
+                                                 input_F,
+                                                 networkInputSize,
+                                                 layer1_lut_I,
+                                                 layer1_lut_F,
+                                                 layer1_neurons,  //layer1_lutSize = 2 ^ input_I
+                                                 layer1_output_I,
+                                                 layer2_input_I,
+                                                 layer2_lut_I,
+                                                 layer2_lut_F,
+                                                 layer2_neurons,
+                                                 layer3_input_I,
+                                                 layer3_0_inputCnt,
+                                                 layer3_0_lut_I,
+                                                 layer3_0_lut_F,
+                                                 output0_I,
+                                                 output0_F,
+                                                 layer3_1_inputCnt,
+                                                 layer3_1_lut_I,
+                                                 layer3_1_lut_F,
+                                                 output1_I,
+                                                 output1_F>
+      LutNetworkFP;
+}  // namespace lutNN
+
 PtAssignmentNNRegression::PtAssignmentNNRegression(const edm::ParameterSet& edmCfg,
                                                    const OMTFConfiguration* omtfConfig,
                                                    std::string networkFile)
-    : PtAssignmentBase(omtfConfig) {
+    : PtAssignmentBase(omtfConfig), lutNetworkFP(make_unique<lutNN::LutNetworkFP>()) {
   std::ifstream ifs(networkFile);
-  {
-    static const int input_I = 10;
-    static const int input_F = 4;
-    static const std::size_t networkInputSize = 18;
 
-    static const int layer1_neurons = 16;
-    static const int layer1_lut_I = 3;
-    static const int layer1_lut_F = 13;
+  edm::LogImportant("OMTFReconstruction")
+      << " " << __FUNCTION__ << ":" << __LINE__ << " networkFile " << networkFile << std::endl;
 
-    static const int layer1_output_I = 4;
-    //4 bits are for the count of the noHit layers which goes to the input of the layer2
-    static const int layer2_input_I = 8;
+  lutNetworkFP->load(networkFile);
 
-    static const int layer2_neurons = 9;
-    static const int layer2_lut_I = 5;
-    static const int layer2_lut_F = 11;
-
-    static const int layer3_input_I = 5;
-
-    static const int layer3_0_inputCnt = 8;
-    static const int layer3_0_lut_I = 5;
-    static const int layer3_0_lut_F = 11;
-    static const int output0_I = 8;
-    static const int output0_F = 2;
-
-    static const int layer3_1_inputCnt = 1;
-    static const int layer3_1_lut_I = 4;
-    static const int layer3_1_lut_F = 11;
-    static const int output1_I = 8;
-    static const int output1_F = 0;  //Does not matter in principle - it is not used
-
-    lutNetworkFP.reset(new lutNN::LutNetworkFixedPointRegression2Outputs<input_I,
-                                                                         input_F,
-                                                                         networkInputSize,
-                                                                         layer1_lut_I,
-                                                                         layer1_lut_F,
-                                                                         layer1_neurons,  //layer1_lutSize = 2 ^ input_I
-                                                                         layer1_output_I,
-                                                                         layer2_input_I,
-                                                                         layer2_lut_I,
-                                                                         layer2_lut_F,
-                                                                         layer2_neurons,
-                                                                         layer3_input_I,
-                                                                         layer3_0_inputCnt,
-                                                                         layer3_0_lut_I,
-                                                                         layer3_0_lut_F,
-                                                                         output0_I,
-                                                                         output0_F,
-                                                                         layer3_1_inputCnt,
-                                                                         layer3_1_lut_I,
-                                                                         layer3_1_lut_F,
-                                                                         output1_I,
-                                                                         output1_F>());
-
-    edm::LogImportant("OMTFReconstruction")
-        << " " << __FUNCTION__ << ":" << __LINE__ << " networkFile " << networkFile << std::endl;
-    lutNetworkFP->load(networkFile);
-    edm::LogImportant("OMTFReconstruction") << " " << __FUNCTION__ << ":" << __LINE__ << std::endl;
-  }
+  edm::LogImportant("OMTFReconstruction") << " " << __FUNCTION__ << ":" << __LINE__ << std::endl;
 }
 
 struct OmtfHit {
@@ -128,7 +133,7 @@ bool omtfHitToEventInput(OmtfHit& hit, std::vector<float>& inputs, unsigned int 
 
     rangeFactor *= 2;  //TODO !!!!!!!!!!!!!!!!!!!
 
-    if (abs(hit.phiDist) >= (63 * rangeFactor)) {
+    if (std::abs(hit.phiDist) >= (63 * rangeFactor)) {
       edm::LogImportant("OMTFReconstruction")  //<<" muonPt "<<omtfEvent.muonPt<<" omtfPt "<<omtfEvent.omtfPt
           << " RefLayer " << omtfRefLayer << " layer " << int(hit.layer) << " hit.phiDist " << hit.phiDist << " valid "
           << ((short)hit.valid) << " !!!!!!!!!!!!!!!!!!!!!!!!" << endl;
@@ -166,7 +171,7 @@ PtAssignmentNNRegression::~PtAssignmentNNRegression() {
 }
 
 std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoMuon,
-                                                    std::vector<std::unique_ptr<IOMTFEmulationObserver> >& observers) {
+                                                    std::vector<std::unique_ptr<IOMTFEmulationObserver>>& observers) {
   LogTrace("l1tOmtfEventPrint") << " " << __FUNCTION__ << ":" << __LINE__ << std::endl;
   auto& gpResult = algoMuon->getGpResultConstr();
   //int pdfMiddle = 1<<(omtfConfig->nPdfAddrBits()-1);
@@ -222,8 +227,6 @@ std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoM
             << " layer " << int(hit.layer) << " hit.phiDist " << hit.phiDist << " valid " << stubResult.getValid()
             << " !!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       }
-
-      stubResult.getMuonStub()->detId;
 
       DetId detId(stubResult.getMuonStub()->detId);
       if (detId.subdetId() == MuonSubdetId::CSC) {
@@ -292,7 +295,7 @@ std::vector<float> PtAssignmentNNRegression::getPts(AlgoMuons::value_type& algoM
   unsigned int i =0;
   for(auto& classifierToRegression : classifierToRegressions) {
     auto orgValue = classifierToRegression->getValue(&event);
-    auto absOrgValue = fabs(orgValue);
+    auto absOrgValue = std::abs(orgValue);
     pts.at(i) = classifierToRegression->getCalibratedValue(absOrgValue);
     pts.at(i) = std::copysign(pts.at(i), orgValue);
 

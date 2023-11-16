@@ -67,7 +67,7 @@ const int OMTFinput::getHitQual(unsigned int iLayer, unsigned int iInput) const 
 
 ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////
-boost::dynamic_bitset<>  OMTFinput::getRefHits(unsigned int iProcessor) const {
+boost::dynamic_bitset<> OMTFinput::getRefHits(unsigned int iProcessor) const {
   boost::dynamic_bitset<> refHits(myOmtfConfig->nRefHits());
 
   unsigned int iRefHit = 0;

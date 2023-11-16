@@ -68,12 +68,17 @@ void OMTFConfiguration::configure(const L1TMuonOverlapParams *omtfParams) {
 
   //TODO is this 6 here the number of processors per side?
   std::copy(connectedSectorsStartVec->begin(), connectedSectorsStartVec->begin() + nProcessors(), barrelMin.begin());
-  std::copy(connectedSectorsStartVec->begin() + nProcessors(), connectedSectorsStartVec->begin() + 2*nProcessors(), endcap10DegMin.begin());
-  std::copy(connectedSectorsStartVec->begin() + 2*nProcessors(), connectedSectorsStartVec->end(), endcap20DegMin.begin());
+  std::copy(connectedSectorsStartVec->begin() + nProcessors(),
+            connectedSectorsStartVec->begin() + 2 * nProcessors(),
+            endcap10DegMin.begin());
+  std::copy(
+      connectedSectorsStartVec->begin() + 2 * nProcessors(), connectedSectorsStartVec->end(), endcap20DegMin.begin());
 
   std::copy(connectedSectorsEndVec->begin(), connectedSectorsEndVec->begin() + nProcessors(), barrelMax.begin());
-  std::copy(connectedSectorsEndVec->begin() + nProcessors(), connectedSectorsEndVec->begin() + 2*nProcessors(), endcap10DegMax.begin());
-  std::copy(connectedSectorsEndVec->begin() + 2*nProcessors(), connectedSectorsEndVec->end(), endcap20DegMax.begin());
+  std::copy(connectedSectorsEndVec->begin() + nProcessors(),
+            connectedSectorsEndVec->begin() + 2 * nProcessors(),
+            endcap10DegMax.begin());
+  std::copy(connectedSectorsEndVec->begin() + 2 * nProcessors(), connectedSectorsEndVec->end(), endcap20DegMax.begin());
 
   ///Set connections tables
   const std::vector<L1TMuonOverlapParams::LayerMapNode> *layerMap = omtfParams->layerMap();

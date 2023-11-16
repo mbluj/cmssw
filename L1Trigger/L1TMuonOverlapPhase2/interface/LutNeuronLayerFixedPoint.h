@@ -15,28 +15,39 @@
 #include <array>
 #include <limits>
 #include <iomanip>
+#include <cassert>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include "L1Trigger/L1TMuonOverlapPhase2/interface/LutNetworkFixedPointCommon.h"
-//#include "L1Trigger/L1TMuonOverlapPhase2/interface/LutLayerFixedPoint.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 namespace lutNN {
+  // constexpr for ceil(log2) from stackoverflow
+  constexpr size_t floorlog2(size_t i) {
+    assert(i > 0);  // argument of floorlog2 must be grater than 0
+    return i == 1 ? 0 : 1 + floorlog2(i >> 1);
+  }
+  constexpr size_t ceillog2(size_t i) {
+    assert(i > 0);  // argument of ceillog2 must be grater than 0
+    return i == 1 ? 0 : floorlog2(i - 1) + 1;
+  }
 
-  template <int input_I, int input_F, std::size_t inputSize, int lut_I, int lut_F, int neurons, int output_I>
+  template <int input_I, int input_F, size_t inputSize, int lut_I, int lut_F, int neurons, int output_I>
   class LutNeuronLayerFixedPoint {
   public:
     static const int input_W = input_I + input_F;
     static const int lut_W = lut_I + lut_F;
 
     //the lut out values sum
-    static const int lutOutSum_I = lut_I + ceil(log2(inputSize));
+    //static const int lutOutSum_I = lut_I + ceil(log2(inputSize)); //MB: ceil(log2(inputSize)) is not constexpr which makes issue for code-checks
+    static const int lutOutSum_I = lut_I + ceillog2(inputSize);
     static const int lutOutSum_W = lutOutSum_I + lut_F;
 
     static const int output_W = output_I + lut_F;
 
     //static_assert( (1<<input_I) <= lutSize);
-    static const std::size_t lutSize = 1 << input_I;
+    static const size_t lutSize = 1 << input_I;
 
     typedef std::array<ap_ufixed<input_W, input_I, AP_TRN, AP_SAT>, inputSize> inputArrayType;
 
@@ -45,26 +56,22 @@ namespace lutNN {
     LutNeuronLayerFixedPoint() {  //FIXME initialise name(name)
       //static_assert(lut_I <= (output_I - ceil(log2(inputSize)) ), "not correct lut_I, output_I  and inputSize"); //TODO
 
-      std::cout << "Constructing LutNeuronLayerFixedPoint " << name << "\n     input_I  " << std::setw(2) << input_I
-                << "    input_F " << std::setw(2) << input_F << " input_W " << std::setw(2) << input_W << " inputSize "
-                << std::setw(2) << inputSize << "\n       lut_I  " << std::setw(2) << lut_I << "      lut_F "
-                << std::setw(2) << lut_F << "   lut_W " << std::setw(2) << lut_W << "   lutSize " << std::setw(2)
-                << lutSize << "\n lutOutSum_I " << std::setw(2) << lutOutSum_I << " lutOutSum_W " << std::setw(2)
-                << lutOutSum_W << "\n    output_I " << std::setw(2) << output_I << "    output_W " << std::setw(2)
-                << output_W << "\n neurons " << std::setw(2) << neurons << "\n outOffset " << outOffset << " = "
-                << std::hex << outOffset << " width " << outOffset.width << std::dec << std::endl;
-
-      //std::cout<<"(output_I - ceil(log2(inputSize)) ) "<<(output_I - ceil(log2(inputSize)) )<<std::endl;
-
-      //if(lut_I != (output_I - ceil(log2(inputSize)) ) )
-      //    throw std::runtime_error("LutLayerFixedPoint: lut_I != (output_I - ceil(log2(inputSize))");
+      LogTrace("l1tOmtfEventPrint") << "Constructing LutNeuronLayerFixedPoint " << name << "\n     input_I  "
+                                    << std::setw(2) << input_I << "    input_F " << std::setw(2) << input_F
+                                    << " input_W " << std::setw(2) << input_W << " inputSize " << std::setw(2)
+                                    << inputSize << "\n       lut_I  " << std::setw(2) << lut_I << "      lut_F "
+                                    << std::setw(2) << lut_F << "   lut_W " << std::setw(2) << lut_W << "   lutSize "
+                                    << std::setw(2) << lutSize << "\n lutOutSum_I " << std::setw(2) << lutOutSum_I
+                                    << " lutOutSum_W " << std::setw(2) << lutOutSum_W << "\n    output_I "
+                                    << std::setw(2) << output_I << "    output_W " << std::setw(2) << output_W
+                                    << "\n neurons " << std::setw(2) << neurons << "\n outOffset " << outOffset << " = "
+                                    << std::hex << outOffset << " width " << outOffset.width << std::dec;
     }
 
     virtual ~LutNeuronLayerFixedPoint() {}
 
     void setName(std::string name) { this->name = name; }
 
-    //std::array< std::array<std::array<ap_fixed<output_W, output_I>, lutSize>, neurons>, inputSize>&
     auto& getLutArray() { return lutArray; }
 
     void setLutArray(
@@ -86,7 +93,6 @@ namespace lutNN {
           auto& lut = lutArray.at(iInput).at(iNeuron);
           std::ostringstream ostr;
           for (auto& a : lut) {
-            //ostr<<std::hex<<a.bits_to_uint64()<<", ";
             ostr << std::fixed << std::setprecision(19) << a.to_float() << ", ";
           }
           tree.put(keyPath + "." + name + ".lutArray." + std::to_string(iInput) + "." + std::to_string(iNeuron),
@@ -115,8 +121,7 @@ namespace lutNN {
 
           for (auto& a : lut) {
             if (std::getline(ss, item, ',')) {
-              //a.setBits(std::stoull(item, NULL, 16));
-              a = std::stof(item, NULL);
+              a = std::stof(item, nullptr);
             } else {
               throw std::runtime_error(
                   "LutNeuronLayerFixedPoint::read: number of items get from file is smaller than lut size");
@@ -145,19 +150,9 @@ namespace lutNN {
 
           auto result = lut.at(address) + fractionalPart * derivative;
           lutOutSum += result;
-
-          /*std::cout<<__FUNCTION__<<":"<<__LINE__<<name<<" "<<" iNeuron "<<std::setw(3)<<iNeuron<<" iInput "<<std::setw(8)<<iInput<<" input "<<std::setw(6)<<inputArray.at(iInput)<<" address "<<std::setw(5)<<address
-                         //<<" fractionalPart "<<std::setw(8)<<fractionalPart//<<" width "<<fractionalPart.width<<" iwidth "<<fractionalPart.iwidth
-                         //<<" derivative "<<std::setw(8)<<derivative//<<" width "<<derivative.width<<" iwidth "<<derivative.iwidth
-                         //<<" lut[addresPlus1] "<<std::setw(8)<<lut.at(addresPlus1)<<" lut[addr] "<<std::setw(8) << lut.at(address)
-                         //<<" outVal "<<std::setw(8)<<lutSum<<" outVal-offset "<<(lutSum - 1.77778)<<std::endl;
-                         <<" result "<<std::setw(8)<<result<<std::endl;*/
         }
 
         lutOutSumArray.at(iNeuron) = lutOutSum;
-
-        /*std::cout<<__FUNCTION__<<":"<<__LINE__<<name<<" "<<" iNeuron "<<iNeuron<<" lutOutSum "<<std::setw(10)<<lutOutSum
-                     <<" width "<<lutOutSum.width<<" iwidth "<<lutOutSum.iwidth<<std::endl;*/
       }
 
       return lutOutSumArray;
@@ -171,8 +166,6 @@ namespace lutNN {
     auto& getOutWithOffset() {
       for (unsigned int iOut = 0; iOut < lutOutSumArray.size(); iOut++) {
         outputArray[iOut] = lutOutSumArray[iOut] + outOffset;
-
-        //std::cout<<__FUNCTION__<<":"<<__LINE__<<name<<" "<<"iOut "<<iOut<<" lutOutSumArray[i] "<<lutOutSumArray[iOut]<<" outputArray[i] "<<outputArray[iOut]<<std::endl;
       }
 
       return outputArray;

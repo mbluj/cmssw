@@ -2,6 +2,8 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 from PhysicsTools.NanoAOD.simpleVertexFlatTableProducer_cfi import simpleVertexFlatTableProducer
+from PhysicsTools.NanoAOD.nano_eras_cff import *
+from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import prod_common, refittedPV
 
 
 ##################### User floats producers, selectors ##########################
@@ -47,7 +49,7 @@ covarianceVars = cms.PSet(
 
 vertexTable.optionalPvVariables = covarianceVars
 
-verticesWithBS = "offlineSlimmedPrimaryVerticesWithBS"
+verticesWithBS = prod_common.pvSource
 pvbsTable = simpleVertexFlatTableProducer.clone(
     src = verticesWithBS,
     name = "PVBS",
@@ -61,12 +63,16 @@ pvbsTable = simpleVertexFlatTableProducer.clone(
         ndof = Var("ndof()", float, doc = "number of degrees of freedom", precision = 8),
         chi2 = Var("normalizedChi2()", float, doc = "reduced chi2, i.e. chi2/ndof", precision = 8),
     ),
-    externalVariables = cms.PSet(
-        score = ExtVar(cms.InputTag(verticesWithBS), float, doc="vertex score, i.e. sum pt2 of clustered objects", precision = 8)
-    )
 )
 
 #before cross linking
 vertexTask = cms.Task()
 #after cross linkining
 vertexTablesTask = cms.Task( vertexTable, svCandidateTable, pvbsTable )
+
+#refit PV with beam-spot constraint that is not present in Run-2 samples
+_vertexTablesTaskRun2 = vertexTablesTask.copy()
+_vertexTablesTaskRun2.add( refittedPV )
+run2_nanoAOD_ANY.toReplaceWith(
+    vertexTablesTask, _vertexTablesTaskRun2
+)

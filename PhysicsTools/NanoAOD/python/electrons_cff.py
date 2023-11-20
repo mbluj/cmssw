@@ -384,12 +384,12 @@ electronTable = simpleCandidateFlatTableProducer.clone(
 
 # Produce and add time-life info (e.g. for electrons from tau decays)
 from PhysicsTools.PatAlgos.patElectronTimeLifeInfoUpdater_cfi import patElectronTimeLifeInfoUpdater
-from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import *
+import PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff as tli
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 electronsWithTimeLifeInfo = patElectronTimeLifeInfoUpdater.clone(
     src = electronTable.src,
-    pvSource = "offlineSlimmedPrimaryVerticesWithBS",
-    pvChoice = 0 #0: PV[0], 1: smallest dz
+    pvSource = tli.prod_common.pvSource,
+    pvChoice = tli.prod_common.pvChoice
 )
 
 electronTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
@@ -398,8 +398,8 @@ electronTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
     doc = cms.string("Additional time-life info for non-prompt electrons"),
     extension = True,
     variables = cms.PSet(
-        ipVars,
-        trackVars
+        tli.ipVars,
+        tli.trackVars
     )
 )
 
@@ -466,3 +466,7 @@ run2_egamma.toReplaceWith(electronTask, _electronTask_Run2)
 # Revert back to AK4 CHS jets for Run2 inputs
 run2_nanoAOD_ANY.toModify(
     ptRatioRelForEle,srcJet="updatedJets")
+# Refit PV with beam-spot constraint that is not present in Run-2 samples
+_electronTimeLifeInfoTaskRun2 = electronTimeLifeInfoTask.copy()
+_electronTimeLifeInfoTaskRun2.add(tli.refittedPV)
+run2_nanoAOD_ANY.toReplaceWith(electronTimeLifeInfoTask,_electronTimeLifeInfoTaskRun2)

@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
-from PhysicsTools.NanoAOD.nano_eras_cff import run3_nanoAOD_124
+from PhysicsTools.NanoAOD.nano_eras_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 
 from PhysicsTools.JetMCAlgos.TauGenJets_cfi import tauGenJets
@@ -8,7 +8,7 @@ from PhysicsTools.JetMCAlgos.TauGenJetsDecayModeSelectorAllHadrons_cfi import ta
 
 from PhysicsTools.PatAlgos.patTauSignalCandidatesProducer_cfi import patTauSignalCandidatesProducer
 from PhysicsTools.PatAlgos.patTauTimeLifeInfoUpdater_cfi import patTauTimeLifeInfoUpdater
-from PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff import *
+import PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff as tli
 
 ##################### Updated tau collection with MVA-based tau-Ids rerun #######
 # Used only in some eras
@@ -178,8 +178,8 @@ tauSignalCandsTable = simpleCandidateFlatTableProducer.clone(
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 tausWithTimeLifeInfo = patTauTimeLifeInfoUpdater.clone(
     src = tauTable.src,
-    pvSource = "offlineSlimmedPrimaryVerticesWithBS",
-    pvChoice = 0 #0: PV[0], 1: smallest dz
+    pvSource = tli.prod_common.pvSource,
+    pvChoice = tli.prod_common.pvChoice
 )
 
 tauTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
@@ -188,9 +188,9 @@ tauTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
     doc = cms.string("Additional tau time-life info"),
     extension = True,
     variables = cms.PSet(
-        svVars,
-        ipVars,
-        trackVars
+        tli.svVars,
+        tli.ipVars,
+        tli.trackVars
     )
 )
 
@@ -264,6 +264,10 @@ tauTablesTask = cms.Task(tauTable)
 tauSignalCandsTask = cms.Task(tauSignalCands,tauSignalCandsTable)
 tauTablesTask.add(tauSignalCandsTask)
 tauTimeLifeInfoTask = cms.Task(tausWithTimeLifeInfo,tauTimeLifeInfoTable)
+# Refit PV with beam-spot constraint that is not present in Run-2 samples
+_tauTimeLifeInfoTaskRun2 = tauTimeLifeInfoTask.copy()
+_tauTimeLifeInfoTaskRun2.add(tli.refittedPV)
+run2_nanoAOD_ANY.toReplaceWith(tauTimeLifeInfoTask,_tauTimeLifeInfoTaskRun2)
 tauTablesTask.add(tauTimeLifeInfoTask)
 
 

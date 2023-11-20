@@ -4,6 +4,14 @@
 #
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
+from PhysicsTools.NanoAOD.nano_eras_cff import *
+from PhysicsTools.PatAlgos.miniAODRefitVertexProducer_cfi import miniAODRefitVertexProducer
+
+# common settings of lepton life-time info producer
+prod_common = cms.PSet(
+    pvSource = cms.InputTag("offlineSlimmedPrimaryVerticesWithBS"),
+    pvChoice = cms.int32(0) #0: PV[0], 1: smallest dz
+)
 
 # impact parameter
 ipVars = cms.PSet(
@@ -48,3 +56,10 @@ svVars = cms.PSet(
     flightLength = Var("?hasUserFloat('flightLength')?userFloat('flightLength'):0", float, doc="flight-length,i.e. the PV to SV distance", precision=16),
     flightLengthSig = Var("?hasUserFloat('flightLength_sig')?userFloat('flightLength_sig'):0", float, doc="Significance of flight-length", precision=16)
 )
+
+# Module to refit PV with beam-spot constraint that is not present in Run-2 samples
+refittedPV = miniAODRefitVertexProducer.clone(
+    srcVertices = "offlineSlimmedPrimaryVertices",
+)
+run2_nanoAOD_ANY.toModify(
+    prod_common, pvSource = "refittedPV")

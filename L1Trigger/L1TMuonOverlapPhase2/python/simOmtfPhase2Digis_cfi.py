@@ -40,7 +40,7 @@ simOmtfPhase2Digis = cms.EDProducer("L1TMuonOverlapPhase2TrackProducer",
   
   dtRefHitMinQuality =  cms.int32(2), #/TODO change to 4
     
-  stubEtaEncoding = cms.string("bits"), #/TODO change to valueP1Scale when InputMakerPhase2 is modifiwed
+  stubEtaEncoding = cms.string("valueP1Scale"), #/bits TODO change to valueP1Scale when InputMakerPhase2 is modifiwed
   
   usePhiBExtrapolationFromMB1 = cms.bool(False),
   usePhiBExtrapolationFromMB2 = cms.bool(False),

@@ -6,6 +6,7 @@ import sys
 import re
 from os import listdir
 from os.path import isfile, join
+import fnmatch
 
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -14,10 +15,11 @@ verbose = True
 #version = 't14_extrapolSimpl_displ_allfiles'
 #version = 't16_extrapolSimpl_displ_test'
 #version = 'ExtraplMB1nadMB2SimplifiedFP_t17_v11_test_valueP1Scale'
-version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v14_test_bits'
+#version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v16_test_bits'
 #version = 'Patterns_0x00012_t17_v11_extr_off_test_bits'
+version = 'ExtraplMB1nadMB2SimplifiedFP_t19_v16_test_bits_MH-1000_MFF-150_CTau-1000mm'
 
-runDebug = "DEBUG" # or "INFO" DEBUG
+runDebug = "INFO" # or "INFO" DEBUG
 useExtraploationAlgo = True
 #useExtraploationAlgo = False
 
@@ -105,8 +107,29 @@ chosenFiles = []
 fileCnt = 1000 #1000 
 if(runDebug == "DEBUG") :
     fileCnt = 1;
-    
+
 if True :    #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #path = '/eos/user/c/cericeci/forOMTF/OMTF_PhaseII_FixedTiming/'    
+    #path =  '/eos/cms/store/user/eyigitba/dispDiMu/crabOut/CRAB_PrivateMC/HTo2LongLivedTo2mu2jets_MH-1000_MFF-150_CTau-1000mm_TuneCP5_13p6TeV_pythia8/231105_154703/0000/'
+    path =  '/eos/cms/store/user/eyigitba/dispDiMu/crabOut/CRAB_PrivateMC/'
+    
+    root_files = []
+    for root, dirs, files in os.walk(path):
+        for file in fnmatch.filter(files, '*.root'):
+            root_files.append(os.path.join(root, file))
+    
+    file_cnt = 1000000   
+    file_num = 0    
+    for root_file in root_files :
+        if isfile(root_file) :
+            chosenFiles.append('file://' + root_file)
+            file_num += 1
+        else :
+            print("file not found!!!!!!!: " + root_file)   
+            
+        if file_num >= file_cnt :
+            break  
+if False :    #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #path = '/eos/user/c/cericeci/forOMTF/OMTF_PhaseII_FixedTiming/'    
     path =  '/eos/user/a/asotorod/Samples/OMTF-L1/OMTF_fixedTiming/'
     firstFile = 1 #1001            
@@ -165,7 +188,7 @@ else :
 
 ####Event Setup Producer
 process.load('L1Trigger.L1TMuonOverlapPhase1.fakeOmtfParams_cff')
-process.omtfParams.configXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/hwToLogicLayer_0x0008.xml")
+process.omtfParams.configXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/hwToLogicLayer_0x0009.xml")
 
 process.esProd = cms.EDAnalyzer("EventSetupRecordDataGetter",
    toGet = cms.VPSet(
@@ -190,7 +213,7 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string('omtfAn
 if useExtraploationAlgo :
     process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_extrapolSimple_cfi')
 else :
-    process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi')    
+    process.load('L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi') 
 
 if(runDebug == "DEBUG") :
     process.simOmtfDigis.dumpResultToXML = cms.bool(True)

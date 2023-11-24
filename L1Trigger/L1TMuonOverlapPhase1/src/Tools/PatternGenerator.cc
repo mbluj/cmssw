@@ -445,9 +445,18 @@ void PatternGenerator::upadatePdfs() {
         }
 
         //watch out - the pt here is the hardware pt before the recalibration
-        if ((gp->key().thePt <= 10) && (iLayer == 1 || iLayer == 3 || iLayer == 5)) {
+        if ((gp->key().thePt <= 10) && (iRefLayer == 2 && (iLayer == 1 || iLayer == 3))) {//iRefLayer: MB2, iLayer: MB1 and MB2 phiB
+          gp->setDistPhiBitShift(2, iLayer, iRefLayer);
+        }
+        else if ((gp->key().thePt <= 10) && (iRefLayer == 5 && (iLayer == 5))) { //iRefLayer: MB3, iLayer: MB3 phiB
+          gp->setDistPhiBitShift(2, iLayer, iRefLayer);
+        }
+        else if ((gp->key().thePt <= 10) && (iRefLayer == 2 && (iLayer == 10))) {//iRefLayer: MB2, iLayer: RB1_in
           gp->setDistPhiBitShift(1, iLayer, iRefLayer);
-        } else if ((gp->key().thePt >= 11 && gp->key().thePt <= 17) && (iLayer == 1))
+        }
+        else if ((gp->key().thePt <= 10) && (iLayer == 1 || iLayer == 3 || iLayer == 5)) { //DT phiB
+          gp->setDistPhiBitShift(1, iLayer, iRefLayer);
+        } else if ((gp->key().thePt >= 11 && gp->key().thePt <= 17) && (iLayer == 1)) //MB1 phiB
           //due to grouping the patterns 4-7, the pdfs for the layer 1 in the pattern go outside of the range
           //so the shift must be increased (or the group should be divided into to 2 groups, but it will increase fw occupancy
           gp->setDistPhiBitShift(1, iLayer, iRefLayer);
@@ -539,8 +548,24 @@ void PatternGenerator::upadatePdfs() {
           }
 
           if (mergedCnt) {
+            //because for some gps the statistics can be too low, and then the meanDistPhiValue is 0, so it should not contribute to meanDistPhi, therefore it is divide by mergedCnt
             meanDistPhi /= mergedCnt;
-            //because for some gps the statistics can be too low, and then the meanDistPhiValue is 0, so it should not contribute
+
+            //setting the meanDistPhi to 0 if it is already small - this should save logic in FPGA
+            if(iLayer == 2) {
+              //the meanDistPhi for the iLayer == 2 i.e. MB2 is used to calculate the algoMuon output phi
+              //therefore it is not zero-ed, as it will affect this output phi, phi and thus e.g. ghostbusting
+            }
+            else if(abs(round(meanDistPhi)) <= 3)
+              meanDistPhi = 0;
+            else if (goldenPatterns.at(patternGroups[iGroup][0]).get()->key().thePt >= 13 ) {
+              //RPC layers, one strip is 4.7 units, the minimal possinle spacing between two RPC hits is 2 strips
+              if(iLayer >= 10 && abs(round(meanDistPhi)) <= 8)
+                meanDistPhi = 0;
+              else if(abs(round(meanDistPhi)) <= 5)
+                meanDistPhi = 0;
+            }
+
             for (unsigned int i = 0; i < patternGroups[iGroup].size(); i++) {
               auto gp = goldenPatterns.at(patternGroups[iGroup][i]).get();
               gp->setMeanDistPhiValue(round(meanDistPhi), iLayer, iRefLayer);

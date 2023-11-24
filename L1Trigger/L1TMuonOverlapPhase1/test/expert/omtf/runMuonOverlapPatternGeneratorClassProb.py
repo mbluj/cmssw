@@ -12,7 +12,10 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 verbose = True
 
 versionIn = "ExtraplMB1nadMB2Simplified_t17"
-versionOut =  versionIn + "_classProb17_recalib2"
+#versionIn = "ExtraplMB1nadMB2DTQualAndEtaValueP1Scale_t18"
+#versionIn = "0x00011_oldSample_3_30Files"
+
+versionOut =  versionIn + "_classProb17_recalib2_minDP0"
 
 if verbose: 
     process.MessageLogger = cms.Service("MessageLogger",

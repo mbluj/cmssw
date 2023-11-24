@@ -25,6 +25,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH2F.h"
 #include "TStyle.h"
 #include <cstdlib>
 #include <iostream>
@@ -144,6 +145,7 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
 
   outfile.mkdir("patternsPdfs")->cd();
   outfile.mkdir("patternsPdfs/canvases");
+  outfile.mkdir("patternsPdfs/canvases2");
   outfile.mkdir("layerStats");
   ostringstream ostrName;
   ostringstream ostrTtle;
@@ -162,6 +164,50 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
     ostrTtle << "Pos_RefLayer_" << iRefLayer;
     classProbHists.push_back(new TH1F(
         ostrName.str().c_str(), ostrTtle.str().c_str(), goldenPatterns.size(), -0.5, goldenPatterns.size() - 0.5));
+  }
+
+  auto gpsCnt = goldenPatterns.size();
+  auto layerCnt = goldenPatterns[0]->getPdf().size();
+  auto refLayerCnt = goldenPatterns[0]->getPdf().size();
+
+
+  vector<vector<TH2F*> > distPhiLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
+  vector<vector<TH2F*> > meanDistPhiLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
+  vector<vector<TH2F*> > pdfsLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
+
+  for (unsigned int iLayer = 0; iLayer < layerCnt; ++iLayer) {
+    int rangeFactor = 1;
+    if(iLayer == 1 || iLayer == 3 || iLayer == 5)
+      rangeFactor = 2;
+
+    for (unsigned int iRefLayer = 0; iRefLayer < refLayerCnt; ++iRefLayer) {
+      ostrName.str("");
+      ostrName << "distPhi_refLayer_" << iRefLayer << "_layer_" << iLayer;
+      ostrTtle.str("");
+      ostrTtle << "distPhi refLayer " << iRefLayer<< " layer " << iLayer;
+      //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
+      distPhiLayerRefLayer[iLayer][iRefLayer] = new TH2F(
+          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
+          omtfConfig->nPdfBins() * rangeFactor * 2, (int)(omtfConfig->nPdfBins()) * (-rangeFactor) -0.5, omtfConfig->nPdfBins() * rangeFactor -0.5);
+
+      ostrName.str("");
+      ostrName << "meanDistPhi_refLayer_" << iRefLayer << "_Layer_" << iLayer;
+      ostrTtle.str("");
+      ostrTtle << "meanDistPhi refLayer " << iRefLayer<< " Layer " << iLayer;
+      //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
+      meanDistPhiLayerRefLayer[iLayer][iRefLayer]  = new TH2F(
+          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
+          omtfConfig->nPdfBins() * rangeFactor * 2, (int)(omtfConfig->nPdfBins()) * (-rangeFactor) -0.5, omtfConfig->nPdfBins() * rangeFactor -0.5);
+
+      ostrName.str("");
+      ostrName << "pdfs_refLayer_" << iRefLayer << "_layer_" << iLayer;
+      ostrTtle.str("");
+      ostrTtle << "pdfs refLayer " << iRefLayer<< " layer " << iLayer;
+      //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
+      pdfsLayerRefLayer[iLayer][iRefLayer] = new TH2F(
+          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
+          omtfConfig->nPdfBins(),  -0.5, omtfConfig->nPdfBins() -0.5);
+    }
   }
 
   for (auto& gp : goldenPatterns) {
@@ -190,11 +236,23 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
         //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
         TH1F* hist = new TH1F(
             ostrName.str().c_str(), ostrTtle.str().c_str(), omtfConfig->nPdfBins(), -0.5, omtfConfig->nPdfBins() - 0.5);
+
+        int pdfMiddle = gp->getPdf()[iLayer][iRefLayer].size() / 2;
+        int shift = gp->getDistPhiBitShift(iLayer, iRefLayer);
+
         for (unsigned int iPdf = 0; iPdf < gp->getPdf()[iLayer][iRefLayer].size(); iPdf++) {
           hist->Fill(iPdf, gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
+
+          distPhiLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, (((int)iPdf- pdfMiddle) << shift) + gp->meanDistPhi[iLayer][iRefLayer][0] ,
+              gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
+
+          pdfsLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, (int)iPdf,
+              gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
         }
         if ((int)iLayer == (omtfConfig->getRefToLogicNumber()[iRefLayer]))
           hist->SetLineColor(kGreen);
+
+        meanDistPhiLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, gp->meanDistPhi[iLayer][iRefLayer][0], 1);
 
         hist->GetYaxis()->SetRangeUser(0, omtfConfig->pdfMaxValue() + 1);
         hist->Draw("hist");
@@ -261,6 +319,52 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
   outfile.cd();
   for (auto& classProbHist : classProbHists) {
     classProbHist->Write();
+  }
+
+  outfile.cd("patternsPdfs/canvases2");
+  for (unsigned int iRefLayer = 0; iRefLayer < goldenPatterns[0]->getPdf()[0].size(); ++iRefLayer) {
+    ostrName.str("");
+    ostrName << "distPhiForPatterns_Reflayer_" << iRefLayer;
+    ostrTtle.str("");
+    ostrTtle << "distPhiForPatterns Reflayer " << iRefLayer;
+
+    TCanvas* canvas = new TCanvas(ostrName.str().c_str(), ostrTtle.str().c_str(), 1200, 1000);
+    canvas->Divide(6, 3, 0, 0);
+
+    for (unsigned int iLayer = 0; iLayer < distPhiLayerRefLayer.size(); ++iLayer) {
+      canvas->cd(iLayer + 1);
+      canvas->cd(iLayer + 1)->SetGridx();
+      canvas->cd(iLayer + 1)->SetGridy();
+
+      //distPhiLayerRefLayer[iLayer][iRefLayer]->SetLineColor(kBlack);
+      distPhiLayerRefLayer[iLayer][iRefLayer]->Draw("colz");
+
+      meanDistPhiLayerRefLayer[iLayer][iRefLayer]->SetLineColor(kRed);
+      meanDistPhiLayerRefLayer[iLayer][iRefLayer]->Draw("boxsame");
+
+      distPhiLayerRefLayer[iLayer][iRefLayer]->Write();
+      meanDistPhiLayerRefLayer[iLayer][iRefLayer]->Write();
+      pdfsLayerRefLayer[iLayer][iRefLayer]->Write();
+    }
+
+    canvas->Write();
+
+    ostrName.str("");
+    ostrName << "pdfsForPatterns_Reflayer_" << iRefLayer;
+    ostrTtle.str("");
+    ostrTtle << "pdfsForPatterns Reflayer " << iRefLayer;
+
+    canvas = new TCanvas(ostrName.str().c_str(), ostrTtle.str().c_str(), 1200, 1000);
+    canvas->Divide(6, 3, 0, 0);
+    for (unsigned int iLayer = 0; iLayer < distPhiLayerRefLayer.size(); ++iLayer) {
+      canvas->cd(iLayer + 1);
+      canvas->cd(iLayer + 1)->SetGridx();
+      canvas->cd(iLayer + 1)->SetGridy();
+
+      pdfsLayerRefLayer[iLayer][iRefLayer]->Draw("colz");
+    }
+
+    canvas->Write();
   }
 
   saveHists(outfile);

@@ -366,8 +366,8 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
         aSector = rpc.sector();
         ///on the 0-2pi border we need to add 1 30 deg sector
         ///to get the correct index
-        if (iProcessor == (config->nProcessors()-1) && aSector < 3)
-          aSector+=12; //aMin = -1;
+        if (iProcessor == (config->nProcessors() - 1) && aSector < 3)
+          aSector += 12;  //aMin = -1;
         //Use division into rolls
         iRoll = rpc.roll();
         ///Set roll number by hand to keep common input
@@ -388,8 +388,8 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
         aMin = config->getEndcap10DegMin()[iProcessor];
         ///on the 0-2pi border we need to add 4 10 deg sectors
         ///to get the correct index
-        if (iProcessor == (config->nProcessors()-1) && aSector < 5)
-          aSector+=36; //aMin = -4;
+        if (iProcessor == (config->nProcessors() - 1) && aSector < 5)
+          aSector += 36;  //aMin = -4;
       }
       break;
     }
@@ -398,8 +398,8 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
       aSector = dt.sector();
       ///on the 0-2pi border we need to add 1 30 deg sector
       ///to get the correct index
-      if (iProcessor == (config->nProcessors()-1) && aSector < 3)
-        aSector+=12; //aMin = -1;
+      if (iProcessor == (config->nProcessors() - 1) && aSector < 3)
+        aSector += 12;  //aMin = -1;
       break;
     }
     case MuonSubdetId::CSC: {
@@ -408,15 +408,15 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
       aMin = config->getEndcap10DegMin()[iProcessor];
       ///on the 0-2pi border we need to add 4 10deg sectors
       ///to get the correct index
-      if (iProcessor == (config->nProcessors()-1) && aSector < 5)
-        aSector+=36; //aMin = -4;
+      if (iProcessor == (config->nProcessors() - 1) && aSector < 5)
+        aSector += 36;  //aMin = -4;
       ///Endcap region covers algo 10 deg sectors
       ///on the 0-2pi border we need to add 2 20deg sectors
       ///to get the correct index
       if ((type == l1t::tftype::emtf_pos || type == l1t::tftype::emtf_neg) && csc.station() > 1 && csc.ring() == 1) {
         aMin = config->getEndcap20DegMin()[iProcessor];
-        if (iProcessor == (config->nProcessors()-1) && aSector < 3)
-          aSector+=18; //aMin = -2;
+        if (iProcessor == (config->nProcessors() - 1) && aSector < 3)
+          aSector += 18;  //aMin = -2;
       }
       break;
     }
@@ -436,7 +436,8 @@ unsigned int OMTFinputMaker::getInputNumber(const OMTFConfiguration* config,
 int OMTFinputMaker::getProcessorPhiZero(const OMTFConfiguration* config, unsigned int iProcessor) {
   unsigned int nPhiBins = config->nPhiBins();
 
-  int phiZero = nPhiBins / config->nProcessors() * (iProcessor) + nPhiBins / 24; //this 24 gives 15deg (360deg/24 = 15deg)
+  int phiZero =
+      nPhiBins / config->nProcessors() * (iProcessor) + nPhiBins / 24;  //this 24 gives 15deg (360deg/24 = 15deg)
   // "0" is 15degree moved cyclically to each processor, note [0,2pi]
 
   return config->foldPhi(phiZero);

@@ -243,7 +243,7 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
   boost::dynamic_bitset<> isKilled(mtfCands->size(0), false);
 
   for (unsigned int i1 = 0; i1 < mtfCands->size(0); ++i1) {
-    if(mtfCands->at(0, i1).hwPt() == 0)
+    if (mtfCands->at(0, i1).hwPt() == 0)
       continue;
     LogTrace("l1tOmtfEventPrint") << "\nCandidateSimMuonMatcher::ghostBust regionalCand pt " << std::setw(3)
                                   << mtfCands->at(0, i1).hwPt() << " qual " << std::setw(2)
@@ -252,7 +252,7 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
     for (unsigned int i2 = i1 + 1; i2 < mtfCands->size(0); ++i2) {
       auto& mtfCand1 = mtfCands->at(0, i1);
       auto& mtfCand2 = mtfCands->at(0, i2);
-      if(mtfCand2.hwPt() == 0)
+      if (mtfCand2.hwPt() == 0)
         continue;
 
       if (abs(mtfCand1.hwEta() - mtfCand2.hwEta()) < (0.3 / 0.010875)) {
@@ -290,15 +290,15 @@ std::vector<const l1t::RegionalMuonCand*> CandidateSimMuonMatcher::ghostBust(
 
     if (mtfCands->at(0, i1).hwPt()) {
       LogTrace("l1tOmtfEventPrint")
-            << "CandidateSimMuonMatcher::ghostBust\n  regionalCand pt " << std::setw(3) << mtfCands->at(0, i1).hwPt()
-            << " qual " << std::setw(2) << mtfCands->at(0, i1).hwQual() << " proc " << std::setw(2)
-            << mtfCands->at(0, i1).processor() << " eta " << std::setw(4) << mtfCands->at(0, i1).hwEta() << " gloablEta "
-            << std::setw(8) << mtfCands->at(0, i1).hwEta() * 0.010875 << " hwPhi " << std::setw(3)
-            << mtfCands->at(0, i1).hwPhi() << " globalPhi " << std::setw(8)
-            << hwGmtPhiToGlobalPhi(l1t::MicroGMTConfiguration::calcGlobalPhi(
-                mtfCands->at(0, i1).hwPhi(), mtfCands->at(0, i1).trackFinderType(), mtfCands->at(0, i1).processor()))
-                << " fireadLayers " << std::bitset<18>(mtfCands->at(0, i1).trackAddress().at(0)) << " gb isKilled "
-                << isKilled.test(i1) << std::endl;
+          << "CandidateSimMuonMatcher::ghostBust\n  regionalCand pt " << std::setw(3) << mtfCands->at(0, i1).hwPt()
+          << " qual " << std::setw(2) << mtfCands->at(0, i1).hwQual() << " proc " << std::setw(2)
+          << mtfCands->at(0, i1).processor() << " eta " << std::setw(4) << mtfCands->at(0, i1).hwEta() << " gloablEta "
+          << std::setw(8) << mtfCands->at(0, i1).hwEta() * 0.010875 << " hwPhi " << std::setw(3)
+          << mtfCands->at(0, i1).hwPhi() << " globalPhi " << std::setw(8)
+          << hwGmtPhiToGlobalPhi(l1t::MicroGMTConfiguration::calcGlobalPhi(
+                 mtfCands->at(0, i1).hwPhi(), mtfCands->at(0, i1).trackFinderType(), mtfCands->at(0, i1).processor()))
+          << " fireadLayers " << std::bitset<18>(mtfCands->at(0, i1).trackAddress().at(0)) << " gb isKilled "
+          << isKilled.test(i1) << std::endl;
 
       LogTrace("l1tOmtfEventPrint") << *(gbCandidates.at(i1)) << std::endl;
     }

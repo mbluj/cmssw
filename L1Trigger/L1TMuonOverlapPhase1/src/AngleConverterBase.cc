@@ -80,11 +80,8 @@ int AngleConverterBase::getProcessorPhi(int phiZero, l1t::tftype part, int dtScN
 }
 ///////////////////////////////////////
 ///////////////////////////////////////
-int AngleConverterBase::getProcessorPhi(int phiZero,
-                                        l1t::tftype part,
-                                        const CSCDetId& csc,
-                                        const CSCCorrelatedLCTDigi& digi,
-                                        unsigned int iInput) const {
+int AngleConverterBase::getProcessorPhi(
+    int phiZero, l1t::tftype part, const CSCDetId& csc, const CSCCorrelatedLCTDigi& digi, unsigned int iInput) const {
   const double hsPhiPitch = 2 * M_PI / nPhiBins;
   //
   // get offset for each chamber.
@@ -130,12 +127,12 @@ int AngleConverterBase::getProcessorPhi(int phiZero,
   // in case of MC tag fixOff should be identical to offsetLoc
 
   if (config->getFixCscGeometryOffset()) {
-    if(config->nProcessors() == 6) //phase1
+    if (config->nProcessors() == 6)          //phase1
       fixOff = fixCscOffsetGeom(offsetLoc);  //TODO does not work in when phiZero is always 0. Fix this
-    else if(config->nProcessors() == 3) {//phase2
+    else if (config->nProcessors() == 3) {   //phase2
       //TODO fix this bricolage!!!!!!!!!!!!!!
-      if(iInput >= 14)
-        fixOff = fixCscOffsetGeom(offsetLoc -900) + 900;
+      if (iInput >= 14)
+        fixOff = fixCscOffsetGeom(offsetLoc - 900) + 900;
       else
         fixOff = fixCscOffsetGeom(offsetLoc);
     }

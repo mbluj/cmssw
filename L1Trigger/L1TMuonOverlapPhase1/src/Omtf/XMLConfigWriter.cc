@@ -658,7 +658,7 @@ void XMLConfigWriter::writeConnectionsData(
       }
     }
     ////
-    for (unsigned int iRegion = 0; iRegion <  myOMTFConfig->nLogicRegions(); ++iRegion) {
+    for (unsigned int iRegion = 0; iRegion < myOMTFConfig->nLogicRegions(); ++iRegion) {
       xercesc::DOMElement* aRegionElement = theDoc->createElement(_toDOMS("LogicRegion"));
       stringStr.str("");
       stringStr << iRegion;

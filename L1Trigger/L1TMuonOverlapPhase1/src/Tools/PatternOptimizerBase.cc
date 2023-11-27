@@ -170,43 +170,57 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
   auto layerCnt = goldenPatterns[0]->getPdf().size();
   auto refLayerCnt = goldenPatterns[0]->getPdf().size();
 
-
   vector<vector<TH2F*> > distPhiLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
   vector<vector<TH2F*> > meanDistPhiLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
   vector<vector<TH2F*> > pdfsLayerRefLayer(layerCnt, vector<TH2F*>(refLayerCnt, nullptr));
 
   for (unsigned int iLayer = 0; iLayer < layerCnt; ++iLayer) {
     int rangeFactor = 1;
-    if(iLayer == 1 || iLayer == 3 || iLayer == 5)
+    if (iLayer == 1 || iLayer == 3 || iLayer == 5)
       rangeFactor = 2;
 
     for (unsigned int iRefLayer = 0; iRefLayer < refLayerCnt; ++iRefLayer) {
       ostrName.str("");
       ostrName << "distPhi_refLayer_" << iRefLayer << "_layer_" << iLayer;
       ostrTtle.str("");
-      ostrTtle << "distPhi refLayer " << iRefLayer<< " layer " << iLayer;
+      ostrTtle << "distPhi refLayer " << iRefLayer << " layer " << iLayer;
       //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
-      distPhiLayerRefLayer[iLayer][iRefLayer] = new TH2F(
-          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
-          omtfConfig->nPdfBins() * rangeFactor * 2, (int)(omtfConfig->nPdfBins()) * (-rangeFactor) -0.5, omtfConfig->nPdfBins() * rangeFactor -0.5);
+      distPhiLayerRefLayer[iLayer][iRefLayer] = new TH2F(ostrName.str().c_str(),
+                                                         ostrTtle.str().c_str(),
+                                                         gpsCnt,
+                                                         0,
+                                                         gpsCnt,
+                                                         omtfConfig->nPdfBins() * rangeFactor * 2,
+                                                         (int)(omtfConfig->nPdfBins()) * (-rangeFactor) - 0.5,
+                                                         omtfConfig->nPdfBins() * rangeFactor - 0.5);
 
       ostrName.str("");
       ostrName << "meanDistPhi_refLayer_" << iRefLayer << "_Layer_" << iLayer;
       ostrTtle.str("");
-      ostrTtle << "meanDistPhi refLayer " << iRefLayer<< " Layer " << iLayer;
+      ostrTtle << "meanDistPhi refLayer " << iRefLayer << " Layer " << iLayer;
       //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
-      meanDistPhiLayerRefLayer[iLayer][iRefLayer]  = new TH2F(
-          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
-          omtfConfig->nPdfBins() * rangeFactor * 2, (int)(omtfConfig->nPdfBins()) * (-rangeFactor) -0.5, omtfConfig->nPdfBins() * rangeFactor -0.5);
+      meanDistPhiLayerRefLayer[iLayer][iRefLayer] = new TH2F(ostrName.str().c_str(),
+                                                             ostrTtle.str().c_str(),
+                                                             gpsCnt,
+                                                             0,
+                                                             gpsCnt,
+                                                             omtfConfig->nPdfBins() * rangeFactor * 2,
+                                                             (int)(omtfConfig->nPdfBins()) * (-rangeFactor) - 0.5,
+                                                             omtfConfig->nPdfBins() * rangeFactor - 0.5);
 
       ostrName.str("");
       ostrName << "pdfs_refLayer_" << iRefLayer << "_layer_" << iLayer;
       ostrTtle.str("");
-      ostrTtle << "pdfs refLayer " << iRefLayer<< " layer " << iLayer;
+      ostrTtle << "pdfs refLayer " << iRefLayer << " layer " << iLayer;
       //edm::LogVerbatim("l1tOmtfEventPrint") <<__FUNCTION__<<": "<<__LINE__<<" creating hist "<<ostrTtle.str()<<std::endl;
-      pdfsLayerRefLayer[iLayer][iRefLayer] = new TH2F(
-          ostrName.str().c_str(), ostrTtle.str().c_str(), gpsCnt, 0,  gpsCnt,
-          omtfConfig->nPdfBins(),  -0.5, omtfConfig->nPdfBins() -0.5);
+      pdfsLayerRefLayer[iLayer][iRefLayer] = new TH2F(ostrName.str().c_str(),
+                                                      ostrTtle.str().c_str(),
+                                                      gpsCnt,
+                                                      0,
+                                                      gpsCnt,
+                                                      omtfConfig->nPdfBins(),
+                                                      -0.5,
+                                                      omtfConfig->nPdfBins() - 0.5);
     }
   }
 
@@ -243,16 +257,19 @@ void PatternOptimizerBase::savePatternsInRoot(std::string rootFileName) {
         for (unsigned int iPdf = 0; iPdf < gp->getPdf()[iLayer][iRefLayer].size(); iPdf++) {
           hist->Fill(iPdf, gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
 
-          distPhiLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, (((int)iPdf- pdfMiddle) << shift) + gp->meanDistPhi[iLayer][iRefLayer][0] ,
+          distPhiLayerRefLayer[iLayer][iRefLayer]->Fill(
+              gp->key().theNumber,
+              (((int)iPdf - pdfMiddle) << shift) + gp->meanDistPhi[iLayer][iRefLayer][0],
               gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
 
-          pdfsLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, (int)iPdf,
-              gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
+          pdfsLayerRefLayer[iLayer][iRefLayer]->Fill(
+              gp->key().theNumber, (int)iPdf, gp->pdfAllRef[iLayer][iRefLayer][iPdf]);
         }
         if ((int)iLayer == (omtfConfig->getRefToLogicNumber()[iRefLayer]))
           hist->SetLineColor(kGreen);
 
-        meanDistPhiLayerRefLayer[iLayer][iRefLayer]->Fill(gp->key().theNumber, gp->meanDistPhi[iLayer][iRefLayer][0], 1);
+        meanDistPhiLayerRefLayer[iLayer][iRefLayer]->Fill(
+            gp->key().theNumber, gp->meanDistPhi[iLayer][iRefLayer][0], 1);
 
         hist->GetYaxis()->SetRangeUser(0, omtfConfig->pdfMaxValue() + 1);
         hist->Draw("hist");

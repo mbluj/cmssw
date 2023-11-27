@@ -78,7 +78,6 @@ void ProcConfigurationBase::configureFromEdmParameterSet(const edm::ParameterSet
 
   if (edmParameterSet.exists("dtPhiBUnitsRad")) {
     dtPhiBUnitsRad_ = edmParameterSet.getParameter<double>("dtPhiBUnitsRad");
-    edm::LogVerbatim("OMTFReconstruction")
-        << "dtPhiBUnitsRad: " << dtPhiBUnitsRad_ << std::endl;
+    edm::LogVerbatim("OMTFReconstruction") << "dtPhiBUnitsRad: " << dtPhiBUnitsRad_ << std::endl;
   }
 }

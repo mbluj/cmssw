@@ -1,51 +1,24 @@
 import FWCore.ParameterSet.Config as cms
 
-###OMTF emulator configuration
-simOmtfDigis = cms.EDProducer("L1TMuonOverlapPhase1TrackProducer",
+###OMTF emulator configuration with simple extrapolation algorithm
+from L1Trigger.L1TMuonOverlapPhase1.simOmtfDigis_cfi import simOmtfDigis
 
-  srcDTPh = cms.InputTag('simDtTriggerPrimitiveDigis'),
-  srcDTTh = cms.InputTag('simDtTriggerPrimitiveDigis'),
-  srcCSC = cms.InputTag('simCscTriggerPrimitiveDigis','MPCSORTED'),
-  srcRPC = cms.InputTag('simMuonRPCDigis'),
+## add parameters to enable simple extrapolation algorithm
+simOmtfDigis.noHitValueInPdf = cms.bool(True)
+simOmtfDigis.minDtPhiQuality = cms.int32(2)
+simOmtfDigis.minDtPhiBQuality = cms.int32(4)
 
-  #g4SimTrackSrc = cms.InputTag('g4SimHits'),
-  dumpResultToXML = cms.bool(False),
-  dumpDetailedResultToXML = cms.bool(False),
-  XMLDumpFileName = cms.string("TestEvents.xml"),
-  dumpGPToXML = cms.bool(False),
-  readEventsFromXML = cms.bool(False),
-  eventsXMLFiles = cms.vstring("TestEvents.xml"),
-  dropRPCPrimitives = cms.bool(False),
-  dropDTPrimitives = cms.bool(False),
-  dropCSCPrimitives = cms.bool(False),
-  processorType = cms.string("OMTFProcessor"),
+simOmtfDigis.dtRefHitMinQuality = cms.int32(4)
 
-  #ghostBusterType = cms.string("GhostBusterPreferRefDt"),
+simOmtfDigis.stubEtaEncoding = cms.string("bits")
 
-  #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x00020007.xml")
-  #patternsXMLFile = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/Patterns_0x0003.xml")
+simOmtfDigis.usePhiBExtrapolationFromMB1 = cms.bool(True)
+simOmtfDigis.usePhiBExtrapolationFromMB2 = cms.bool(True)
+simOmtfDigis.useStubQualInExtr = cms.bool(False)
+simOmtfDigis.useEndcapStubsRInExtr = cms.bool(False)
+simOmtfDigis.useFloatingPointExtrapolation = cms.bool(False)
 
-  #if commented the default values are 0-0
-  #-3 to 4 is the range of the OMTF DAQ readout, so should be used e.g. in the DQM data to emulator comparison
-  bxMin = cms.int32(0),
-  bxMax = cms.int32(0),
-
-  noHitValueInPdf = cms.bool(True),
-  minDtPhiQuality = cms.int32(2),
-  minDtPhiBQuality = cms.int32(4),
-
-  dtRefHitMinQuality = cms.int32(4),
-
-  stubEtaEncoding = cms.string("bits"),
-
-  usePhiBExtrapolationFromMB1 = cms.bool(True),
-  usePhiBExtrapolationFromMB2 = cms.bool(True),
-  useStubQualInExtr = cms.bool(False),
-  useEndcapStubsRInExtr = cms.bool(False),
-  useFloatingPointExtrapolation = cms.bool(False),
-
-  extrapolFactorsFileName = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/ExtrapolationFactors_simple.xml"),
-  sorterType = cms.string("byLLH"),
-  ghostBusterType = cms.string("byRefLayer"), # byLLH byRefLayer GhostBusterPreferRefDt
-  goldenPatternResultFinalizeFunction = cms.int32(10)
-)
+simOmtfDigis.extrapolFactorsFileName = cms.FileInPath("L1Trigger/L1TMuon/data/omtf_config/ExtrapolationFactors_simple.xml")
+simOmtfDigis.sorterType = cms.string("byLLH")
+simOmtfDigis.ghostBusterType = cms.string("byRefLayer") # byLLH byRefLayer GhostBusterPreferRefDt
+simOmtfDigis.goldenPatternResultFinalizeFunction = cms.int32(10)

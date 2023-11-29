@@ -76,7 +76,7 @@ path = '/eos/user/k/kbunkow/cms_data/SingleMuFullEta/721_FullEta_v4/' #old sampl
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 #print(onlyfiles)
 
-filesNameLike = sys.argv[1]
+filesNameLike = sys.argv[2]
 #chosenFiles = ['file://' + path + f for f in onlyfiles if (('_p_10_' in f) or ('_m_10_' in f))]
 #chosenFiles = ['file://' + path + f for f in onlyfiles if (('_10_p_10_' in f))]
 #chosenFiles = ['file://' + path + f for f in onlyfiles if (re.match('.*_._p_10.*', f))]

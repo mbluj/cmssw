@@ -7,7 +7,7 @@ from PhysicsTools.JetMCAlgos.TauGenJets_cfi import tauGenJets
 from PhysicsTools.JetMCAlgos.TauGenJetsDecayModeSelectorAllHadrons_cfi import tauGenJetsSelectorAllHadrons
 
 from PhysicsTools.PatAlgos.patTauSignalCandidatesProducer_cfi import patTauSignalCandidatesProducer
-from PhysicsTools.PatAlgos.patTauTimeLifeInfoUpdater_cfi import patTauTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.tauTimeLifeInfoTableProducer_cfi import tauTimeLifeInfoTableProducer
 import PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff as tli
 
 ##################### Updated tau collection with MVA-based tau-Ids rerun #######
@@ -176,17 +176,13 @@ tauSignalCandsTable = simpleCandidateFlatTableProducer.clone(
 
 # Produce and add time-life info
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
-tausWithTimeLifeInfo = patTauTimeLifeInfoUpdater.clone(
-    src = tauTable.src,
-    pvSource = tli.prod_common.pvSource,
-    pvChoice = tli.prod_common.pvChoice
-)
-
-tauTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
-    src = "tausWithTimeLifeInfo",
+tauTimeLifeInfoTable = tauTimeLifeInfoTableProducer.clone(
     name = tauTable.name,
+    src = tauTable.src,
     doc = cms.string("Additional tau time-life info"),
     extension = True,
+    pvSource = tli.prod_common.pvSource,
+    pvChoice = tli.prod_common.pvChoice,
     variables = cms.PSet(
         tli.svVars,
         tli.ipVars,
@@ -263,7 +259,7 @@ tauTask = cms.Task(finalTaus)
 tauTablesTask = cms.Task(tauTable)
 tauSignalCandsTask = cms.Task(tauSignalCands,tauSignalCandsTable)
 tauTablesTask.add(tauSignalCandsTask)
-tauTimeLifeInfoTask = cms.Task(tausWithTimeLifeInfo,tauTimeLifeInfoTable)
+tauTimeLifeInfoTask = cms.Task(tauTimeLifeInfoTable)
 # Refit PV with beam-spot constraint that is not present in Run-2 samples
 _tauTimeLifeInfoTaskRun2 = tauTimeLifeInfoTask.copy()
 _tauTimeLifeInfoTaskRun2.add(tli.refittedPV)

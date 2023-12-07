@@ -39,15 +39,15 @@ svCandidateTable.variables.pt.precision=10
 svCandidateTable.variables.phi.precision=12
 
 covarianceVars = cms.PSet(
-    cxx = Var("covariance(0,0)", float, doc="vertex covariance (0,0)", precision = 16),
-    cyx = Var("covariance(1,0)", float, doc="vertex covariance (1,0)", precision = 16),
-    czx = Var("covariance(2,0)", float, doc="vertex covariance (2,0)", precision = 16),
-    cyy = Var("covariance(1,1)", float, doc="vertex covariance (1,1)", precision = 16),
-    czy = Var("covariance(2,1)", float, doc="vertex covariance (2,1)", precision = 16),
-    czz = Var("covariance(2,2)", float, doc="vertex covariance (2,2)", precision = 16)
+    cxx = Var("covariance(0,0)", float, doc="vertex covariance (0,0)", precision = 10),
+    cyx = Var("covariance(1,0)", float, doc="vertex covariance (1,0)", precision = 10),
+    czx = Var("covariance(2,0)", float, doc="vertex covariance (2,0)", precision = 10),
+    cyy = Var("covariance(1,1)", float, doc="vertex covariance (1,1)", precision = 10),
+    czy = Var("covariance(2,1)", float, doc="vertex covariance (2,1)", precision = 10),
+    czz = Var("covariance(2,2)", float, doc="vertex covariance (2,2)", precision = 10)
 )
 
-vertexTable.optionalPvVariables = covarianceVars
+#vertexTable.optionalPvVariables = covarianceVars
 
 verticesWithBS = prod_common.pvSource
 pvbsTable = simpleVertexFlatTableProducer.clone(

@@ -394,20 +394,17 @@ electronTable = simpleCandidateFlatTableProducer.clone(
 ########## electronTable extension defn ##########
 
 # Produce and add time-life info (e.g. for electrons from tau decays)
-from PhysicsTools.PatAlgos.patElectronTimeLifeInfoUpdater_cfi import patElectronTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.electronTimeLifeInfoTableProducer_cfi import electronTimeLifeInfoTableProducer
 import PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff as tli
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
-electronsWithTimeLifeInfo = patElectronTimeLifeInfoUpdater.clone(
-    src = electronTable.src,
-    pvSource = tli.prod_common.pvSource,
-    pvChoice = tli.prod_common.pvChoice
-)
-
-electronTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
-    src = "electronsWithTimeLifeInfo",
+electronTimeLifeInfoTable = electronTimeLifeInfoTableProducer.clone(
     name = electronTable.name,
+    src = electronTable.src,
+    selection = 'pt > 20',
     doc = cms.string("Additional time-life info for non-prompt electrons"),
     extension = True,
+    pvSource = tli.prod_common.pvSource,
+    pvChoice = tli.prod_common.pvChoice,
     variables = cms.PSet(
         tli.ipVars,
         tli.trackVars
@@ -465,7 +462,7 @@ electronMCTable = cms.EDProducer("CandMCMatchTableProducer",
 electronTask = cms.Task(bitmapVIDForEle,bitmapVIDForEleFall17V2,bitmapVIDForEleHEEP,isoForEle,isoForEleFall17V2,ptRatioRelForEle,seedGainEle,calibratedPatElectronsNano,slimmedElectronsWithUserData,finalElectrons)
 electronTablesTask = cms.Task(electronMVATTH, electronTable)
 electronMCTask = cms.Task(tautaggerForMatching, matchingElecPhoton, electronsMCMatchForTable, electronsMCMatchForTableAlt, electronMCTable)
-electronTimeLifeInfoTask = cms.Task(electronsWithTimeLifeInfo,electronTimeLifeInfoTable)
+electronTimeLifeInfoTask = cms.Task(electronTimeLifeInfoTable)
 electronTablesTask.add(electronTimeLifeInfoTask)
 
 _electronTask_Run2 = electronTask.copy()

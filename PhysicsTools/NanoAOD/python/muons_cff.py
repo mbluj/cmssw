@@ -5,7 +5,7 @@ from PhysicsTools.NanoAOD.common_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 
 import PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi
-from PhysicsTools.PatAlgos.patMuonTimeLifeInfoUpdater_cfi import patMuonTimeLifeInfoUpdater
+from PhysicsTools.NanoAOD.muonTimeLifeInfoTableProducer_cfi import muonTimeLifeInfoTableProducer
 import PhysicsTools.NanoAOD.leptonTimeLifeInfo_common_cff as tli
 
 # this below is used only in some eras
@@ -189,17 +189,14 @@ muonTable = simpleCandidateFlatTableProducer.clone(
 )
 
 # Produce and add time-life info (e.g. for muons from tau decays)
-muonsWithTimeLifeInfo = patMuonTimeLifeInfoUpdater.clone(
-    src = muonTable.src,
-    pvSource = tli.prod_common.pvSource,
-    pvChoice = tli.prod_common.pvChoice
-)
-
-muonTimeLifeInfoTable = simpleCandidateFlatTableProducer.clone(
-    src = "muonsWithTimeLifeInfo",
+muonTimeLifeInfoTable = muonTimeLifeInfoTableProducer.clone(
     name = muonTable.name,
+    src = muonTable.src,
+    selection = 'pt > 15',
     doc = cms.string("Additional time-life info for non-prompt muons"),
     extension = True,
+    pvSource = tli.prod_common.pvSource,
+    pvChoice = tli.prod_common.pvChoice,
     variables = cms.PSet(
         tli.ipVars,
         tli.trackVars
@@ -244,7 +241,7 @@ muonMCTable = cms.EDProducer("CandMCMatchTableProducer",
 muonTask = cms.Task(slimmedMuonsUpdated,isoForMu,ptRatioRelForMu,slimmedMuonsWithUserData,finalMuons,finalLooseMuons )
 muonMCTask = cms.Task(muonsMCMatchForTable,muonMCTable)
 muonTablesTask = cms.Task(muonMVATTH,muonMVALowPt,muonBSConstrain,muonTable,muonMVAID)
-muonTimeLifeInfoTask = cms.Task(muonsWithTimeLifeInfo,muonTimeLifeInfoTable)
+muonTimeLifeInfoTask = cms.Task(muonTimeLifeInfoTable)
 # Refit PV with beam-spot constraint that is not present in Run-2 samples
 _muonTimeLifeInfoTaskRun2 = muonTimeLifeInfoTask.copy()
 _muonTimeLifeInfoTaskRun2.add(tli.refittedPV)

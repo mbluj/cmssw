@@ -33,21 +33,20 @@
 #include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 #include "Utilities/General/interface/ClassName.h"
 #include "PhysicsTools/NanoAOD/interface/SimpleFlatTableProducer.h"
-#include "DataFormats/NanoAOD/interface/LeptonTimeLifeInfo.h"
+#include "DataFormats/VertexReco/interface/TrackTimeLifeInfo.h"
 
 #include <cstring>
 
 namespace {
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, int32_t> IntLeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, uint32_t> UIntLeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, float> FloatLeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, double> DoubleLeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, int8_t> Int8LeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, uint8_t> UInt8LeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, int16_t> Int16LeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringObjectFunction<LeptonTimeLifeInfo>, uint16_t>
-      UInt16LeptonTimeLifeInfoVar;
-  typedef FuncVariable<LeptonTimeLifeInfo, StringCutObjectSelector<LeptonTimeLifeInfo>, bool> BoolLeptonTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int32_t> IntTrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint32_t> UIntTrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, float> FloatTrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, double> DoubleTrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int8_t> Int8TrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint8_t> UInt8TrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int16_t> Int16TrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint16_t> UInt16TrackTimeLifeInfoVar;
+  typedef FuncVariable<TrackTimeLifeInfo, StringCutObjectSelector<TrackTimeLifeInfo>, bool> BoolTrackTimeLifeInfoVar;
 }  // namespace
 
 template <typename T>
@@ -62,8 +61,8 @@ public:
 private:
   //--- private utility methods
   const reco::Track* getTrack(const T&);
-  void produceAndFillIPInfo(const T&, const TransientTrackBuilder&, const reco::Vertex&, LeptonTimeLifeInfo&);
-  void produceAndFillSVInfo(const T&, const TransientTrackBuilder&, const reco::Vertex&, LeptonTimeLifeInfo&);
+  void produceAndFillIPInfo(const T&, const TransientTrackBuilder&, const reco::Vertex&, TrackTimeLifeInfo&);
+  void produceAndFillSVInfo(const T&, const TransientTrackBuilder&, const reco::Vertex&, TrackTimeLifeInfo&);
   static bool fitVertex(const std::vector<reco::TransientTrack>& transTrk, TransientVertex& transVtx) {
     if (transTrk.size() < 2)
       return false;
@@ -80,7 +79,7 @@ private:
   bool extension_;
   const StringCutObjectSelector<T> selector_;
   int pvChoice_;
-  std::vector<std::unique_ptr<Variable<LeptonTimeLifeInfo>>> vars_;
+  std::vector<std::unique_ptr<Variable<TrackTimeLifeInfo>>> vars_;
 
   enum PVChoice { useFront = 0, useClosestInDz };
 };
@@ -101,23 +100,23 @@ LeptonTimeLifeInfoTableProducer<T>::LeptonTimeLifeInfoTableProducer(const edm::P
     const auto& varPSet = varsPSet.getParameter<edm::ParameterSet>(vname);
     const std::string& type = varPSet.getParameter<std::string>("type");
     if (type == "int")
-      vars_.push_back(std::make_unique<IntLeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<IntTrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "uint")
-      vars_.push_back(std::make_unique<UIntLeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<UIntTrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "float")
-      vars_.push_back(std::make_unique<FloatLeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<FloatTrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "double")
-      vars_.push_back(std::make_unique<DoubleLeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<DoubleTrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "int8")
-      vars_.push_back(std::make_unique<Int8LeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<Int8TrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "uint8")
-      vars_.push_back(std::make_unique<UInt8LeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<UInt8TrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "int16")
-      vars_.push_back(std::make_unique<Int16LeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<Int16TrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "uint16")
-      vars_.push_back(std::make_unique<UInt16LeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<UInt16TrackTimeLifeInfoVar>(vname, varPSet));
     else if (type == "bool")
-      vars_.push_back(std::make_unique<BoolLeptonTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<BoolTrackTimeLifeInfoVar>(vname, varPSet));
     else
       throw cms::Exception("Configuration", "unsupported type " + type + " for variable " + vname);
   }
@@ -137,11 +136,11 @@ void LeptonTimeLifeInfoTableProducer<T>::produce(edm::Event& evt, const edm::Eve
   // Get transient track builder
   const TransientTrackBuilder& transTrackBuilder = es.getData(transTrackBuilderToken_);
 
-  std::vector<const LeptonTimeLifeInfo*> infos;
+  std::vector<const TrackTimeLifeInfo*> infos;
   infos.reserve(leptons->size());
 
   for (const auto& lepton : *leptons) {
-    LeptonTimeLifeInfo* info = new LeptonTimeLifeInfo();
+    TrackTimeLifeInfo* info = new TrackTimeLifeInfo();
 
     // Do nothing for lepton not passing selection
     if (!selector_(lepton)) {
@@ -205,7 +204,7 @@ template <typename T>
 void LeptonTimeLifeInfoTableProducer<T>::produceAndFillIPInfo(const T& lepton,
                                                               const TransientTrackBuilder& transTrackBuilder,
                                                               const reco::Vertex& pv,
-                                                              LeptonTimeLifeInfo& info) {
+                                                              TrackTimeLifeInfo& info) {
   const reco::Track* track = getTrack(lepton);
   if (track != nullptr) {
     info.setTrack(track);
@@ -236,13 +235,13 @@ template <typename T>
 void LeptonTimeLifeInfoTableProducer<T>::produceAndFillSVInfo(const T& lepton,
                                                               const TransientTrackBuilder& transTrackBuilder,
                                                               const reco::Vertex& pv,
-                                                              LeptonTimeLifeInfo& info) {}
+                                                              TrackTimeLifeInfo& info) {}
 
 template <>
 void LeptonTimeLifeInfoTableProducer<pat::Tau>::produceAndFillSVInfo(const pat::Tau& tau,
                                                                      const TransientTrackBuilder& transTrackBuilder,
                                                                      const reco::Vertex& pv,
-                                                                     LeptonTimeLifeInfo& info) {
+                                                                     TrackTimeLifeInfo& info) {
   // Fit SV with tracks of charged tau decay products
   int fitOK = 0;
   if (tau.signalChargedHadrCands().size() + tau.signalLostTracks().size() > 1) {

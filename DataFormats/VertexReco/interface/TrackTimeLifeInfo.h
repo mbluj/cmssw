@@ -1,9 +1,9 @@
-#ifndef DataFormats_NanoAOD_LeptonTimeLifeInfo_h
-#define DataFormats_NanoAOD_LeptonTimeLifeInfo_h
+#ifndef DataFormats_VertexReco_TrackTimeLifeInfo_h
+#define DataFormats_VertexReco_TrackTimeLifeInfo_h
 
 /**
-  \class    LeptonTimeLifeInfo
-  \brief    Structure to hold lepton life-time information
+  \class    TrackTimeLifeInfo
+  \brief    Structure to hold time-life information
 
   \author   Michal Bluj, NCBJ, Warsaw
 */
@@ -15,10 +15,10 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
-class LeptonTimeLifeInfo {
+class TrackTimeLifeInfo {
 public:
-  LeptonTimeLifeInfo();
-  ~LeptonTimeLifeInfo() {}
+  TrackTimeLifeInfo();
+  ~TrackTimeLifeInfo() {}
 
   // Secondary vertex
   void setSV(reco::Vertex sv) {
@@ -39,7 +39,7 @@ public:
   // Point of closest approach
   void setPCA(GlobalPoint pca, const GlobalError& pca_cov) {
     pca_ = pca;
-    pca_cov_ = pca_cov_;
+    pca_cov_ = pca_cov;
   }
   const GlobalPoint& pca() const { return pca_; }
   const GlobalError& pcaCovariance() const { return pca_cov_; }

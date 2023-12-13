@@ -1,6 +1,6 @@
-#include "DataFormats/NanoAOD/interface/LeptonTimeLifeInfo.h"
+#include "DataFormats/VertexReco/interface/TrackTimeLifeInfo.h"
 
-LeptonTimeLifeInfo::LeptonTimeLifeInfo()
+TrackTimeLifeInfo::TrackTimeLifeInfo()
     : hasSV_(false),
       sv_(reco::Vertex()),
       flight_vec_(GlobalVector()),

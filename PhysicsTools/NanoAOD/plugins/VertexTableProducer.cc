@@ -27,12 +27,14 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/allowedValues.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "CommonTools/Utils/interface/StringObjectFunction.h"
 
 #include "DataFormats/NanoAOD/interface/FlatTable.h"
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
@@ -41,7 +43,7 @@
 #include "RecoVertex/VertexPrimitives/interface/VertexState.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
-#include "PhysicsTools/NanoAOD/interface/SimpleFlatTableProducer.h"
+#include "PhysicsTools/NanoAOD/interface/DumpedVariable.h"
 
 //
 // class declaration
@@ -77,15 +79,8 @@ private:
   const std::string svDoc_;
   const double dlenMin_, dlenSigMin_;
 
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int32_t> IntVar;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint32_t> UIntVar;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, float> FloatVar;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, double> DoubleVar;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int8_t> Int8Var;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint8_t> UInt8Var;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, int16_t> Int16Var;
-  typedef FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, uint16_t> UInt16Var;
-  typedef FuncVariable<reco::Vertex, StringCutObjectSelector<reco::Vertex>, bool> BoolVar;
+  template <typename ValType>
+  using VertexVar = FuncVariable<reco::Vertex, StringObjectFunction<reco::Vertex>, ValType>;
   std::vector<std::unique_ptr<Variable<reco::Vertex>>> pvVars_;
 };
 
@@ -112,23 +107,24 @@ VertexTableProducer::VertexTableProducer(const edm::ParameterSet& params)
       const auto& varPSet = varsPSet.getParameter<edm::ParameterSet>(vname);
       const std::string& type = varPSet.getParameter<std::string>("type");
       if (type == "int")
-        pvVars_.push_back(std::make_unique<IntVar>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<int32_t>>(vname, varPSet));
       else if (type == "uint")
-        pvVars_.push_back(std::make_unique<UIntVar>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<uint32_t>>(vname, varPSet));
       else if (type == "float")
-        pvVars_.push_back(std::make_unique<FloatVar>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<float>>(vname, varPSet));
       else if (type == "double")
-        pvVars_.push_back(std::make_unique<DoubleVar>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<double>>(vname, varPSet));
       else if (type == "int8")
-        pvVars_.push_back(std::make_unique<Int8Var>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<int8_t>>(vname, varPSet));
       else if (type == "uint8")
-        pvVars_.push_back(std::make_unique<UInt8Var>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<uint8_t>>(vname, varPSet));
       else if (type == "int16")
-        pvVars_.push_back(std::make_unique<Int16Var>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<int16_t>>(vname, varPSet));
       else if (type == "uint16")
-        pvVars_.push_back(std::make_unique<UInt16Var>(vname, varPSet));
+        pvVars_.push_back(std::make_unique<VertexVar<uint16_t>>(vname, varPSet));
       else if (type == "bool")
-        pvVars_.push_back(std::make_unique<BoolVar>(vname, varPSet));
+        pvVars_.push_back(
+            std::make_unique<FuncVariable<reco::Vertex, StringCutObjectSelector<reco::Vertex>, bool>>(vname, varPSet));
       else
         throw cms::Exception("Configuration", "unsupported type " + type + " for variable " + vname);
     }

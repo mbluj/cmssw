@@ -12,6 +12,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/allowedValues.h"
 
 #include "DataFormats/NanoAOD/interface/FlatTable.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
@@ -30,24 +31,14 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/GeomPropagators/interface/AnalyticalTrajectoryExtrapolatorToLine.h"
 #include "TrackingTools/GeomPropagators/interface/AnalyticalImpactPointExtrapolator.h"
-#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+#include "CommonTools/Utils/interface/StringObjectFunction.h"
+
 #include "Utilities/General/interface/ClassName.h"
-#include "PhysicsTools/NanoAOD/interface/SimpleFlatTableProducer.h"
+#include "PhysicsTools/NanoAOD/interface/DumpedVariable.h"
 #include "DataFormats/VertexReco/interface/TrackTimeLifeInfo.h"
 
 #include <cstring>
-
-namespace {
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int32_t> IntTrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint32_t> UIntTrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, float> FloatTrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, double> DoubleTrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int8_t> Int8TrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint8_t> UInt8TrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, int16_t> Int16TrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, uint16_t> UInt16TrackTimeLifeInfoVar;
-  typedef FuncVariable<TrackTimeLifeInfo, StringCutObjectSelector<TrackTimeLifeInfo>, bool> BoolTrackTimeLifeInfoVar;
-}  // namespace
 
 template <typename T>
 class LeptonTimeLifeInfoTableProducer : public edm::stream::EDProducer<> {
@@ -82,6 +73,8 @@ private:
   std::vector<std::unique_ptr<Variable<TrackTimeLifeInfo>>> vars_;
 
   enum PVChoice { useFront = 0, useClosestInDz };
+  template <typename ValType>
+  using TrackTimeLifeInfoVar = FuncVariable<TrackTimeLifeInfo, StringObjectFunction<TrackTimeLifeInfo>, ValType>;
 };
 
 template <typename T>
@@ -100,23 +93,25 @@ LeptonTimeLifeInfoTableProducer<T>::LeptonTimeLifeInfoTableProducer(const edm::P
     const auto& varPSet = varsPSet.getParameter<edm::ParameterSet>(vname);
     const std::string& type = varPSet.getParameter<std::string>("type");
     if (type == "int")
-      vars_.push_back(std::make_unique<IntTrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<int32_t>>(vname, varPSet));
     else if (type == "uint")
-      vars_.push_back(std::make_unique<UIntTrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<uint32_t>>(vname, varPSet));
     else if (type == "float")
-      vars_.push_back(std::make_unique<FloatTrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<float>>(vname, varPSet));
     else if (type == "double")
-      vars_.push_back(std::make_unique<DoubleTrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<double>>(vname, varPSet));
     else if (type == "int8")
-      vars_.push_back(std::make_unique<Int8TrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<int8_t>>(vname, varPSet));
     else if (type == "uint8")
-      vars_.push_back(std::make_unique<UInt8TrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<uint8_t>>(vname, varPSet));
     else if (type == "int16")
-      vars_.push_back(std::make_unique<Int16TrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<int16_t>>(vname, varPSet));
     else if (type == "uint16")
-      vars_.push_back(std::make_unique<UInt16TrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(std::make_unique<TrackTimeLifeInfoVar<uint16_t>>(vname, varPSet));
     else if (type == "bool")
-      vars_.push_back(std::make_unique<BoolTrackTimeLifeInfoVar>(vname, varPSet));
+      vars_.push_back(
+          std::make_unique<FuncVariable<TrackTimeLifeInfo, StringCutObjectSelector<TrackTimeLifeInfo>, bool>>(vname,
+                                                                                                              varPSet));
     else
       throw cms::Exception("Configuration", "unsupported type " + type + " for variable " + vname);
   }

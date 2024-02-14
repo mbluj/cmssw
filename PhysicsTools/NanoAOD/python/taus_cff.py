@@ -1,10 +1,12 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
-from PhysicsTools.NanoAOD.nano_eras_cff import run3_nanoAOD_124
+from PhysicsTools.NanoAOD.nano_eras_cff import *
 from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
 
 from PhysicsTools.JetMCAlgos.TauGenJets_cfi import tauGenJets
 from PhysicsTools.JetMCAlgos.TauGenJetsDecayModeSelectorAllHadrons_cfi import tauGenJetsSelectorAllHadrons
+
+from PhysicsTools.PatAlgos.patTauSignalCandidatesProducer_cfi import patTauSignalCandidatesProducer
 
 ##################### Updated tau collection with MVA-based tau-Ids rerun #######
 # Used only in some eras
@@ -152,9 +154,9 @@ run3_nanoAOD_124.toModify(
                  from_raw=True, wp_thrs=WORKING_POINTS_v2p5["jet"])
 )
 
-tauSignalCands = cms.EDProducer("PATTauSignalCandidatesProducer",
+tauSignalCands = patTauSignalCandidatesProducer.clone(
     src = tauTable.src,
-    storeLostTracks = cms.bool(True)
+    storeLostTracks = True
 )
 
 tauSignalCandsTable = simpleCandidateFlatTableProducer.clone(
